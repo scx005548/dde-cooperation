@@ -1,0 +1,10 @@
+dde-cooperation (0.0.1) UNRELEASED; urgency=low
+
+  * 实现了简单的日志功能
+  * 对 gdbus 进行了简单的封装
+  * 使用 protobuf 制定了协议，对 protobuf 消息的收发进行了简单的封装
+  * 实现了子网掩码等查询功能
+  * 实现了 SHA256 算法
+  * 实现了文件传输功能。
+
+ -- planc <hubenchang0515@outlook.com>  Thu, 05 May 2022 16:22:18 +0800

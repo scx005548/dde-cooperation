@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+enum MessageType
+{
+    InvalidType = 0;
+
+    ScanRequestType = 1000;
+    ScanResponseType = 1001;
+    PairRequestType = 1002;
+    PairResponseType = 1003;
+    StopPairRequestType = 1004;
+    StopPairResponseType = 1005;
+
+    SendFileRequestType = 3000;
+    SendFileResponseType = 3001;
+    SendFileBlockRequestType = 3002;
+    SendFileBlockResponseType = 3003;
+    StopSendFileRequestType = 3004;
+    StopSendFileResponseType = 3005;
+    SendDirRequestType = 3006;
+    SendDirResponseType = 3007;
+    TransferRequestType = 3008;
+    TransferResponseType = 3009;
+    StopTransferRequestType = 3010;
+    StopTransferResponseType = 3011;
+
+    InputEventRequestType = 4000;
+    InputEventResponseType = 4001;
+
+    SyncClipboardRequestType = 5000;
+    SyncClipboardResponseType = 5001;
+
+    RemoteDisplayConfigRequestType = 6000;
+    RemoteDisplayConfigResponseType = 6001;
+    RemoteDisplaySendRequestType = 6002;
+    RemoteDisplaySendResponseType = 6003;
+}
+
+message BaseMessage
+{
+    fixed32 type = 1;   // 消息类型，取值为 enum MessageType
+    fixed64 size = 2;   // 消息长度
+}

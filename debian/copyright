@@ -1,0 +1,61 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: dde-cooperation
+Upstream-Contact: <preferred name and address to reach the upstream project>
+Source: <url://example.com>
+#
+# Please double check copyright with the licensecheck(1) command.
+
+Files:     .gitignore
+           CMakeLists.txt
+           src/dbus/Interface.cpp
+           src/dbus/Interface.h
+           src/dbus/Method.cpp
+           src/dbus/Method.h
+           src/dbus/Object.cpp
+           src/dbus/Object.h
+           src/dbus/Property.cpp
+           src/dbus/Property.h
+           src/dbus/Service.cpp
+           src/dbus/Service.h
+           src/dbus/dbus.h
+           src/main.cpp
+           src/modules/Cooperation.cpp
+           src/modules/Cooperation.h
+           src/modules/FileReceiver.h
+           src/modules/FileReciever.cpp
+           src/modules/FileSender.cpp
+           src/modules/FileSender.h
+           src/protocol/base_message.pb.cc
+           src/protocol/base_message.pb.h
+           src/protocol/base_message.proto
+           src/protocol/clipboard.pb.cc
+           src/protocol/clipboard.pb.h
+           src/protocol/clipboard.proto
+           src/protocol/input_event.pb.cc
+           src/protocol/input_event.pb.h
+           src/protocol/input_event.proto
+           src/protocol/pair.pb.cc
+           src/protocol/pair.pb.h
+           src/protocol/pair.proto
+           src/protocol/remote_display.pb.cc
+           src/protocol/remote_display.pb.h
+           src/protocol/remote_display.proto
+           src/protocol/send_file.pb.cc
+           src/protocol/send_file.pb.h
+           src/protocol/send_file.proto
+           src/utils/idxubyte.hpp
+           src/utils/log.hpp
+           src/utils/message.hpp
+           src/utils/net.hpp
+           src/utils/sha256.cpp
+           src/utils/sha256.h
+Copyright: __NO_COPYRIGHT_NOR_LICENSE__
+License:   __NO_COPYRIGHT_NOR_LICENSE__
+
+#----------------------------------------------------------------------------
+# xml and html files (skipped):
+#         misc/conf/com.deepin.system.Cooperation.conf
+
+#----------------------------------------------------------------------------
+# Files marked as NO_LICENSE_TEXT_FOUND may be covered by the following
+# license/copyright files.
