@@ -5,142 +5,109 @@
 
 #include <algorithm>
 
-#include <google/protobuf/stubs/common.h>
-#include <google/protobuf/stubs/port.h>
 #include <google/protobuf/io/coded_stream.h>
-#include <google/protobuf/wire_format_lite_inl.h>
+#include <google/protobuf/extension_set.h>
+#include <google/protobuf/wire_format_lite.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/generated_message_reflection.h>
 #include <google/protobuf/reflection_ops.h>
 #include <google/protobuf/wire_format.h>
-// This is a temporary google only hack
-#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-#include "third_party/protobuf/version.h"
-#endif
 // @@protoc_insertion_point(includes)
-
+#include <google/protobuf/port_def.inc>
 class SyncClipboardRequestDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<SyncClipboardRequest>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<SyncClipboardRequest> _instance;
 } _SyncClipboardRequest_default_instance_;
 class SyncClipboardResponseDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<SyncClipboardResponse>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<SyncClipboardResponse> _instance;
 } _SyncClipboardResponse_default_instance_;
-namespace protobuf_clipboard_2eproto {
-static void InitDefaultsSyncClipboardRequest() {
+static void InitDefaultsscc_info_SyncClipboardRequest_clipboard_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   {
     void* ptr = &::_SyncClipboardRequest_default_instance_;
     new (ptr) ::SyncClipboardRequest();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
   }
   ::SyncClipboardRequest::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<0> scc_info_SyncClipboardRequest =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsSyncClipboardRequest}, {}};
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_SyncClipboardRequest_clipboard_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_SyncClipboardRequest_clipboard_2eproto}, {}};
 
-static void InitDefaultsSyncClipboardResponse() {
+static void InitDefaultsscc_info_SyncClipboardResponse_clipboard_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   {
     void* ptr = &::_SyncClipboardResponse_default_instance_;
     new (ptr) ::SyncClipboardResponse();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
   }
   ::SyncClipboardResponse::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<0> scc_info_SyncClipboardResponse =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsSyncClipboardResponse}, {}};
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_SyncClipboardResponse_clipboard_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_SyncClipboardResponse_clipboard_2eproto}, {}};
 
-void InitDefaults() {
-  ::google::protobuf::internal::InitSCC(&scc_info_SyncClipboardRequest.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_SyncClipboardResponse.base);
-}
+static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_clipboard_2eproto[2];
+static const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* file_level_enum_descriptors_clipboard_2eproto[1];
+static constexpr ::PROTOBUF_NAMESPACE_ID::ServiceDescriptor const** file_level_service_descriptors_clipboard_2eproto = nullptr;
 
-::google::protobuf::Metadata file_level_metadata[2];
-const ::google::protobuf::EnumDescriptor* file_level_enum_descriptors[1];
-
-const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
+const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_clipboard_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::SyncClipboardRequest, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::SyncClipboardRequest, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::SyncClipboardRequest, serial_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::SyncClipboardRequest, type_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::SyncClipboardRequest, data_),
+  PROTOBUF_FIELD_OFFSET(::SyncClipboardRequest, serial_),
+  PROTOBUF_FIELD_OFFSET(::SyncClipboardRequest, type_),
+  PROTOBUF_FIELD_OFFSET(::SyncClipboardRequest, data_),
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::SyncClipboardResponse, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::SyncClipboardResponse, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::SyncClipboardResponse, serial_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::SyncClipboardResponse, success_),
+  PROTOBUF_FIELD_OFFSET(::SyncClipboardResponse, serial_),
+  PROTOBUF_FIELD_OFFSET(::SyncClipboardResponse, success_),
 };
-static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
+static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   { 0, -1, sizeof(::SyncClipboardRequest)},
   { 8, -1, sizeof(::SyncClipboardResponse)},
 };
 
-static ::google::protobuf::Message const * const file_default_instances[] = {
-  reinterpret_cast<const ::google::protobuf::Message*>(&::_SyncClipboardRequest_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::_SyncClipboardResponse_default_instance_),
+static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] = {
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::_SyncClipboardRequest_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::_SyncClipboardResponse_default_instance_),
 };
 
-void protobuf_AssignDescriptors() {
-  AddDescriptors();
-  AssignDescriptors(
-      "clipboard.proto", schemas, file_default_instances, TableStruct::offsets,
-      file_level_metadata, file_level_enum_descriptors, NULL);
-}
+const char descriptor_table_protodef_clipboard_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
+  "\n\017clipboard.proto\"V\n\024SyncClipboardReques"
+  "t\022\016\n\006serial\030\001 \001(\003\022 \n\004type\030\002 \001(\0162\022.Clipbo"
+  "ardDataType\022\014\n\004data\030\003 \001(\014\"8\n\025SyncClipboa"
+  "rdResponse\022\016\n\006serial\030\001 \001(\003\022\017\n\007success\030\002 "
+  "\001(\010*=\n\021ClipboardDataType\022\010\n\004Text\020\000\022\010\n\004MI"
+  "ME\020\001\022\n\n\006Pixmap\020\002\022\010\n\004File\020\003b\006proto3"
+  ;
+static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_clipboard_2eproto_deps[1] = {
+};
+static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_clipboard_2eproto_sccs[2] = {
+  &scc_info_SyncClipboardRequest_clipboard_2eproto.base,
+  &scc_info_SyncClipboardResponse_clipboard_2eproto.base,
+};
+static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_clipboard_2eproto_once;
+const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_clipboard_2eproto = {
+  false, false, descriptor_table_protodef_clipboard_2eproto, "clipboard.proto", 234,
+  &descriptor_table_clipboard_2eproto_once, descriptor_table_clipboard_2eproto_sccs, descriptor_table_clipboard_2eproto_deps, 2, 0,
+  schemas, file_default_instances, TableStruct_clipboard_2eproto::offsets,
+  file_level_metadata_clipboard_2eproto, 2, file_level_enum_descriptors_clipboard_2eproto, file_level_service_descriptors_clipboard_2eproto,
+};
 
-void protobuf_AssignDescriptorsOnce() {
-  static ::google::protobuf::internal::once_flag once;
-  ::google::protobuf::internal::call_once(once, protobuf_AssignDescriptors);
-}
-
-void protobuf_RegisterTypes(const ::std::string&) GOOGLE_PROTOBUF_ATTRIBUTE_COLD;
-void protobuf_RegisterTypes(const ::std::string&) {
-  protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::internal::RegisterAllTypes(file_level_metadata, 2);
-}
-
-void AddDescriptorsImpl() {
-  InitDefaults();
-  static const char descriptor[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-      "\n\017clipboard.proto\"V\n\024SyncClipboardReques"
-      "t\022\016\n\006serial\030\001 \001(\003\022 \n\004type\030\002 \001(\0162\022.Clipbo"
-      "ardDataType\022\014\n\004data\030\003 \001(\014\"8\n\025SyncClipboa"
-      "rdResponse\022\016\n\006serial\030\001 \001(\003\022\017\n\007success\030\002 "
-      "\001(\010*=\n\021ClipboardDataType\022\010\n\004Text\020\000\022\010\n\004MI"
-      "ME\020\001\022\n\n\006Pixmap\020\002\022\010\n\004File\020\003b\006proto3"
-  };
-  ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 234);
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
-    "clipboard.proto", &protobuf_RegisterTypes);
-}
-
-void AddDescriptors() {
-  static ::google::protobuf::internal::once_flag once;
-  ::google::protobuf::internal::call_once(once, AddDescriptorsImpl);
-}
-// Force AddDescriptors() to be called at dynamic initialization time.
-struct StaticDescriptorInitializer {
-  StaticDescriptorInitializer() {
-    AddDescriptors();
-  }
-} static_descriptor_initializer;
-}  // namespace protobuf_clipboard_2eproto
-const ::google::protobuf::EnumDescriptor* ClipboardDataType_descriptor() {
-  protobuf_clipboard_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_clipboard_2eproto::file_level_enum_descriptors[0];
+// Force running AddDescriptors() at dynamic initialization time.
+static bool dynamic_init_dummy_clipboard_2eproto = (static_cast<void>(::PROTOBUF_NAMESPACE_ID::internal::AddDescriptors(&descriptor_table_clipboard_2eproto)), true);
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* ClipboardDataType_descriptor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&descriptor_table_clipboard_2eproto);
+  return file_level_enum_descriptors_clipboard_2eproto[0];
 }
 bool ClipboardDataType_IsValid(int value) {
   switch (value) {
@@ -159,26 +126,23 @@ bool ClipboardDataType_IsValid(int value) {
 
 void SyncClipboardRequest::InitAsDefaultInstance() {
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int SyncClipboardRequest::kSerialFieldNumber;
-const int SyncClipboardRequest::kTypeFieldNumber;
-const int SyncClipboardRequest::kDataFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class SyncClipboardRequest::_Internal {
+ public:
+};
 
-SyncClipboardRequest::SyncClipboardRequest()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_clipboard_2eproto::scc_info_SyncClipboardRequest.base);
+SyncClipboardRequest::SyncClipboardRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:SyncClipboardRequest)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:SyncClipboardRequest)
 }
 SyncClipboardRequest::SyncClipboardRequest(const SyncClipboardRequest& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  data_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.data().size() > 0) {
-    data_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.data_);
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  data_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_data().empty()) {
+    data_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from._internal_data(),
+      GetArena());
   }
   ::memcpy(&serial_, &from.serial_,
     static_cast<size_t>(reinterpret_cast<char*>(&type_) -
@@ -187,7 +151,8 @@ SyncClipboardRequest::SyncClipboardRequest(const SyncClipboardRequest& from)
 }
 
 void SyncClipboardRequest::SharedCtor() {
-  data_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_SyncClipboardRequest_clipboard_2eproto.base);
+  data_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   ::memset(&serial_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&type_) -
       reinterpret_cast<char*>(&serial_)) + sizeof(type_));
@@ -196,168 +161,123 @@ void SyncClipboardRequest::SharedCtor() {
 SyncClipboardRequest::~SyncClipboardRequest() {
   // @@protoc_insertion_point(destructor:SyncClipboardRequest)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void SyncClipboardRequest::SharedDtor() {
-  data_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  GOOGLE_DCHECK(GetArena() == nullptr);
+  data_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
+void SyncClipboardRequest::ArenaDtor(void* object) {
+  SyncClipboardRequest* _this = reinterpret_cast< SyncClipboardRequest* >(object);
+  (void)_this;
+}
+void SyncClipboardRequest::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void SyncClipboardRequest::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* SyncClipboardRequest::descriptor() {
-  ::protobuf_clipboard_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_clipboard_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const SyncClipboardRequest& SyncClipboardRequest::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_clipboard_2eproto::scc_info_SyncClipboardRequest.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_SyncClipboardRequest_clipboard_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void SyncClipboardRequest::Clear() {
 // @@protoc_insertion_point(message_clear_start:SyncClipboardRequest)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  data_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  data_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
   ::memset(&serial_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&type_) -
       reinterpret_cast<char*>(&serial_)) + sizeof(type_));
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
-bool SyncClipboardRequest::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:SyncClipboardRequest)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* SyncClipboardRequest::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // int64 serial = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
-                 input, &serial_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+          serial_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // .ClipboardDataType type = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
-          int value;
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
-                 input, &value)));
-          set_type(static_cast< ::ClipboardDataType >(value));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
+          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+          _internal_set_type(static_cast<::ClipboardDataType>(val));
+        } else goto handle_unusual;
+        continue;
       // bytes data = 3;
-      case 3: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(26u /* 26 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
-                input, this->mutable_data()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 26)) {
+          auto str = _internal_mutable_data();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:SyncClipboardRequest)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:SyncClipboardRequest)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void SyncClipboardRequest::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:SyncClipboardRequest)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // int64 serial = 1;
-  if (this->serial() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt64(1, this->serial(), output);
-  }
-
-  // .ClipboardDataType type = 2;
-  if (this->type() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteEnum(
-      2, this->type(), output);
-  }
-
-  // bytes data = 3;
-  if (this->data().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBytesMaybeAliased(
-      3, this->data(), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:SyncClipboardRequest)
-}
-
-::google::protobuf::uint8* SyncClipboardRequest::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* SyncClipboardRequest::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:SyncClipboardRequest)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // int64 serial = 1;
   if (this->serial() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(1, this->serial(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(1, this->_internal_serial(), target);
   }
 
   // .ClipboardDataType type = 2;
   if (this->type() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
-      2, this->type(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+      2, this->_internal_type(), target);
   }
 
   // bytes data = 3;
   if (this->data().size() > 0) {
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
-        3, this->data(), target);
+    target = stream->WriteBytesMaybeAliased(
+        3, this->_internal_data(), target);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:SyncClipboardRequest)
   return target;
@@ -367,45 +287,48 @@ size_t SyncClipboardRequest::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:SyncClipboardRequest)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // bytes data = 3;
   if (this->data().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::BytesSize(
-        this->data());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
+        this->_internal_data());
   }
 
   // int64 serial = 1;
   if (this->serial() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::Int64Size(
-        this->serial());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int64Size(
+        this->_internal_serial());
   }
 
   // .ClipboardDataType type = 2;
   if (this->type() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::EnumSize(this->type());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_type());
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void SyncClipboardRequest::MergeFrom(const ::google::protobuf::Message& from) {
+void SyncClipboardRequest::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:SyncClipboardRequest)
   GOOGLE_DCHECK_NE(&from, this);
   const SyncClipboardRequest* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const SyncClipboardRequest>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<SyncClipboardRequest>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:SyncClipboardRequest)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:SyncClipboardRequest)
     MergeFrom(*source);
@@ -415,23 +338,22 @@ void SyncClipboardRequest::MergeFrom(const ::google::protobuf::Message& from) {
 void SyncClipboardRequest::MergeFrom(const SyncClipboardRequest& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:SyncClipboardRequest)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (from.data().size() > 0) {
-
-    data_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.data_);
+    _internal_set_data(from._internal_data());
   }
   if (from.serial() != 0) {
-    set_serial(from.serial());
+    _internal_set_serial(from._internal_serial());
   }
   if (from.type() != 0) {
-    set_type(from.type());
+    _internal_set_type(from._internal_type());
   }
 }
 
-void SyncClipboardRequest::CopyFrom(const ::google::protobuf::Message& from) {
+void SyncClipboardRequest::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:SyncClipboardRequest)
   if (&from == this) return;
   Clear();
@@ -449,22 +371,20 @@ bool SyncClipboardRequest::IsInitialized() const {
   return true;
 }
 
-void SyncClipboardRequest::Swap(SyncClipboardRequest* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void SyncClipboardRequest::InternalSwap(SyncClipboardRequest* other) {
   using std::swap;
-  data_.Swap(&other->data_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  swap(serial_, other->serial_);
-  swap(type_, other->type_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
+  data_.Swap(&other->data_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(SyncClipboardRequest, type_)
+      + sizeof(SyncClipboardRequest::type_)
+      - PROTOBUF_FIELD_OFFSET(SyncClipboardRequest, serial_)>(
+          reinterpret_cast<char*>(&serial_),
+          reinterpret_cast<char*>(&other->serial_));
 }
 
-::google::protobuf::Metadata SyncClipboardRequest::GetMetadata() const {
-  protobuf_clipboard_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_clipboard_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata SyncClipboardRequest::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -472,22 +392,19 @@ void SyncClipboardRequest::InternalSwap(SyncClipboardRequest* other) {
 
 void SyncClipboardResponse::InitAsDefaultInstance() {
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int SyncClipboardResponse::kSerialFieldNumber;
-const int SyncClipboardResponse::kSuccessFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class SyncClipboardResponse::_Internal {
+ public:
+};
 
-SyncClipboardResponse::SyncClipboardResponse()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_clipboard_2eproto::scc_info_SyncClipboardResponse.base);
+SyncClipboardResponse::SyncClipboardResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:SyncClipboardResponse)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:SyncClipboardResponse)
 }
 SyncClipboardResponse::SyncClipboardResponse(const SyncClipboardResponse& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::memcpy(&serial_, &from.serial_,
     static_cast<size_t>(reinterpret_cast<char*>(&success_) -
     reinterpret_cast<char*>(&serial_)) + sizeof(success_));
@@ -503,138 +420,105 @@ void SyncClipboardResponse::SharedCtor() {
 SyncClipboardResponse::~SyncClipboardResponse() {
   // @@protoc_insertion_point(destructor:SyncClipboardResponse)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void SyncClipboardResponse::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void SyncClipboardResponse::ArenaDtor(void* object) {
+  SyncClipboardResponse* _this = reinterpret_cast< SyncClipboardResponse* >(object);
+  (void)_this;
+}
+void SyncClipboardResponse::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void SyncClipboardResponse::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* SyncClipboardResponse::descriptor() {
-  ::protobuf_clipboard_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_clipboard_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const SyncClipboardResponse& SyncClipboardResponse::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_clipboard_2eproto::scc_info_SyncClipboardResponse.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_SyncClipboardResponse_clipboard_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void SyncClipboardResponse::Clear() {
 // @@protoc_insertion_point(message_clear_start:SyncClipboardResponse)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   ::memset(&serial_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&success_) -
       reinterpret_cast<char*>(&serial_)) + sizeof(success_));
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
-bool SyncClipboardResponse::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:SyncClipboardResponse)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* SyncClipboardResponse::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // int64 serial = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
-                 input, &serial_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+          serial_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // bool success = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &success_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
+          success_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:SyncClipboardResponse)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:SyncClipboardResponse)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void SyncClipboardResponse::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:SyncClipboardResponse)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // int64 serial = 1;
-  if (this->serial() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt64(1, this->serial(), output);
-  }
-
-  // bool success = 2;
-  if (this->success() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(2, this->success(), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:SyncClipboardResponse)
-}
-
-::google::protobuf::uint8* SyncClipboardResponse::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* SyncClipboardResponse::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:SyncClipboardResponse)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // int64 serial = 1;
   if (this->serial() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(1, this->serial(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(1, this->_internal_serial(), target);
   }
 
   // bool success = 2;
   if (this->success() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(2, this->success(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(2, this->_internal_success(), target);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:SyncClipboardResponse)
   return target;
@@ -644,16 +528,15 @@ size_t SyncClipboardResponse::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:SyncClipboardResponse)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // int64 serial = 1;
   if (this->serial() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::Int64Size(
-        this->serial());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int64Size(
+        this->_internal_serial());
   }
 
   // bool success = 2;
@@ -661,20 +544,24 @@ size_t SyncClipboardResponse::ByteSizeLong() const {
     total_size += 1 + 1;
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void SyncClipboardResponse::MergeFrom(const ::google::protobuf::Message& from) {
+void SyncClipboardResponse::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:SyncClipboardResponse)
   GOOGLE_DCHECK_NE(&from, this);
   const SyncClipboardResponse* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const SyncClipboardResponse>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<SyncClipboardResponse>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:SyncClipboardResponse)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:SyncClipboardResponse)
     MergeFrom(*source);
@@ -684,19 +571,19 @@ void SyncClipboardResponse::MergeFrom(const ::google::protobuf::Message& from) {
 void SyncClipboardResponse::MergeFrom(const SyncClipboardResponse& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:SyncClipboardResponse)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (from.serial() != 0) {
-    set_serial(from.serial());
+    _internal_set_serial(from._internal_serial());
   }
   if (from.success() != 0) {
-    set_success(from.success());
+    _internal_set_success(from._internal_success());
   }
 }
 
-void SyncClipboardResponse::CopyFrom(const ::google::protobuf::Message& from) {
+void SyncClipboardResponse::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:SyncClipboardResponse)
   if (&from == this) return;
   Clear();
@@ -714,33 +601,31 @@ bool SyncClipboardResponse::IsInitialized() const {
   return true;
 }
 
-void SyncClipboardResponse::Swap(SyncClipboardResponse* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void SyncClipboardResponse::InternalSwap(SyncClipboardResponse* other) {
   using std::swap;
-  swap(serial_, other->serial_);
-  swap(success_, other->success_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(SyncClipboardResponse, success_)
+      + sizeof(SyncClipboardResponse::success_)
+      - PROTOBUF_FIELD_OFFSET(SyncClipboardResponse, serial_)>(
+          reinterpret_cast<char*>(&serial_),
+          reinterpret_cast<char*>(&other->serial_));
 }
 
-::google::protobuf::Metadata SyncClipboardResponse::GetMetadata() const {
-  protobuf_clipboard_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_clipboard_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata SyncClipboardResponse::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
 // @@protoc_insertion_point(namespace_scope)
-namespace google {
-namespace protobuf {
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::SyncClipboardRequest* Arena::CreateMaybeMessage< ::SyncClipboardRequest >(Arena* arena) {
-  return Arena::CreateInternal< ::SyncClipboardRequest >(arena);
+PROTOBUF_NAMESPACE_OPEN
+template<> PROTOBUF_NOINLINE ::SyncClipboardRequest* Arena::CreateMaybeMessage< ::SyncClipboardRequest >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::SyncClipboardRequest >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::SyncClipboardResponse* Arena::CreateMaybeMessage< ::SyncClipboardResponse >(Arena* arena) {
-  return Arena::CreateInternal< ::SyncClipboardResponse >(arena);
+template<> PROTOBUF_NOINLINE ::SyncClipboardResponse* Arena::CreateMaybeMessage< ::SyncClipboardResponse >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::SyncClipboardResponse >(arena);
 }
-}  // namespace protobuf
-}  // namespace google
+PROTOBUF_NAMESPACE_CLOSE
 
 // @@protoc_insertion_point(global_scope)
+#include <google/protobuf/port_undef.inc>

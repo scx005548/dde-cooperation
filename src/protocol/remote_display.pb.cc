@@ -5,205 +5,170 @@
 
 #include <algorithm>
 
-#include <google/protobuf/stubs/common.h>
-#include <google/protobuf/stubs/port.h>
 #include <google/protobuf/io/coded_stream.h>
-#include <google/protobuf/wire_format_lite_inl.h>
+#include <google/protobuf/extension_set.h>
+#include <google/protobuf/wire_format_lite.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/generated_message_reflection.h>
 #include <google/protobuf/reflection_ops.h>
 #include <google/protobuf/wire_format.h>
-// This is a temporary google only hack
-#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-#include "third_party/protobuf/version.h"
-#endif
 // @@protoc_insertion_point(includes)
-
+#include <google/protobuf/port_def.inc>
 class RemoteDisplayConfigRequestDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<RemoteDisplayConfigRequest>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<RemoteDisplayConfigRequest> _instance;
 } _RemoteDisplayConfigRequest_default_instance_;
 class RemoteDisplayConfigResponseDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<RemoteDisplayConfigResponse>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<RemoteDisplayConfigResponse> _instance;
 } _RemoteDisplayConfigResponse_default_instance_;
 class RemoteDisplaySendRequestDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<RemoteDisplaySendRequest>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<RemoteDisplaySendRequest> _instance;
 } _RemoteDisplaySendRequest_default_instance_;
 class RemoteDisplaySendResponseDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<RemoteDisplaySendResponse>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<RemoteDisplaySendResponse> _instance;
 } _RemoteDisplaySendResponse_default_instance_;
-namespace protobuf_remote_5fdisplay_2eproto {
-static void InitDefaultsRemoteDisplayConfigRequest() {
+static void InitDefaultsscc_info_RemoteDisplayConfigRequest_remote_5fdisplay_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   {
     void* ptr = &::_RemoteDisplayConfigRequest_default_instance_;
     new (ptr) ::RemoteDisplayConfigRequest();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
   }
   ::RemoteDisplayConfigRequest::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<0> scc_info_RemoteDisplayConfigRequest =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsRemoteDisplayConfigRequest}, {}};
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_RemoteDisplayConfigRequest_remote_5fdisplay_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_RemoteDisplayConfigRequest_remote_5fdisplay_2eproto}, {}};
 
-static void InitDefaultsRemoteDisplayConfigResponse() {
+static void InitDefaultsscc_info_RemoteDisplayConfigResponse_remote_5fdisplay_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   {
     void* ptr = &::_RemoteDisplayConfigResponse_default_instance_;
     new (ptr) ::RemoteDisplayConfigResponse();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
   }
   ::RemoteDisplayConfigResponse::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<0> scc_info_RemoteDisplayConfigResponse =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsRemoteDisplayConfigResponse}, {}};
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_RemoteDisplayConfigResponse_remote_5fdisplay_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_RemoteDisplayConfigResponse_remote_5fdisplay_2eproto}, {}};
 
-static void InitDefaultsRemoteDisplaySendRequest() {
+static void InitDefaultsscc_info_RemoteDisplaySendRequest_remote_5fdisplay_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   {
     void* ptr = &::_RemoteDisplaySendRequest_default_instance_;
     new (ptr) ::RemoteDisplaySendRequest();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
   }
   ::RemoteDisplaySendRequest::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<0> scc_info_RemoteDisplaySendRequest =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsRemoteDisplaySendRequest}, {}};
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_RemoteDisplaySendRequest_remote_5fdisplay_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_RemoteDisplaySendRequest_remote_5fdisplay_2eproto}, {}};
 
-static void InitDefaultsRemoteDisplaySendResponse() {
+static void InitDefaultsscc_info_RemoteDisplaySendResponse_remote_5fdisplay_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   {
     void* ptr = &::_RemoteDisplaySendResponse_default_instance_;
     new (ptr) ::RemoteDisplaySendResponse();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
   }
   ::RemoteDisplaySendResponse::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<0> scc_info_RemoteDisplaySendResponse =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsRemoteDisplaySendResponse}, {}};
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_RemoteDisplaySendResponse_remote_5fdisplay_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_RemoteDisplaySendResponse_remote_5fdisplay_2eproto}, {}};
 
-void InitDefaults() {
-  ::google::protobuf::internal::InitSCC(&scc_info_RemoteDisplayConfigRequest.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_RemoteDisplayConfigResponse.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_RemoteDisplaySendRequest.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_RemoteDisplaySendResponse.base);
-}
+static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_remote_5fdisplay_2eproto[4];
+static const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* file_level_enum_descriptors_remote_5fdisplay_2eproto[1];
+static constexpr ::PROTOBUF_NAMESPACE_ID::ServiceDescriptor const** file_level_service_descriptors_remote_5fdisplay_2eproto = nullptr;
 
-::google::protobuf::Metadata file_level_metadata[4];
-const ::google::protobuf::EnumDescriptor* file_level_enum_descriptors[1];
-
-const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
+const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_remote_5fdisplay_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::RemoteDisplayConfigRequest, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::RemoteDisplayConfigRequest, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::RemoteDisplayConfigRequest, type_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::RemoteDisplayConfigRequest, width_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::RemoteDisplayConfigRequest, height_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::RemoteDisplayConfigRequest, display_),
+  PROTOBUF_FIELD_OFFSET(::RemoteDisplayConfigRequest, type_),
+  PROTOBUF_FIELD_OFFSET(::RemoteDisplayConfigRequest, width_),
+  PROTOBUF_FIELD_OFFSET(::RemoteDisplayConfigRequest, height_),
+  PROTOBUF_FIELD_OFFSET(::RemoteDisplayConfigRequest, display_),
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::RemoteDisplayConfigResponse, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::RemoteDisplayConfigResponse, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::RemoteDisplayConfigResponse, success_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::RemoteDisplayConfigResponse, port_),
+  PROTOBUF_FIELD_OFFSET(::RemoteDisplayConfigResponse, success_),
+  PROTOBUF_FIELD_OFFSET(::RemoteDisplayConfigResponse, port_),
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::RemoteDisplaySendRequest, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::RemoteDisplaySendRequest, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::RemoteDisplaySendRequest, serial_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::RemoteDisplaySendRequest, data_),
+  PROTOBUF_FIELD_OFFSET(::RemoteDisplaySendRequest, serial_),
+  PROTOBUF_FIELD_OFFSET(::RemoteDisplaySendRequest, data_),
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::RemoteDisplaySendResponse, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::RemoteDisplaySendResponse, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::RemoteDisplaySendResponse, serial_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::RemoteDisplaySendResponse, success_),
+  PROTOBUF_FIELD_OFFSET(::RemoteDisplaySendResponse, serial_),
+  PROTOBUF_FIELD_OFFSET(::RemoteDisplaySendResponse, success_),
 };
-static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
+static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   { 0, -1, sizeof(::RemoteDisplayConfigRequest)},
   { 9, -1, sizeof(::RemoteDisplayConfigResponse)},
   { 16, -1, sizeof(::RemoteDisplaySendRequest)},
   { 23, -1, sizeof(::RemoteDisplaySendResponse)},
 };
 
-static ::google::protobuf::Message const * const file_default_instances[] = {
-  reinterpret_cast<const ::google::protobuf::Message*>(&::_RemoteDisplayConfigRequest_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::_RemoteDisplayConfigResponse_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::_RemoteDisplaySendRequest_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::_RemoteDisplaySendResponse_default_instance_),
+static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] = {
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::_RemoteDisplayConfigRequest_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::_RemoteDisplayConfigResponse_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::_RemoteDisplaySendRequest_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::_RemoteDisplaySendResponse_default_instance_),
 };
 
-void protobuf_AssignDescriptors() {
-  AddDescriptors();
-  AssignDescriptors(
-      "remote_display.proto", schemas, file_default_instances, TableStruct::offsets,
-      file_level_metadata, file_level_enum_descriptors, NULL);
-}
+const char descriptor_table_protodef_remote_5fdisplay_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
+  "\n\024remote_display.proto\"r\n\032RemoteDisplayC"
+  "onfigRequest\022$\n\004type\030\001 \001(\0162\026.RemoteDispl"
+  "ayDataType\022\r\n\005width\030\002 \001(\005\022\016\n\006height\030\003 \001("
+  "\005\022\017\n\007display\030\004 \001(\010\"<\n\033RemoteDisplayConfi"
+  "gResponse\022\017\n\007success\030\001 \001(\010\022\014\n\004port\030\002 \001(\005"
+  "\"8\n\030RemoteDisplaySendRequest\022\016\n\006serial\030\001"
+  " \001(\003\022\014\n\004data\030\002 \001(\014\"<\n\031RemoteDisplaySendR"
+  "esponse\022\016\n\006serial\030\001 \001(\003\022\017\n\007success\030\002 \001(\010"
+  "*:\n\025RemoteDisplayDataType\022\007\n\003BMP\020\000\022\016\n\nMo"
+  "tionJPEG\020\001\022\010\n\004H264\020\002b\006proto3"
+  ;
+static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_remote_5fdisplay_2eproto_deps[1] = {
+};
+static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_remote_5fdisplay_2eproto_sccs[4] = {
+  &scc_info_RemoteDisplayConfigRequest_remote_5fdisplay_2eproto.base,
+  &scc_info_RemoteDisplayConfigResponse_remote_5fdisplay_2eproto.base,
+  &scc_info_RemoteDisplaySendRequest_remote_5fdisplay_2eproto.base,
+  &scc_info_RemoteDisplaySendResponse_remote_5fdisplay_2eproto.base,
+};
+static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_remote_5fdisplay_2eproto_once;
+const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_remote_5fdisplay_2eproto = {
+  false, false, descriptor_table_protodef_remote_5fdisplay_2eproto, "remote_display.proto", 388,
+  &descriptor_table_remote_5fdisplay_2eproto_once, descriptor_table_remote_5fdisplay_2eproto_sccs, descriptor_table_remote_5fdisplay_2eproto_deps, 4, 0,
+  schemas, file_default_instances, TableStruct_remote_5fdisplay_2eproto::offsets,
+  file_level_metadata_remote_5fdisplay_2eproto, 4, file_level_enum_descriptors_remote_5fdisplay_2eproto, file_level_service_descriptors_remote_5fdisplay_2eproto,
+};
 
-void protobuf_AssignDescriptorsOnce() {
-  static ::google::protobuf::internal::once_flag once;
-  ::google::protobuf::internal::call_once(once, protobuf_AssignDescriptors);
-}
-
-void protobuf_RegisterTypes(const ::std::string&) GOOGLE_PROTOBUF_ATTRIBUTE_COLD;
-void protobuf_RegisterTypes(const ::std::string&) {
-  protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::internal::RegisterAllTypes(file_level_metadata, 4);
-}
-
-void AddDescriptorsImpl() {
-  InitDefaults();
-  static const char descriptor[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-      "\n\024remote_display.proto\"r\n\032RemoteDisplayC"
-      "onfigRequest\022$\n\004type\030\001 \001(\0162\026.RemoteDispl"
-      "ayDataType\022\r\n\005width\030\002 \001(\005\022\016\n\006height\030\003 \001("
-      "\005\022\017\n\007display\030\004 \001(\010\"<\n\033RemoteDisplayConfi"
-      "gResponse\022\017\n\007success\030\001 \001(\010\022\014\n\004port\030\002 \001(\005"
-      "\"8\n\030RemoteDisplaySendRequest\022\016\n\006serial\030\001"
-      " \001(\003\022\014\n\004data\030\002 \001(\014\"<\n\031RemoteDisplaySendR"
-      "esponse\022\016\n\006serial\030\001 \001(\003\022\017\n\007success\030\002 \001(\010"
-      "*:\n\025RemoteDisplayDataType\022\007\n\003BMP\020\000\022\016\n\nMo"
-      "tionJPEG\020\001\022\010\n\004H264\020\002b\006proto3"
-  };
-  ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 388);
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
-    "remote_display.proto", &protobuf_RegisterTypes);
-}
-
-void AddDescriptors() {
-  static ::google::protobuf::internal::once_flag once;
-  ::google::protobuf::internal::call_once(once, AddDescriptorsImpl);
-}
-// Force AddDescriptors() to be called at dynamic initialization time.
-struct StaticDescriptorInitializer {
-  StaticDescriptorInitializer() {
-    AddDescriptors();
-  }
-} static_descriptor_initializer;
-}  // namespace protobuf_remote_5fdisplay_2eproto
-const ::google::protobuf::EnumDescriptor* RemoteDisplayDataType_descriptor() {
-  protobuf_remote_5fdisplay_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_remote_5fdisplay_2eproto::file_level_enum_descriptors[0];
+// Force running AddDescriptors() at dynamic initialization time.
+static bool dynamic_init_dummy_remote_5fdisplay_2eproto = (static_cast<void>(::PROTOBUF_NAMESPACE_ID::internal::AddDescriptors(&descriptor_table_remote_5fdisplay_2eproto)), true);
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* RemoteDisplayDataType_descriptor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&descriptor_table_remote_5fdisplay_2eproto);
+  return file_level_enum_descriptors_remote_5fdisplay_2eproto[0];
 }
 bool RemoteDisplayDataType_IsValid(int value) {
   switch (value) {
@@ -221,24 +186,19 @@ bool RemoteDisplayDataType_IsValid(int value) {
 
 void RemoteDisplayConfigRequest::InitAsDefaultInstance() {
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int RemoteDisplayConfigRequest::kTypeFieldNumber;
-const int RemoteDisplayConfigRequest::kWidthFieldNumber;
-const int RemoteDisplayConfigRequest::kHeightFieldNumber;
-const int RemoteDisplayConfigRequest::kDisplayFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class RemoteDisplayConfigRequest::_Internal {
+ public:
+};
 
-RemoteDisplayConfigRequest::RemoteDisplayConfigRequest()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_remote_5fdisplay_2eproto::scc_info_RemoteDisplayConfigRequest.base);
+RemoteDisplayConfigRequest::RemoteDisplayConfigRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:RemoteDisplayConfigRequest)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:RemoteDisplayConfigRequest)
 }
 RemoteDisplayConfigRequest::RemoteDisplayConfigRequest(const RemoteDisplayConfigRequest& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::memcpy(&type_, &from.type_,
     static_cast<size_t>(reinterpret_cast<char*>(&display_) -
     reinterpret_cast<char*>(&type_)) + sizeof(display_));
@@ -254,189 +214,133 @@ void RemoteDisplayConfigRequest::SharedCtor() {
 RemoteDisplayConfigRequest::~RemoteDisplayConfigRequest() {
   // @@protoc_insertion_point(destructor:RemoteDisplayConfigRequest)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void RemoteDisplayConfigRequest::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void RemoteDisplayConfigRequest::ArenaDtor(void* object) {
+  RemoteDisplayConfigRequest* _this = reinterpret_cast< RemoteDisplayConfigRequest* >(object);
+  (void)_this;
+}
+void RemoteDisplayConfigRequest::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void RemoteDisplayConfigRequest::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* RemoteDisplayConfigRequest::descriptor() {
-  ::protobuf_remote_5fdisplay_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_remote_5fdisplay_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const RemoteDisplayConfigRequest& RemoteDisplayConfigRequest::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_remote_5fdisplay_2eproto::scc_info_RemoteDisplayConfigRequest.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_RemoteDisplayConfigRequest_remote_5fdisplay_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void RemoteDisplayConfigRequest::Clear() {
 // @@protoc_insertion_point(message_clear_start:RemoteDisplayConfigRequest)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   ::memset(&type_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&display_) -
       reinterpret_cast<char*>(&type_)) + sizeof(display_));
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
-bool RemoteDisplayConfigRequest::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:RemoteDisplayConfigRequest)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* RemoteDisplayConfigRequest::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // .RemoteDisplayDataType type = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
-          int value;
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
-                 input, &value)));
-          set_type(static_cast< ::RemoteDisplayDataType >(value));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+          _internal_set_type(static_cast<::RemoteDisplayDataType>(val));
+        } else goto handle_unusual;
+        continue;
       // int32 width = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &width_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
+          width_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // int32 height = 3;
-      case 3: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(24u /* 24 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &height_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
+          height_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // bool display = 4;
-      case 4: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(32u /* 32 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &display_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
+          display_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:RemoteDisplayConfigRequest)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:RemoteDisplayConfigRequest)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void RemoteDisplayConfigRequest::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:RemoteDisplayConfigRequest)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // .RemoteDisplayDataType type = 1;
-  if (this->type() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteEnum(
-      1, this->type(), output);
-  }
-
-  // int32 width = 2;
-  if (this->width() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(2, this->width(), output);
-  }
-
-  // int32 height = 3;
-  if (this->height() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(3, this->height(), output);
-  }
-
-  // bool display = 4;
-  if (this->display() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(4, this->display(), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:RemoteDisplayConfigRequest)
-}
-
-::google::protobuf::uint8* RemoteDisplayConfigRequest::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* RemoteDisplayConfigRequest::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:RemoteDisplayConfigRequest)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // .RemoteDisplayDataType type = 1;
   if (this->type() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
-      1, this->type(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+      1, this->_internal_type(), target);
   }
 
   // int32 width = 2;
   if (this->width() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(2, this->width(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(2, this->_internal_width(), target);
   }
 
   // int32 height = 3;
   if (this->height() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(3, this->height(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(3, this->_internal_height(), target);
   }
 
   // bool display = 4;
   if (this->display() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(4, this->display(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(4, this->_internal_display(), target);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:RemoteDisplayConfigRequest)
   return target;
@@ -446,29 +350,28 @@ size_t RemoteDisplayConfigRequest::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:RemoteDisplayConfigRequest)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // .RemoteDisplayDataType type = 1;
   if (this->type() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::EnumSize(this->type());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_type());
   }
 
   // int32 width = 2;
   if (this->width() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::Int32Size(
-        this->width());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
+        this->_internal_width());
   }
 
   // int32 height = 3;
   if (this->height() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::Int32Size(
-        this->height());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
+        this->_internal_height());
   }
 
   // bool display = 4;
@@ -476,20 +379,24 @@ size_t RemoteDisplayConfigRequest::ByteSizeLong() const {
     total_size += 1 + 1;
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void RemoteDisplayConfigRequest::MergeFrom(const ::google::protobuf::Message& from) {
+void RemoteDisplayConfigRequest::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:RemoteDisplayConfigRequest)
   GOOGLE_DCHECK_NE(&from, this);
   const RemoteDisplayConfigRequest* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const RemoteDisplayConfigRequest>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<RemoteDisplayConfigRequest>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:RemoteDisplayConfigRequest)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:RemoteDisplayConfigRequest)
     MergeFrom(*source);
@@ -499,25 +406,25 @@ void RemoteDisplayConfigRequest::MergeFrom(const ::google::protobuf::Message& fr
 void RemoteDisplayConfigRequest::MergeFrom(const RemoteDisplayConfigRequest& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:RemoteDisplayConfigRequest)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (from.type() != 0) {
-    set_type(from.type());
+    _internal_set_type(from._internal_type());
   }
   if (from.width() != 0) {
-    set_width(from.width());
+    _internal_set_width(from._internal_width());
   }
   if (from.height() != 0) {
-    set_height(from.height());
+    _internal_set_height(from._internal_height());
   }
   if (from.display() != 0) {
-    set_display(from.display());
+    _internal_set_display(from._internal_display());
   }
 }
 
-void RemoteDisplayConfigRequest::CopyFrom(const ::google::protobuf::Message& from) {
+void RemoteDisplayConfigRequest::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:RemoteDisplayConfigRequest)
   if (&from == this) return;
   Clear();
@@ -535,22 +442,19 @@ bool RemoteDisplayConfigRequest::IsInitialized() const {
   return true;
 }
 
-void RemoteDisplayConfigRequest::Swap(RemoteDisplayConfigRequest* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void RemoteDisplayConfigRequest::InternalSwap(RemoteDisplayConfigRequest* other) {
   using std::swap;
-  swap(type_, other->type_);
-  swap(width_, other->width_);
-  swap(height_, other->height_);
-  swap(display_, other->display_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(RemoteDisplayConfigRequest, display_)
+      + sizeof(RemoteDisplayConfigRequest::display_)
+      - PROTOBUF_FIELD_OFFSET(RemoteDisplayConfigRequest, type_)>(
+          reinterpret_cast<char*>(&type_),
+          reinterpret_cast<char*>(&other->type_));
 }
 
-::google::protobuf::Metadata RemoteDisplayConfigRequest::GetMetadata() const {
-  protobuf_remote_5fdisplay_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_remote_5fdisplay_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata RemoteDisplayConfigRequest::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -558,22 +462,19 @@ void RemoteDisplayConfigRequest::InternalSwap(RemoteDisplayConfigRequest* other)
 
 void RemoteDisplayConfigResponse::InitAsDefaultInstance() {
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int RemoteDisplayConfigResponse::kSuccessFieldNumber;
-const int RemoteDisplayConfigResponse::kPortFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class RemoteDisplayConfigResponse::_Internal {
+ public:
+};
 
-RemoteDisplayConfigResponse::RemoteDisplayConfigResponse()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_remote_5fdisplay_2eproto::scc_info_RemoteDisplayConfigResponse.base);
+RemoteDisplayConfigResponse::RemoteDisplayConfigResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:RemoteDisplayConfigResponse)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:RemoteDisplayConfigResponse)
 }
 RemoteDisplayConfigResponse::RemoteDisplayConfigResponse(const RemoteDisplayConfigResponse& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::memcpy(&success_, &from.success_,
     static_cast<size_t>(reinterpret_cast<char*>(&port_) -
     reinterpret_cast<char*>(&success_)) + sizeof(port_));
@@ -589,138 +490,105 @@ void RemoteDisplayConfigResponse::SharedCtor() {
 RemoteDisplayConfigResponse::~RemoteDisplayConfigResponse() {
   // @@protoc_insertion_point(destructor:RemoteDisplayConfigResponse)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void RemoteDisplayConfigResponse::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void RemoteDisplayConfigResponse::ArenaDtor(void* object) {
+  RemoteDisplayConfigResponse* _this = reinterpret_cast< RemoteDisplayConfigResponse* >(object);
+  (void)_this;
+}
+void RemoteDisplayConfigResponse::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void RemoteDisplayConfigResponse::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* RemoteDisplayConfigResponse::descriptor() {
-  ::protobuf_remote_5fdisplay_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_remote_5fdisplay_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const RemoteDisplayConfigResponse& RemoteDisplayConfigResponse::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_remote_5fdisplay_2eproto::scc_info_RemoteDisplayConfigResponse.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_RemoteDisplayConfigResponse_remote_5fdisplay_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void RemoteDisplayConfigResponse::Clear() {
 // @@protoc_insertion_point(message_clear_start:RemoteDisplayConfigResponse)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   ::memset(&success_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&port_) -
       reinterpret_cast<char*>(&success_)) + sizeof(port_));
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
-bool RemoteDisplayConfigResponse::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:RemoteDisplayConfigResponse)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* RemoteDisplayConfigResponse::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // bool success = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &success_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+          success_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // int32 port = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &port_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
+          port_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:RemoteDisplayConfigResponse)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:RemoteDisplayConfigResponse)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void RemoteDisplayConfigResponse::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:RemoteDisplayConfigResponse)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // bool success = 1;
-  if (this->success() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(1, this->success(), output);
-  }
-
-  // int32 port = 2;
-  if (this->port() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(2, this->port(), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:RemoteDisplayConfigResponse)
-}
-
-::google::protobuf::uint8* RemoteDisplayConfigResponse::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* RemoteDisplayConfigResponse::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:RemoteDisplayConfigResponse)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // bool success = 1;
   if (this->success() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(1, this->success(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(1, this->_internal_success(), target);
   }
 
   // int32 port = 2;
   if (this->port() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(2, this->port(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(2, this->_internal_port(), target);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:RemoteDisplayConfigResponse)
   return target;
@@ -730,11 +598,10 @@ size_t RemoteDisplayConfigResponse::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:RemoteDisplayConfigResponse)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // bool success = 1;
   if (this->success() != 0) {
     total_size += 1 + 1;
@@ -743,24 +610,28 @@ size_t RemoteDisplayConfigResponse::ByteSizeLong() const {
   // int32 port = 2;
   if (this->port() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::Int32Size(
-        this->port());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
+        this->_internal_port());
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void RemoteDisplayConfigResponse::MergeFrom(const ::google::protobuf::Message& from) {
+void RemoteDisplayConfigResponse::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:RemoteDisplayConfigResponse)
   GOOGLE_DCHECK_NE(&from, this);
   const RemoteDisplayConfigResponse* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const RemoteDisplayConfigResponse>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<RemoteDisplayConfigResponse>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:RemoteDisplayConfigResponse)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:RemoteDisplayConfigResponse)
     MergeFrom(*source);
@@ -770,19 +641,19 @@ void RemoteDisplayConfigResponse::MergeFrom(const ::google::protobuf::Message& f
 void RemoteDisplayConfigResponse::MergeFrom(const RemoteDisplayConfigResponse& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:RemoteDisplayConfigResponse)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (from.success() != 0) {
-    set_success(from.success());
+    _internal_set_success(from._internal_success());
   }
   if (from.port() != 0) {
-    set_port(from.port());
+    _internal_set_port(from._internal_port());
   }
 }
 
-void RemoteDisplayConfigResponse::CopyFrom(const ::google::protobuf::Message& from) {
+void RemoteDisplayConfigResponse::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:RemoteDisplayConfigResponse)
   if (&from == this) return;
   Clear();
@@ -800,20 +671,19 @@ bool RemoteDisplayConfigResponse::IsInitialized() const {
   return true;
 }
 
-void RemoteDisplayConfigResponse::Swap(RemoteDisplayConfigResponse* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void RemoteDisplayConfigResponse::InternalSwap(RemoteDisplayConfigResponse* other) {
   using std::swap;
-  swap(success_, other->success_);
-  swap(port_, other->port_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(RemoteDisplayConfigResponse, port_)
+      + sizeof(RemoteDisplayConfigResponse::port_)
+      - PROTOBUF_FIELD_OFFSET(RemoteDisplayConfigResponse, success_)>(
+          reinterpret_cast<char*>(&success_),
+          reinterpret_cast<char*>(&other->success_));
 }
 
-::google::protobuf::Metadata RemoteDisplayConfigResponse::GetMetadata() const {
-  protobuf_remote_5fdisplay_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_remote_5fdisplay_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata RemoteDisplayConfigResponse::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -821,171 +691,137 @@ void RemoteDisplayConfigResponse::InternalSwap(RemoteDisplayConfigResponse* othe
 
 void RemoteDisplaySendRequest::InitAsDefaultInstance() {
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int RemoteDisplaySendRequest::kSerialFieldNumber;
-const int RemoteDisplaySendRequest::kDataFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class RemoteDisplaySendRequest::_Internal {
+ public:
+};
 
-RemoteDisplaySendRequest::RemoteDisplaySendRequest()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_remote_5fdisplay_2eproto::scc_info_RemoteDisplaySendRequest.base);
+RemoteDisplaySendRequest::RemoteDisplaySendRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:RemoteDisplaySendRequest)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:RemoteDisplaySendRequest)
 }
 RemoteDisplaySendRequest::RemoteDisplaySendRequest(const RemoteDisplaySendRequest& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  data_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.data().size() > 0) {
-    data_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.data_);
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  data_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_data().empty()) {
+    data_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from._internal_data(),
+      GetArena());
   }
   serial_ = from.serial_;
   // @@protoc_insertion_point(copy_constructor:RemoteDisplaySendRequest)
 }
 
 void RemoteDisplaySendRequest::SharedCtor() {
-  data_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  serial_ = GOOGLE_LONGLONG(0);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_RemoteDisplaySendRequest_remote_5fdisplay_2eproto.base);
+  data_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  serial_ = PROTOBUF_LONGLONG(0);
 }
 
 RemoteDisplaySendRequest::~RemoteDisplaySendRequest() {
   // @@protoc_insertion_point(destructor:RemoteDisplaySendRequest)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void RemoteDisplaySendRequest::SharedDtor() {
-  data_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  GOOGLE_DCHECK(GetArena() == nullptr);
+  data_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
+void RemoteDisplaySendRequest::ArenaDtor(void* object) {
+  RemoteDisplaySendRequest* _this = reinterpret_cast< RemoteDisplaySendRequest* >(object);
+  (void)_this;
+}
+void RemoteDisplaySendRequest::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void RemoteDisplaySendRequest::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* RemoteDisplaySendRequest::descriptor() {
-  ::protobuf_remote_5fdisplay_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_remote_5fdisplay_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const RemoteDisplaySendRequest& RemoteDisplaySendRequest::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_remote_5fdisplay_2eproto::scc_info_RemoteDisplaySendRequest.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_RemoteDisplaySendRequest_remote_5fdisplay_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void RemoteDisplaySendRequest::Clear() {
 // @@protoc_insertion_point(message_clear_start:RemoteDisplaySendRequest)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  data_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  serial_ = GOOGLE_LONGLONG(0);
-  _internal_metadata_.Clear();
+  data_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  serial_ = PROTOBUF_LONGLONG(0);
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
-bool RemoteDisplaySendRequest::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:RemoteDisplaySendRequest)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* RemoteDisplaySendRequest::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // int64 serial = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
-                 input, &serial_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+          serial_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // bytes data = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
-                input, this->mutable_data()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+          auto str = _internal_mutable_data();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:RemoteDisplaySendRequest)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:RemoteDisplaySendRequest)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void RemoteDisplaySendRequest::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:RemoteDisplaySendRequest)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // int64 serial = 1;
-  if (this->serial() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt64(1, this->serial(), output);
-  }
-
-  // bytes data = 2;
-  if (this->data().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBytesMaybeAliased(
-      2, this->data(), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:RemoteDisplaySendRequest)
-}
-
-::google::protobuf::uint8* RemoteDisplaySendRequest::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* RemoteDisplaySendRequest::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:RemoteDisplaySendRequest)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // int64 serial = 1;
   if (this->serial() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(1, this->serial(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(1, this->_internal_serial(), target);
   }
 
   // bytes data = 2;
   if (this->data().size() > 0) {
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
-        2, this->data(), target);
+    target = stream->WriteBytesMaybeAliased(
+        2, this->_internal_data(), target);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:RemoteDisplaySendRequest)
   return target;
@@ -995,39 +831,42 @@ size_t RemoteDisplaySendRequest::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:RemoteDisplaySendRequest)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // bytes data = 2;
   if (this->data().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::BytesSize(
-        this->data());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
+        this->_internal_data());
   }
 
   // int64 serial = 1;
   if (this->serial() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::Int64Size(
-        this->serial());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int64Size(
+        this->_internal_serial());
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void RemoteDisplaySendRequest::MergeFrom(const ::google::protobuf::Message& from) {
+void RemoteDisplaySendRequest::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:RemoteDisplaySendRequest)
   GOOGLE_DCHECK_NE(&from, this);
   const RemoteDisplaySendRequest* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const RemoteDisplaySendRequest>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<RemoteDisplaySendRequest>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:RemoteDisplaySendRequest)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:RemoteDisplaySendRequest)
     MergeFrom(*source);
@@ -1037,20 +876,19 @@ void RemoteDisplaySendRequest::MergeFrom(const ::google::protobuf::Message& from
 void RemoteDisplaySendRequest::MergeFrom(const RemoteDisplaySendRequest& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:RemoteDisplaySendRequest)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (from.data().size() > 0) {
-
-    data_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.data_);
+    _internal_set_data(from._internal_data());
   }
   if (from.serial() != 0) {
-    set_serial(from.serial());
+    _internal_set_serial(from._internal_serial());
   }
 }
 
-void RemoteDisplaySendRequest::CopyFrom(const ::google::protobuf::Message& from) {
+void RemoteDisplaySendRequest::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:RemoteDisplaySendRequest)
   if (&from == this) return;
   Clear();
@@ -1068,21 +906,15 @@ bool RemoteDisplaySendRequest::IsInitialized() const {
   return true;
 }
 
-void RemoteDisplaySendRequest::Swap(RemoteDisplaySendRequest* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void RemoteDisplaySendRequest::InternalSwap(RemoteDisplaySendRequest* other) {
   using std::swap;
-  data_.Swap(&other->data_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
+  data_.Swap(&other->data_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
   swap(serial_, other->serial_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
 }
 
-::google::protobuf::Metadata RemoteDisplaySendRequest::GetMetadata() const {
-  protobuf_remote_5fdisplay_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_remote_5fdisplay_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata RemoteDisplaySendRequest::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -1090,22 +922,19 @@ void RemoteDisplaySendRequest::InternalSwap(RemoteDisplaySendRequest* other) {
 
 void RemoteDisplaySendResponse::InitAsDefaultInstance() {
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int RemoteDisplaySendResponse::kSerialFieldNumber;
-const int RemoteDisplaySendResponse::kSuccessFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class RemoteDisplaySendResponse::_Internal {
+ public:
+};
 
-RemoteDisplaySendResponse::RemoteDisplaySendResponse()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_remote_5fdisplay_2eproto::scc_info_RemoteDisplaySendResponse.base);
+RemoteDisplaySendResponse::RemoteDisplaySendResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:RemoteDisplaySendResponse)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:RemoteDisplaySendResponse)
 }
 RemoteDisplaySendResponse::RemoteDisplaySendResponse(const RemoteDisplaySendResponse& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::memcpy(&serial_, &from.serial_,
     static_cast<size_t>(reinterpret_cast<char*>(&success_) -
     reinterpret_cast<char*>(&serial_)) + sizeof(success_));
@@ -1121,138 +950,105 @@ void RemoteDisplaySendResponse::SharedCtor() {
 RemoteDisplaySendResponse::~RemoteDisplaySendResponse() {
   // @@protoc_insertion_point(destructor:RemoteDisplaySendResponse)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void RemoteDisplaySendResponse::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void RemoteDisplaySendResponse::ArenaDtor(void* object) {
+  RemoteDisplaySendResponse* _this = reinterpret_cast< RemoteDisplaySendResponse* >(object);
+  (void)_this;
+}
+void RemoteDisplaySendResponse::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void RemoteDisplaySendResponse::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* RemoteDisplaySendResponse::descriptor() {
-  ::protobuf_remote_5fdisplay_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_remote_5fdisplay_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const RemoteDisplaySendResponse& RemoteDisplaySendResponse::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_remote_5fdisplay_2eproto::scc_info_RemoteDisplaySendResponse.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_RemoteDisplaySendResponse_remote_5fdisplay_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void RemoteDisplaySendResponse::Clear() {
 // @@protoc_insertion_point(message_clear_start:RemoteDisplaySendResponse)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   ::memset(&serial_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&success_) -
       reinterpret_cast<char*>(&serial_)) + sizeof(success_));
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
-bool RemoteDisplaySendResponse::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:RemoteDisplaySendResponse)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* RemoteDisplaySendResponse::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // int64 serial = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
-                 input, &serial_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+          serial_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // bool success = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &success_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
+          success_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:RemoteDisplaySendResponse)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:RemoteDisplaySendResponse)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void RemoteDisplaySendResponse::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:RemoteDisplaySendResponse)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // int64 serial = 1;
-  if (this->serial() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt64(1, this->serial(), output);
-  }
-
-  // bool success = 2;
-  if (this->success() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(2, this->success(), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:RemoteDisplaySendResponse)
-}
-
-::google::protobuf::uint8* RemoteDisplaySendResponse::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* RemoteDisplaySendResponse::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:RemoteDisplaySendResponse)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // int64 serial = 1;
   if (this->serial() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(1, this->serial(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(1, this->_internal_serial(), target);
   }
 
   // bool success = 2;
   if (this->success() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(2, this->success(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(2, this->_internal_success(), target);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:RemoteDisplaySendResponse)
   return target;
@@ -1262,16 +1058,15 @@ size_t RemoteDisplaySendResponse::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:RemoteDisplaySendResponse)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // int64 serial = 1;
   if (this->serial() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::Int64Size(
-        this->serial());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int64Size(
+        this->_internal_serial());
   }
 
   // bool success = 2;
@@ -1279,20 +1074,24 @@ size_t RemoteDisplaySendResponse::ByteSizeLong() const {
     total_size += 1 + 1;
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void RemoteDisplaySendResponse::MergeFrom(const ::google::protobuf::Message& from) {
+void RemoteDisplaySendResponse::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:RemoteDisplaySendResponse)
   GOOGLE_DCHECK_NE(&from, this);
   const RemoteDisplaySendResponse* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const RemoteDisplaySendResponse>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<RemoteDisplaySendResponse>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:RemoteDisplaySendResponse)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:RemoteDisplaySendResponse)
     MergeFrom(*source);
@@ -1302,19 +1101,19 @@ void RemoteDisplaySendResponse::MergeFrom(const ::google::protobuf::Message& fro
 void RemoteDisplaySendResponse::MergeFrom(const RemoteDisplaySendResponse& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:RemoteDisplaySendResponse)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (from.serial() != 0) {
-    set_serial(from.serial());
+    _internal_set_serial(from._internal_serial());
   }
   if (from.success() != 0) {
-    set_success(from.success());
+    _internal_set_success(from._internal_success());
   }
 }
 
-void RemoteDisplaySendResponse::CopyFrom(const ::google::protobuf::Message& from) {
+void RemoteDisplaySendResponse::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:RemoteDisplaySendResponse)
   if (&from == this) return;
   Clear();
@@ -1332,39 +1131,37 @@ bool RemoteDisplaySendResponse::IsInitialized() const {
   return true;
 }
 
-void RemoteDisplaySendResponse::Swap(RemoteDisplaySendResponse* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void RemoteDisplaySendResponse::InternalSwap(RemoteDisplaySendResponse* other) {
   using std::swap;
-  swap(serial_, other->serial_);
-  swap(success_, other->success_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(RemoteDisplaySendResponse, success_)
+      + sizeof(RemoteDisplaySendResponse::success_)
+      - PROTOBUF_FIELD_OFFSET(RemoteDisplaySendResponse, serial_)>(
+          reinterpret_cast<char*>(&serial_),
+          reinterpret_cast<char*>(&other->serial_));
 }
 
-::google::protobuf::Metadata RemoteDisplaySendResponse::GetMetadata() const {
-  protobuf_remote_5fdisplay_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_remote_5fdisplay_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata RemoteDisplaySendResponse::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
 // @@protoc_insertion_point(namespace_scope)
-namespace google {
-namespace protobuf {
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::RemoteDisplayConfigRequest* Arena::CreateMaybeMessage< ::RemoteDisplayConfigRequest >(Arena* arena) {
-  return Arena::CreateInternal< ::RemoteDisplayConfigRequest >(arena);
+PROTOBUF_NAMESPACE_OPEN
+template<> PROTOBUF_NOINLINE ::RemoteDisplayConfigRequest* Arena::CreateMaybeMessage< ::RemoteDisplayConfigRequest >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::RemoteDisplayConfigRequest >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::RemoteDisplayConfigResponse* Arena::CreateMaybeMessage< ::RemoteDisplayConfigResponse >(Arena* arena) {
-  return Arena::CreateInternal< ::RemoteDisplayConfigResponse >(arena);
+template<> PROTOBUF_NOINLINE ::RemoteDisplayConfigResponse* Arena::CreateMaybeMessage< ::RemoteDisplayConfigResponse >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::RemoteDisplayConfigResponse >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::RemoteDisplaySendRequest* Arena::CreateMaybeMessage< ::RemoteDisplaySendRequest >(Arena* arena) {
-  return Arena::CreateInternal< ::RemoteDisplaySendRequest >(arena);
+template<> PROTOBUF_NOINLINE ::RemoteDisplaySendRequest* Arena::CreateMaybeMessage< ::RemoteDisplaySendRequest >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::RemoteDisplaySendRequest >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::RemoteDisplaySendResponse* Arena::CreateMaybeMessage< ::RemoteDisplaySendResponse >(Arena* arena) {
-  return Arena::CreateInternal< ::RemoteDisplaySendResponse >(arena);
+template<> PROTOBUF_NOINLINE ::RemoteDisplaySendResponse* Arena::CreateMaybeMessage< ::RemoteDisplaySendResponse >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::RemoteDisplaySendResponse >(arena);
 }
-}  // namespace protobuf
-}  // namespace google
+PROTOBUF_NAMESPACE_CLOSE
 
 // @@protoc_insertion_point(global_scope)
+#include <google/protobuf/port_undef.inc>
