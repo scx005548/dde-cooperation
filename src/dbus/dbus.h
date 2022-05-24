@@ -7,4 +7,4 @@
 #include "Method.h"
 #include "Property.h"
 
-#endif // DBUS_H
+#endif // !DBUS_H

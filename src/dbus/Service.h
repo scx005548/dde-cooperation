@@ -8,17 +8,14 @@
 
 #include "Object.h"
 
-
-
-namespace DBus
-{
+namespace DBus {
 
 class Object;
 
-class Service : public Glib::Object
-{
+class Service : public Glib::Object {
 public:
-    explicit Service(const Glib::ustring& name, Gio::DBus::BusType type=Gio::DBus::BusType::BUS_TYPE_SESSION);
+    explicit Service(const Glib::ustring &name,
+                     Gio::DBus::BusType type = Gio::DBus::BusType::BUS_TYPE_SESSION);
     ~Service() = default;
 
     /*****************************************************************************
@@ -32,14 +29,14 @@ public:
      * @param[in] obj 对象
      * @return 是否成功
      * ***************************************************************************/
-    bool exportObject(const Glib::RefPtr<DBus::Object>& obj) noexcept;
+    bool exportObject(const Glib::RefPtr<DBus::Object> &obj) noexcept;
 
     /*****************************************************************************
      * @brief 删除对象
      * @param[in] path 对象路径
      * @return 是否成功
      * ***************************************************************************/
-    bool unexportObject(const Glib::ustring& path) noexcept;
+    bool unexportObject(const Glib::ustring &path) noexcept;
 
     /*****************************************************************************
      * @brief 刷新服务
@@ -52,15 +49,14 @@ public:
      * @param[in] service 服务
      * @return id
      * ***************************************************************************/
-    static guint registerService(const Glib::RefPtr<Service>& service);
+    static guint registerService(const Glib::RefPtr<Service> &service);
 
     /*****************************************************************************
      * @brief 删除服务
      * @param[in] name 名字
-     * @return 是否成功 
+     * @return 是否成功
      * ***************************************************************************/
-    static bool unregisterService(const Glib::ustring& name);
-
+    static bool unregisterService(const Glib::ustring &name);
 
 private:
     Glib::ustring m_name;
@@ -71,7 +67,7 @@ private:
     bool m_registered;
 
     std::map<Glib::ustring, Glib::RefPtr<DBus::Object>> m_objects;
-    std::map<Glib::ustring, std::vector<guint>>  m_objIds;
+    std::map<Glib::ustring, std::vector<guint>> m_objIds;
 
     /*****************************************************************************
      * @brief 回调函数，DBus 方法调用
@@ -81,15 +77,15 @@ private:
      * @param[in] interfaceName 接口名
      * @param[in] methodName 方法名
      * @param[in] args 参数
-     * @param[in] invocation 
+     * @param[in] invocation
      * ***************************************************************************/
-    void onMethodCall(const Glib::RefPtr<Gio::DBus::Connection>& connection,
-                                const Glib::ustring& sender,
-                                const Glib::ustring& objectPath,
-                                const Glib::ustring& interfaceName,
-                                const Glib::ustring& methodName,
-                                const Glib::VariantContainerBase& args,
-                                const Glib::RefPtr<Gio::DBus::MethodInvocation>& invocation);
+    void onMethodCall(const Glib::RefPtr<Gio::DBus::Connection> &connection,
+                      const Glib::ustring &sender,
+                      const Glib::ustring &objectPath,
+                      const Glib::ustring &interfaceName,
+                      const Glib::ustring &methodName,
+                      const Glib::VariantContainerBase &args,
+                      const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation);
 
     /*****************************************************************************
      * @brief 回调函数，DBus 属性读取
@@ -100,12 +96,12 @@ private:
      * @param[in] interfaceName 接口名
      * @param[in] propertyName 属性名
      * ***************************************************************************/
-    void onGetProperty(Glib::VariantBase& property,
-                        const Glib::RefPtr<Gio::DBus::Connection>& connection,
-                        const Glib::ustring& sender,
-                        const Glib::ustring& objectPath,
-                        const Glib::ustring& interfaceName,
-                        const Glib::ustring& propertyName) const noexcept;
+    void onGetProperty(Glib::VariantBase &property,
+                       const Glib::RefPtr<Gio::DBus::Connection> &connection,
+                       const Glib::ustring &sender,
+                       const Glib::ustring &objectPath,
+                       const Glib::ustring &interfaceName,
+                       const Glib::ustring &propertyName) const noexcept;
 
     /*****************************************************************************
      * @brief 回调函数，DBus 属性读取
@@ -116,12 +112,12 @@ private:
      * @param[in] propertyName 属性名
      * @param[in] value 属性值
      * ***************************************************************************/
-    bool onSetProperty(const Glib::RefPtr<Gio::DBus::Connection>& connection,
-                        const Glib::ustring& sender,
-                        const Glib::ustring& objectPath,
-                        const Glib::ustring& interfaceName,
-                        const Glib::ustring& propertyName,
-                        const Glib::VariantBase& value) noexcept;
+    bool onSetProperty(const Glib::RefPtr<Gio::DBus::Connection> &connection,
+                       const Glib::ustring &sender,
+                       const Glib::ustring &objectPath,
+                       const Glib::ustring &interfaceName,
+                       const Glib::ustring &propertyName,
+                       const Glib::VariantBase &value) noexcept;
 
     /* 服务名 => 服务 */
     static std::map<Glib::ustring, Glib::RefPtr<Service>> services;
@@ -134,27 +130,26 @@ private:
      * @param[in] connection DBus连接
      * @param[in] name 名字
      * ***************************************************************************/
-    static void onBusAcquired(const Glib::RefPtr<Gio::DBus::Connection>& connection,
-                                const Glib::ustring& name);
+    static void onBusAcquired(const Glib::RefPtr<Gio::DBus::Connection> &connection,
+                              const Glib::ustring &name);
 
     /*****************************************************************************
      * @brief 回调函数，DBus 获得连接名
      * @param[in] connection DBus连接
      * @param[in] name 名字
      * ***************************************************************************/
-    static void onNameAcquired(const Glib::RefPtr<Gio::DBus::Connection>& connection, 
-                                const Glib::ustring& name);
+    static void onNameAcquired(const Glib::RefPtr<Gio::DBus::Connection> &connection,
+                               const Glib::ustring &name);
 
     /*****************************************************************************
      * @brief 回调函数，DBus 失去连接名
      * @param[in] connection DBus连接
      * @param[in] name 名字
      * ***************************************************************************/
-    static void onNameLost(const Glib::RefPtr<Gio::DBus::Connection>& connection, 
-                                const Glib::ustring& name);
+    static void onNameLost(const Glib::RefPtr<Gio::DBus::Connection> &connection,
+                           const Glib::ustring &name);
 };
 
 }; // namespace DBus
 
-
-#endif // DBUS_SERVICE_H
+#endif // !DBUS_SERVICE_H

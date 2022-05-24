@@ -1,22 +1,22 @@
-#include <FileReceiver.h>
-#include <sha256.h>
+#include "FileReceiver.h"
+
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
-TransferResponse FileReceiver::parseRequest(TransferRequest request) noexcept
-{
-    auto sock = Gio::Socket::create(Gio::SocketFamily::SOCKET_FAMILY_IPV4, 
-                                Gio::SocketType::SOCKET_TYPE_STREAM, 
-                                Gio::SocketProtocol::SOCKET_PROTOCOL_TCP);
+#include "utils/sha256.h"
+
+TransferResponse FileReceiver::parseRequest(TransferRequest request) noexcept {
+    auto sock = Gio::Socket::create(Gio::SocketFamily::SOCKET_FAMILY_IPV4,
+                                    Gio::SocketType::SOCKET_TYPE_STREAM,
+                                    Gio::SocketProtocol::SOCKET_PROTOCOL_TCP);
     auto addr = Net::makeSocketAddress("0.0.0.0", 0);
     sock->bind(addr, true);
     sock->listen();
 
-    auto local = Glib::RefPtr<Gio::InetSocketAddress>::cast_dynamic<Gio::SocketAddress>(sock->get_local_address());
-    Glib::Thread::create([this, sock](){
-        m_recv(sock);
-    }, false);
+    auto local = Glib::RefPtr<Gio::InetSocketAddress>::cast_dynamic<Gio::SocketAddress>(
+        sock->get_local_address());
+    Glib::Thread::create([this, sock]() { m_recv(sock); }, false);
 
     TransferResponse response;
     response.set_key(START_TRANSFER_KEY);
@@ -24,8 +24,7 @@ TransferResponse FileReceiver::parseRequest(TransferRequest request) noexcept
     return response;
 }
 
-int32_t FileReceiver::m_allocId(const Glib::ustring& filename, int32_t parent) noexcept
-{
+int32_t FileReceiver::m_allocId(const Glib::ustring &filename, int32_t parent) noexcept {
     int32_t id = static_cast<int32_t>(m_id.size() + 1);
     FileNode node;
     node.id = id;
@@ -38,8 +37,7 @@ int32_t FileReceiver::m_allocId(const Glib::ustring& filename, int32_t parent) n
     return id;
 }
 
-void FileReceiver::m_releseId() noexcept
-{
+void FileReceiver::m_releseId() noexcept {
     int32_t id = m_id.top();
     m_id.pop();
     m_idMap.erase(id);
@@ -47,12 +45,10 @@ void FileReceiver::m_releseId() noexcept
     INFO("release ID %d\n", id);
 }
 
-Glib::ustring FileReceiver::m_getFilePath(int32_t id) const noexcept
-{
+Glib::ustring FileReceiver::m_getFilePath(int32_t id) const noexcept {
     FileNode node = m_idMap.at(id);
     Glib::ustring path = node.name;
-    while(node.parent > 0)
-    {
+    while (node.parent > 0) {
         node = m_idMap.at(node.parent);
         path = Glib::ustring::compose("%1/%2", node.name, path);
     }
@@ -60,18 +56,16 @@ Glib::ustring FileReceiver::m_getFilePath(int32_t id) const noexcept
     return path;
 }
 
-void FileReceiver::m_recv(const Glib::RefPtr<Gio::Socket>& server) noexcept
-{
+void FileReceiver::m_recv(const Glib::RefPtr<Gio::Socket> &server) noexcept {
     auto sock = server->accept();
     sock->set_blocking(true);
-    auto remote = Glib::RefPtr<Gio::InetSocketAddress>::cast_dynamic<Gio::SocketAddress>(sock->get_remote_address());
+    auto remote = Glib::RefPtr<Gio::InetSocketAddress>::cast_dynamic<Gio::SocketAddress>(
+        sock->get_remote_address());
     INFO("connected by %s:%d\n", remote->get_address()->to_string().c_str(), remote->get_port());
 
-    while(true)
-    {
+    while (true) {
         auto base = Message::recv_message_header(sock);
-        switch (base.type())
-        {
+        switch (base.type()) {
         case SendFileRequestType:
             m_recvFile(sock, base);
             break;
@@ -92,8 +86,8 @@ END_RECV:
     return;
 }
 
-void FileReceiver::m_recvFile(const Glib::RefPtr<Gio::Socket>& sock, const BaseMessage &base) noexcept
-{
+void FileReceiver::m_recvFile(const Glib::RefPtr<Gio::Socket> &sock,
+                              const BaseMessage &base) noexcept {
     int32_t id;
     Glib::ustring fileBaseName;
     {
@@ -112,13 +106,11 @@ void FileReceiver::m_recvFile(const Glib::RefPtr<Gio::Socket>& sock, const BaseM
     Glib::ustring fileSubPath = m_getFilePath(id);
     Glib::ustring path = Glib::ustring::compose("%1/%2", m_saveDir, fileSubPath);
     INFO("save %s\n", path.c_str());
-    FILE* fp = fopen(path.c_str(), "wb");
+    FILE *fp = fopen(path.c_str(), "wb");
 
-    while (true)
-    {
+    while (true) {
         auto base = Message::recv_message_header(sock);
-        if (base.type() == MessageType::SendFileBlockRequestType)
-        {
+        if (base.type() == MessageType::SendFileBlockRequestType) {
             INFO("recv SendFileBlockRequest\n");
             auto request = Message::recv_message_body<SendFileBlockRequest>(sock, base);
             size_t len = fwrite(request.block_data().data(), 1, request.block_size(), fp);
@@ -131,13 +123,11 @@ void FileReceiver::m_recvFile(const Glib::RefPtr<Gio::Socket>& sock, const BaseM
             continue;
         }
 
-        if (base.type() == MessageType::StopSendFileRequestType)
-        {
+        if (base.type() == MessageType::StopSendFileRequestType) {
             INFO("recv StopSendFileRequest\n");
             auto request = Message::recv_message_body<StopSendFileRequest>(sock, base);
             Glib::ustring hex = Hash::sha256Hex(&sha256);
-            if (hex != request.file_sha256())
-            {
+            if (hex != request.file_sha256()) {
                 ERROR("SHA256 mismatch %s != %s\n", request.file_sha256().c_str(), hex.c_str());
             }
             StopSendFileResponse response;
@@ -148,12 +138,12 @@ void FileReceiver::m_recvFile(const Glib::RefPtr<Gio::Socket>& sock, const BaseM
             break;
         }
     }
-    
+
     fclose(fp);
 }
 
-void FileReceiver::m_recvDir(const Glib::RefPtr<Gio::Socket>& sock, const BaseMessage &base) noexcept
-{
+void FileReceiver::m_recvDir(const Glib::RefPtr<Gio::Socket> &sock,
+                             const BaseMessage &base) noexcept {
     auto request = Message::recv_message_body<SendDirRequest>(sock, base);
     uint32_t id = m_allocId(request.dir_name(), request.parent_id());
     SendDirResponse response;

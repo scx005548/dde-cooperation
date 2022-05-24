@@ -1,9 +1,9 @@
 #include <glibmm.h>
 #include <giomm.h>
-#include <Cooperation.h>
 
-int main(void)
-{
+#include "modules/Cooperation.h"
+
+int main() {
     Glib::init();
     Gio::init();
 

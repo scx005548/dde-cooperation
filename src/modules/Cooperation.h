@@ -5,46 +5,43 @@
 #include <giomm.h>
 #include <arpa/inet.h>
 
-#include <dbus.h>
+#include "FileSender.h"
+#include "FileReceiver.h"
 
-#include <pair.pb.h>
+#include "dbus/dbus.h"
+#include "utils/log.h"
+#include "utils/net.h"
+#include "utils/message.h"
 
-#include <log.hpp>
-#include <net.hpp>
-#include <message.hpp>
-
-#include <FileSender.h>
-#include <FileReceiver.h>
+#include "protocol/pair.pb.h"
 
 #define SCAN_KEY "UOS-COOPERATION"
 
-class Cooperation
-{
+class Cooperation {
 public:
     Cooperation() noexcept;
 
 protected:
     // DBus method handlers
-    void scan(const Glib::VariantContainerBase& args,
-              const Glib::RefPtr<Gio::DBus::MethodInvocation>& invocation) noexcept;
+    void scan(const Glib::VariantContainerBase &args,
+              const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
 
-    void pair(const Glib::VariantContainerBase& args,
-              const Glib::RefPtr<Gio::DBus::MethodInvocation>& invocation) noexcept;
+    void pair(const Glib::VariantContainerBase &args,
+              const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
 
-    void sendFile(const Glib::VariantContainerBase& args,
-                  const Glib::RefPtr<Gio::DBus::MethodInvocation>& invocation) noexcept;
+    void sendFile(const Glib::VariantContainerBase &args,
+                  const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
 
     // DBus property handlers
-    void getDevices(Glib::VariantBase& property,
-                    const Glib::ustring& propertyName) const noexcept;
+    void getDevices(Glib::VariantBase &property, const Glib::ustring &propertyName) const noexcept;
 
-    void getPairedDevice(Glib::VariantBase& property,
-                         const Glib::ustring& propertyName) const noexcept;
+    void getPairedDevice(Glib::VariantBase &property,
+                         const Glib::ustring &propertyName) const noexcept;
 
 private:
-    Glib::RefPtr<DBus::Service>     m_service;
-    Glib::RefPtr<DBus::Object>      m_object;
-    Glib::RefPtr<DBus::Interface>   m_interface;
+    Glib::RefPtr<DBus::Service> m_service;
+    Glib::RefPtr<DBus::Object> m_object;
+    Glib::RefPtr<DBus::Interface> m_interface;
 
     // DBus methods
     Glib::RefPtr<DBus::Method> m_methodScan;
@@ -64,8 +61,8 @@ private:
 
     // 不能自己连接自己，实际上只需要一个socket
     // 为了方便测试，允许自己连接自己，因此创建了两个socket
-    Glib::RefPtr<Gio::Socket> m_socketConnect;      // 主动连接
-    Glib::RefPtr<Gio::Socket> m_socketConnected;    // 被动连接
+    Glib::RefPtr<Gio::Socket> m_socketConnect;   // 主动连接
+    Glib::RefPtr<Gio::Socket> m_socketConnected; // 被动连接
 
     const uint16_t m_scanPort = 51595;
     Glib::RefPtr<Gio::SocketAddress> m_scanAddr;
@@ -80,7 +77,7 @@ private:
 
     bool m_pairRequestHandler(Glib::IOCondition cond) noexcept;
 
-    bool m_mainHandler(Glib::IOCondition cond, const Glib::RefPtr<Gio::Socket>& sock) noexcept;
+    bool m_mainHandler(Glib::IOCondition cond, const Glib::RefPtr<Gio::Socket> &sock) noexcept;
 };
 
-#endif // COOPERATION_H
+#endif // !COOPERATION_H

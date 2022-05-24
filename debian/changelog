@@ -1,4 +1,4 @@
-dde-cooperation (0.0.1) UNRELEASED; urgency=low
+dde-cooperation (0.0.1) UNRELEASED; urgency=medium
 
   * 实现了简单的日志功能
   * 对 gdbus 进行了简单的封装

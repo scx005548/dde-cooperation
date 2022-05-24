@@ -1,57 +1,47 @@
-#ifndef MESSAGE_HPP
-#define MESSAGE_HPP
+#ifndef MESSAGE_H
+#define MESSAGE_H
 
-#include <log.hpp>
 #include <giomm.h>
+
+#include "utils/log.h"
 #include "protocol/base_message.pb.h"
 
-namespace Message
-{
-    
+namespace Message {
 
-template<typename T>
-inline void send_message(const Glib::RefPtr<Gio::Socket>& sock, uint32_t type, const T& response) noexcept
-{
+template <typename T>
+inline void send_message(const Glib::RefPtr<Gio::Socket> &sock,
+                         uint32_t type,
+                         const T &response) noexcept {
     BaseMessage base;
     base.set_type(type);
     base.set_size(response.ByteSizeLong());
 
-    char* buffer = new char[base.ByteSizeLong()];
+    char *buffer = new char[base.ByteSizeLong()];
     base.SerializeToArray(buffer, base.ByteSizeLong());
-    try
-    {
+    try {
         sock->send(buffer, base.ByteSizeLong());
-    }
-    catch(Gio::Error& e)
-    {
+    } catch (Gio::Error &e) {
         ERROR("%s\n", e.what().c_str());
     }
     delete[] buffer;
 
     buffer = new char[response.ByteSizeLong()];
     response.SerializeToArray(buffer, response.ByteSizeLong());
-    try
-    {
+    try {
         sock->send(buffer, response.ByteSizeLong());
-    }
-    catch(Gio::Error& e)
-    {
+    } catch (Gio::Error &e) {
         ERROR("%s\n", e.what().c_str());
     }
     delete[] buffer;
 }
 
-inline BaseMessage recv_message_header(const Glib::RefPtr<Gio::Socket>& sock) noexcept
-{
+inline BaseMessage recv_message_header(const Glib::RefPtr<Gio::Socket> &sock) noexcept {
     static const size_t base_msg_size = 14;
     BaseMessage base;
-    char* buffer = new char[base_msg_size];
-    try
-    {
+    char *buffer = new char[base_msg_size];
+    try {
         sock->receive(buffer, base_msg_size);
-    }
-    catch(Gio::Error& e)
-    {
+    } catch (Gio::Error &e) {
         ERROR("%s\n", e.what().c_str());
     }
     base.ParseFromArray(buffer, base_msg_size);
@@ -60,16 +50,13 @@ inline BaseMessage recv_message_header(const Glib::RefPtr<Gio::Socket>& sock) no
     return base;
 }
 
-template<typename T>
-inline T recv_message_body(const Glib::RefPtr<Gio::Socket>& sock, const BaseMessage& base) noexcept
-{
-    char* buffer = new char[base.size()];
-    try
-    {
+template <typename T>
+inline T recv_message_body(const Glib::RefPtr<Gio::Socket> &sock,
+                           const BaseMessage &base) noexcept {
+    char *buffer = new char[base.size()];
+    try {
         sock->receive(buffer, base.size());
-    }
-    catch(Gio::Error& e)
-    {
+    } catch (Gio::Error &e) {
         ERROR("%s\n", e.what().c_str());
     }
     T response;
@@ -79,30 +66,23 @@ inline T recv_message_body(const Glib::RefPtr<Gio::Socket>& sock, const BaseMess
     return response;
 }
 
-template<typename T>
-inline T recv_message(const Glib::RefPtr<Gio::Socket>& sock) noexcept
-{
+template <typename T>
+inline T recv_message(const Glib::RefPtr<Gio::Socket> &sock) noexcept {
     static const size_t base_msg_size = 14;
     BaseMessage base;
-    char* buffer = new char[base_msg_size];
-    try
-    {
+    char *buffer = new char[base_msg_size];
+    try {
         sock->receive(buffer, base_msg_size);
-    }
-    catch(Gio::Error& e)
-    {
+    } catch (Gio::Error &e) {
         ERROR("%s\n", e.what().c_str());
     }
     base.ParseFromArray(buffer, base_msg_size);
     delete[] buffer;
 
     buffer = new char[base.size()];
-    try
-    {
+    try {
         sock->receive(buffer, base.size());
-    }
-    catch(Gio::Error& e)
-    {
+    } catch (Gio::Error &e) {
         ERROR("%s\n", e.what().c_str());
     }
     T response;
@@ -112,33 +92,32 @@ inline T recv_message(const Glib::RefPtr<Gio::Socket>& sock) noexcept
     return response;
 }
 
-
-
-template<typename T>
-inline void send_message_to(const Glib::RefPtr<Gio::Socket>& sock, uint32_t type, const T& message, 
-                            const Glib::RefPtr<Gio::SocketAddress>& addr) noexcept
-{
+template <typename T>
+inline void send_message_to(const Glib::RefPtr<Gio::Socket> &sock,
+                            uint32_t type,
+                            const T &message,
+                            const Glib::RefPtr<Gio::SocketAddress> &addr) noexcept {
     BaseMessage base;
     base.set_type(type);
     base.set_size(message.ByteSizeLong());
 
-    char* buffer = new char[base.ByteSizeLong() + message.ByteSizeLong()];
+    char *buffer = new char[base.ByteSizeLong() + message.ByteSizeLong()];
     base.SerializeToArray(buffer, base.ByteSizeLong());
-    message.SerializeToArray(buffer+base.ByteSizeLong(), message.ByteSizeLong());
+    message.SerializeToArray(buffer + base.ByteSizeLong(), message.ByteSizeLong());
     sock->send_to(addr, buffer, base.ByteSizeLong() + message.ByteSizeLong());
     delete[] buffer;
 }
 
-template<typename T>
-inline T recv_message_from(const Glib::RefPtr<Gio::Socket>& sock, Glib::RefPtr<Gio::SocketAddress>& addr) noexcept
-{
+template <typename T>
+inline T recv_message_from(const Glib::RefPtr<Gio::Socket> &sock,
+                           Glib::RefPtr<Gio::SocketAddress> &addr) noexcept {
     static const size_t base_msg_size = 14;
     BaseMessage base;
-    char* buffer = new char[65535];
+    char *buffer = new char[65535];
     sock->receive_from(addr, buffer, 65535);
     base.ParseFromArray(buffer, base_msg_size);
     T message;
-    message.ParseFromArray(buffer+base_msg_size, base.size());
+    message.ParseFromArray(buffer + base_msg_size, base.size());
     delete[] buffer;
 
     return message;
@@ -146,4 +125,4 @@ inline T recv_message_from(const Glib::RefPtr<Gio::Socket>& sock, Glib::RefPtr<G
 
 } // namespace Message
 
-#endif // MESSAGE_HPP
+#endif // !MESSAGE_H

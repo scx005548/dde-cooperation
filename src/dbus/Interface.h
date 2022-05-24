@@ -9,18 +9,15 @@
 #include "Method.h"
 #include "Property.h"
 
-
-
-namespace DBus
-{
+namespace DBus {
 
 class Object;
 
-class Interface : public Glib::Object
-{
+class Interface : public Glib::Object {
     friend DBus::Object;
+
 public:
-    explicit Interface(const Glib::ustring& name) noexcept;
+    explicit Interface(const Glib::ustring &name) noexcept;
 
     /*****************************************************************************
      * @brief 返回接口名
@@ -43,30 +40,30 @@ public:
     /*****************************************************************************
      * @brief 导出方法
      * @param[in] method 方法
-     * @return 是否成功 
+     * @return 是否成功
      * ***************************************************************************/
-    bool exportMethod(const Glib::RefPtr<Method>& method) noexcept;
+    bool exportMethod(const Glib::RefPtr<Method> &method) noexcept;
 
     /*****************************************************************************
      * @brief 删除方法
      * @param[in] name 方法名
-     * @return 是否成功 
+     * @return 是否成功
      * ***************************************************************************/
-    bool unexportMethod(const Glib::ustring& name) noexcept;
+    bool unexportMethod(const Glib::ustring &name) noexcept;
 
     /*****************************************************************************
      * @brief 导出属性
      * @param[in] property 属性
-     * @return 是否成功 
+     * @return 是否成功
      * ***************************************************************************/
-    bool exportProperty(const Glib::RefPtr<Property>& property) noexcept;
+    bool exportProperty(const Glib::RefPtr<Property> &property) noexcept;
 
     /*****************************************************************************
      * @brief 删除属性
      * @param[in] name 属性名
-     * @return 是否成功 
+     * @return 是否成功
      * ***************************************************************************/
-    bool unexportProperty(const Glib::ustring& name) noexcept;
+    bool unexportProperty(const Glib::ustring &name) noexcept;
 
 protected:
     /*****************************************************************************
@@ -77,15 +74,15 @@ protected:
      * @param[in] interfaceName 接口名
      * @param[in] methodName 方法名
      * @param[in] args 参数
-     * @param[in] invocation 
+     * @param[in] invocation
      * ***************************************************************************/
-    void onMethodCall(const Glib::RefPtr<Gio::DBus::Connection>& connection,
-                        const Glib::ustring& sender,
-                        const Glib::ustring& objectPath,
-                        const Glib::ustring& interfaceName,
-                        const Glib::ustring& methodName,
-                        const Glib::VariantContainerBase& args,
-                        const Glib::RefPtr<Gio::DBus::MethodInvocation>& invocation) const noexcept;
+    void onMethodCall(const Glib::RefPtr<Gio::DBus::Connection> &connection,
+                      const Glib::ustring &sender,
+                      const Glib::ustring &objectPath,
+                      const Glib::ustring &interfaceName,
+                      const Glib::ustring &methodName,
+                      const Glib::VariantContainerBase &args,
+                      const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) const noexcept;
 
     /*****************************************************************************
      * @brief 回调函数，DBus 属性读取
@@ -96,12 +93,12 @@ protected:
      * @param[in] interfaceName 接口名
      * @param[in] propertyName 属性名
      * ***************************************************************************/
-    void onGetProperty(Glib::VariantBase& property,
-                        const Glib::RefPtr<Gio::DBus::Connection>& connection,
-                        const Glib::ustring& sender,
-                        const Glib::ustring& objectPath,
-                        const Glib::ustring& interfaceName,
-                        const Glib::ustring& propertyName) const noexcept;
+    void onGetProperty(Glib::VariantBase &property,
+                       const Glib::RefPtr<Gio::DBus::Connection> &connection,
+                       const Glib::ustring &sender,
+                       const Glib::ustring &objectPath,
+                       const Glib::ustring &interfaceName,
+                       const Glib::ustring &propertyName) const noexcept;
 
     /*****************************************************************************
      * @brief 回调函数，DBus 属性读取
@@ -112,23 +109,23 @@ protected:
      * @param[in] propertyName 属性名
      * @param[in] value 属性值
      * ***************************************************************************/
-    bool onSetProperty(const Glib::RefPtr<Gio::DBus::Connection>& connection,
-                        const Glib::ustring& sender,
-                        const Glib::ustring& objectPath,
-                        const Glib::ustring& interfaceName,
-                        const Glib::ustring& propertyName,
-                        const Glib::VariantBase& value) noexcept;
-    
+    bool onSetProperty(const Glib::RefPtr<Gio::DBus::Connection> &connection,
+                       const Glib::ustring &sender,
+                       const Glib::ustring &objectPath,
+                       const Glib::ustring &interfaceName,
+                       const Glib::ustring &propertyName,
+                       const Glib::VariantBase &value) noexcept;
+
 private:
     Glib::ustring m_name;
-    std::map<Glib::ustring, Glib::RefPtr<Method>> m_methods;        // 方法函数表
-    std::map<Glib::ustring, Glib::RefPtr<Property>> m_properties;    // 属性表
+    std::map<Glib::ustring, Glib::RefPtr<Method>> m_methods;      // 方法函数表
+    std::map<Glib::ustring, Glib::RefPtr<Property>> m_properties; // 属性表
 
 protected:
-    DBus::Object* m_parent;
+    DBus::Object *m_parent;
 
 }; // class Interface
 
 }; // namespace DBus
 
-#endif // DBUS_Interface_H
+#endif // !DBUS_INTERFACE_H
