@@ -8,6 +8,8 @@ project(
     ]
 )
 
+fmt = dependency('fmt', required: true)
+spdlog = dependency('spdlog', required: true)
 libnm = dependency('libnm', required: true)
 glibmm = dependency('glibmm-2.4', required: true)
 giomm = dependency('giomm-2.4', required: true)

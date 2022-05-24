@@ -4,10 +4,14 @@ Priority: optional
 Maintainer: planc <hubenchang0515@outlook.com>
 Rules-Requires-Root: no
 Build-Depends:
+ cmake,
+# libfmt 5.3.0+ 后可删除 cmake 依赖
  debhelper-compat (= 11),
+ libfmt-dev,
  libglibmm-2.4-dev,
  libnm-dev,
  libprotobuf-dev,
+ libspdlog-dev,
  meson,
  protobuf-compiler,
 Standards-Version: 4.5.1

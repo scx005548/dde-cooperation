@@ -1,5 +1,7 @@
 #include "Cooperation.h"
 
+#include <spdlog/spdlog.h>
+
 Cooperation::Cooperation() noexcept
     : m_service(
           new DBus::Service{"com.deepin.system.Cooperation", Gio::DBus::BusType::BUS_TYPE_SYSTEM})
@@ -69,7 +71,7 @@ Cooperation::Cooperation() noexcept
             m_socketListenPair,
             Glib::IO_IN);
     } catch (Gio::Error &e) {
-        ERROR("%d %s\n", e.code(), e.what().c_str());
+        SPDLOG_ERROR("{} {}", e.code(), e.what().c_str());
     }
 }
 
@@ -84,7 +86,7 @@ void Cooperation::scan(const Glib::VariantContainerBase &args,
         Message::send_message_to(m_socketScan, MessageType::ScanRequestType, request, m_scanAddr);
         m_devices.clear();
     } catch (Gio::Error &e) {
-        ERROR("%d %s\n", e.code(), e.what().c_str());
+        SPDLOG_ERROR("{} {}", e.code(), e.what().c_str());
     }
     invocation->return_value(Glib::VariantContainerBase{});
 }
@@ -140,7 +142,7 @@ bool Cooperation::m_scanRequestHandler(Glib::IOCondition cond) const noexcept {
     auto request = Message::recv_message_from<ScanRequest>(m_socketListenScan, addr);
 
     if (request.key() != SCAN_KEY) {
-        ERROR("key mismatch %s\n", SCAN_KEY);
+        SPDLOG_ERROR("key mismatch {}", SCAN_KEY);
         return true;
     }
 
@@ -171,7 +173,7 @@ bool Cooperation::m_scanResponseHandler(Glib::IOCondition cond) noexcept {
     auto remote = Glib::RefPtr<Gio::InetSocketAddress>::cast_dynamic<Gio::SocketAddress>(addr);
 
     if (response.key() != SCAN_KEY) {
-        ERROR("key mismatch %s\n", SCAN_KEY);
+        SPDLOG_ERROR("key mismatch {}", SCAN_KEY);
         return true;
     }
 
@@ -180,7 +182,7 @@ bool Cooperation::m_scanResponseHandler(Glib::IOCondition cond) noexcept {
                                          remote->get_address()->to_string(),
                                          response.port());
     m_devices.push_back(device);
-    INFO("%s responsed\n", device.c_str());
+    SPDLOG_INFO("{} responsed", device.c_str());
     return true;
 }
 
@@ -191,15 +193,15 @@ bool Cooperation::m_pairRequestHandler(Glib::IOCondition cond) noexcept {
         m_socketConnected->get_remote_address());
     auto request = Message::recv_message<PairRequest>(m_socketConnected);
     if (request.key() != SCAN_KEY) {
-        ERROR("key mismatch %s\n", SCAN_KEY);
+        SPDLOG_ERROR("key mismatch {}", SCAN_KEY);
         m_socketConnected->close();
         return true;
     }
 
-    INFO("connected by %s@%s:%d\n",
-         request.master_name().c_str(),
-         remote->get_address()->to_string().c_str(),
-         remote->get_port());
+    SPDLOG_INFO("connected by {}@{}:{}\n",
+                request.master_name().c_str(),
+                remote->get_address()->to_string().c_str(),
+                remote->get_port());
     Gio::signal_socket().connect(
         [this](Glib::IOCondition cond) { return m_mainHandler(cond, m_socketConnected); },
         m_socketConnected,

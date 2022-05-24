@@ -9,7 +9,6 @@
 #include "FileReceiver.h"
 
 #include "dbus/dbus.h"
-#include "utils/log.h"
 #include "utils/net.h"
 #include "utils/message.h"
 

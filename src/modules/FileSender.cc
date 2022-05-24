@@ -4,6 +4,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include <spdlog/spdlog.h>
+
 #include "utils/sha256.h"
 
 void FileSender::setPilot(Glib::RefPtr<Gio::Socket> &sock) noexcept {
@@ -59,7 +61,7 @@ void FileSender::parseResponse(TransferResponse response) noexcept {
     try {
         sock->connect(addr);
     } catch (Gio::Error &e) {
-        ERROR("%s\n", e.what().c_str());
+        SPDLOG_ERROR("{}", e.what().c_str());
     }
 
     Glib::Thread::create([this, sock]() { m_send(sock); }, false);
@@ -121,7 +123,7 @@ void FileSender::m_sendFile(const Glib::RefPtr<Gio::Socket> &sock,
     }
 
     Glib::ustring hex = Hash::sha256Hex(&sha256);
-    INFO("SHA256: %s\n", Hash::sha256Hex(&sha256));
+    SPDLOG_INFO("SHA256: {}", Hash::sha256Hex(&sha256));
 
     StopSendFileRequest request;
     request.set_file_id(id);
@@ -130,7 +132,7 @@ void FileSender::m_sendFile(const Glib::RefPtr<Gio::Socket> &sock,
 
     auto response = Message::recv_message<StopSendFileResponse>(sock);
     if (!response.correct()) {
-        ERROR("SHA256 mismatch %s != %s\n", response.file_sha256().c_str(), hex.c_str());
+        SPDLOG_ERROR("SHA256 mismatch {} != {}", response.file_sha256().c_str(), hex.c_str());
     }
 
     fclose(fp);

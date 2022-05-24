@@ -4,6 +4,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include <spdlog/spdlog.h>
+
 #include "utils/sha256.h"
 
 TransferResponse FileReceiver::parseRequest(TransferRequest request) noexcept {
@@ -32,7 +34,7 @@ int32_t FileReceiver::m_allocId(const Glib::ustring &filename, int32_t parent) n
     node.name = filename;
     m_id.push(id);
     m_idMap[id] = node;
-    INFO("alloc ID %d:%s\n", id, filename.c_str());
+    SPDLOG_INFO("alloc ID {}:{}", id, filename.c_str());
 
     return id;
 }
@@ -42,7 +44,7 @@ void FileReceiver::m_releseId() noexcept {
     m_id.pop();
     m_idMap.erase(id);
 
-    INFO("release ID %d\n", id);
+    SPDLOG_INFO("release ID {}", id);
 }
 
 Glib::ustring FileReceiver::m_getFilePath(int32_t id) const noexcept {
@@ -61,7 +63,9 @@ void FileReceiver::m_recv(const Glib::RefPtr<Gio::Socket> &server) noexcept {
     sock->set_blocking(true);
     auto remote = Glib::RefPtr<Gio::InetSocketAddress>::cast_dynamic<Gio::SocketAddress>(
         sock->get_remote_address());
-    INFO("connected by %s:%d\n", remote->get_address()->to_string().c_str(), remote->get_port());
+    SPDLOG_INFO("connected by {}:{}",
+                remote->get_address()->to_string().c_str(),
+                remote->get_port());
 
     while (true) {
         auto base = Message::recv_message_header(sock);
@@ -78,7 +82,7 @@ void FileReceiver::m_recv(const Glib::RefPtr<Gio::Socket> &server) noexcept {
             goto END_RECV;
 
         default:
-            ERROR("unknow message type\n");
+            SPDLOG_ERROR("unknow message type");
         }
     }
 
@@ -105,13 +109,13 @@ void FileReceiver::m_recvFile(const Glib::RefPtr<Gio::Socket> &sock,
 
     Glib::ustring fileSubPath = m_getFilePath(id);
     Glib::ustring path = Glib::ustring::compose("%1/%2", m_saveDir, fileSubPath);
-    INFO("save %s\n", path.c_str());
+    SPDLOG_INFO("save {}", path.c_str());
     FILE *fp = fopen(path.c_str(), "wb");
 
     while (true) {
         auto base = Message::recv_message_header(sock);
         if (base.type() == MessageType::SendFileBlockRequestType) {
-            INFO("recv SendFileBlockRequest\n");
+            SPDLOG_INFO("recv SendFileBlockRequest");
             auto request = Message::recv_message_body<SendFileBlockRequest>(sock, base);
             size_t len = fwrite(request.block_data().data(), 1, request.block_size(), fp);
             Hash::sha256Update(&sha256, request.block_data().data(), request.block_size());
@@ -124,11 +128,13 @@ void FileReceiver::m_recvFile(const Glib::RefPtr<Gio::Socket> &sock,
         }
 
         if (base.type() == MessageType::StopSendFileRequestType) {
-            INFO("recv StopSendFileRequest\n");
+            SPDLOG_INFO("recv StopSendFileRequest");
             auto request = Message::recv_message_body<StopSendFileRequest>(sock, base);
             Glib::ustring hex = Hash::sha256Hex(&sha256);
             if (hex != request.file_sha256()) {
-                ERROR("SHA256 mismatch %s != %s\n", request.file_sha256().c_str(), hex.c_str());
+                SPDLOG_ERROR("SHA256 mismatch {} != {}",
+                             request.file_sha256().c_str(),
+                             hex.c_str());
             }
             StopSendFileResponse response;
             response.set_file_name(fileBaseName);
@@ -154,5 +160,5 @@ void FileReceiver::m_recvDir(const Glib::RefPtr<Gio::Socket> &sock,
     Glib::ustring fileSubPath = m_getFilePath(id);
     Glib::ustring path = Glib::ustring::compose("%1/%2", m_saveDir, fileSubPath);
     mkdir(path.c_str(), 0777);
-    INFO("mkdir %s\n", path.c_str());
+    SPDLOG_INFO("mkdir {}", path.c_str());
 }
