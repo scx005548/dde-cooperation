@@ -150,6 +150,6 @@ private:
                            const Glib::ustring &name);
 };
 
-}; // namespace DBus
+} // namespace DBus
 
 #endif // !DBUS_SERVICE_H

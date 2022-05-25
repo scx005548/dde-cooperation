@@ -75,7 +75,7 @@ Cooperation::Cooperation() noexcept
     }
 }
 
-void Cooperation::scan(const Glib::VariantContainerBase &args,
+void Cooperation::scan([[maybe_unused]] const Glib::VariantContainerBase &args,
                        const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
     try {
         m_socketScan->set_broadcast(true);
@@ -126,18 +126,18 @@ void Cooperation::sendFile(const Glib::VariantContainerBase &args,
 }
 
 void Cooperation::getDevices(Glib::VariantBase &property,
-                             const Glib::ustring &propertyName) const noexcept {
+                             [[maybe_unused]] const Glib::ustring &propertyName) const noexcept {
     auto devices = Glib::Variant<std::vector<Glib::ustring>>::create(m_devices);
     property = devices;
 }
 
 void Cooperation::getPairedDevice(Glib::VariantBase &property,
-                                  const Glib::ustring &propertyName) const noexcept {
+                                  [[maybe_unused]] const Glib::ustring &propertyName) const noexcept {
     auto device = Glib::Variant<Glib::ustring>::create(m_pairedDevice);
     property = device;
 }
 
-bool Cooperation::m_scanRequestHandler(Glib::IOCondition cond) const noexcept {
+bool Cooperation::m_scanRequestHandler([[maybe_unused]] Glib::IOCondition cond) const noexcept {
     Glib::RefPtr<Gio::SocketAddress> addr;
     auto request = Message::recv_message_from<ScanRequest>(m_socketListenScan, addr);
 
@@ -167,7 +167,7 @@ bool Cooperation::m_scanRequestHandler(Glib::IOCondition cond) const noexcept {
     return true;
 }
 
-bool Cooperation::m_scanResponseHandler(Glib::IOCondition cond) noexcept {
+bool Cooperation::m_scanResponseHandler([[maybe_unused]] Glib::IOCondition cond) noexcept {
     Glib::RefPtr<Gio::SocketAddress> addr;
     auto response = Message::recv_message_from<ScanResponse>(m_socketScan, addr);
     auto remote = Glib::RefPtr<Gio::InetSocketAddress>::cast_dynamic<Gio::SocketAddress>(addr);
@@ -186,7 +186,7 @@ bool Cooperation::m_scanResponseHandler(Glib::IOCondition cond) noexcept {
     return true;
 }
 
-bool Cooperation::m_pairRequestHandler(Glib::IOCondition cond) noexcept {
+bool Cooperation::m_pairRequestHandler([[maybe_unused]] Glib::IOCondition cond) noexcept {
 
     m_socketConnected = m_socketListenPair->accept();
     auto remote = Glib::RefPtr<Gio::InetSocketAddress>::cast_dynamic<Gio::SocketAddress>(
@@ -217,7 +217,7 @@ bool Cooperation::m_pairRequestHandler(Glib::IOCondition cond) noexcept {
     return true;
 }
 
-bool Cooperation::m_mainHandler(Glib::IOCondition cond,
+bool Cooperation::m_mainHandler([[maybe_unused]] Glib::IOCondition cond,
                                 const Glib::RefPtr<Gio::Socket> &sock) noexcept {
     auto base = Message::recv_message_header(sock);
     switch (base.type()) {

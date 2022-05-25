@@ -175,8 +175,8 @@ void Service::onBusAcquired(const Glib::RefPtr<Gio::DBus::Connection> &connectio
  * @param[in] connection DBus连接
  * @param[in] name 名字
  * ***************************************************************************/
-void Service::onNameAcquired(const Glib::RefPtr<Gio::DBus::Connection> &connection,
-                             const Glib::ustring &name) {
+void Service::onNameAcquired([[maybe_unused]] const Glib::RefPtr<Gio::DBus::Connection> &connection,
+                             [[maybe_unused]] const Glib::ustring &name) {
     // TODO: See https://bugzilla.gnome.org/show_bug.cgi?id=646427
 }
 

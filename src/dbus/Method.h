@@ -114,11 +114,11 @@ public:
      * ***************************************************************************/
     template <class C>
     static Callback warp(C *self, const SimpleMethodFunc<C> &fn) noexcept {
-        return [self, fn](const Glib::RefPtr<Gio::DBus::Connection> &connection,
-                          const Glib::ustring &sender,
-                          const Glib::ustring &objectPath,
-                          const Glib::ustring &interfaceName,
-                          const Glib::ustring &methodName,
+        return [self, fn]([[maybe_unused]] const Glib::RefPtr<Gio::DBus::Connection> &connection,
+                          [[maybe_unused]] const Glib::ustring &sender,
+                          [[maybe_unused]] const Glib::ustring &objectPath,
+                          [[maybe_unused]] const Glib::ustring &interfaceName,
+                          [[maybe_unused]] const Glib::ustring &methodName,
                           const Glib::VariantContainerBase &args,
                           const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) {
             (self->*fn)(args, invocation);
@@ -131,11 +131,11 @@ public:
      * @return 封装后的方法函数
      * ***************************************************************************/
     static Callback warp(const SimplePlainFunc &fn) noexcept {
-        return [fn](const Glib::RefPtr<Gio::DBus::Connection> &connection,
-                    const Glib::ustring &sender,
-                    const Glib::ustring &objectPath,
-                    const Glib::ustring &interfaceName,
-                    const Glib::ustring &methodName,
+        return [fn]([[maybe_unused]] const Glib::RefPtr<Gio::DBus::Connection> &connection,
+                    [[maybe_unused]] const Glib::ustring &sender,
+                    [[maybe_unused]] const Glib::ustring &objectPath,
+                    [[maybe_unused]] const Glib::ustring &interfaceName,
+                    [[maybe_unused]] const Glib::ustring &methodName,
                     const Glib::VariantContainerBase &args,
                     const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) {
             fn(args, invocation);
@@ -170,6 +170,6 @@ private:
     std::map<Glib::ustring, Glib::ustring> m_outArgs;
 };
 
-}; // namespace DBus
+} // namespace DBus
 
 #endif // !DBUS_METHOD_H

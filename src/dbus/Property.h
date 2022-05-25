@@ -162,10 +162,10 @@ public:
     template <class C>
     static CallbackGet warp(const C *self, const SimpleMethodFuncGet<C> &fn) noexcept {
         return [self, fn](Glib::VariantBase &property,
-                          const Glib::RefPtr<Gio::DBus::Connection> &connection,
-                          const Glib::ustring &sender,
-                          const Glib::ustring &objectPath,
-                          const Glib::ustring &interfaceName,
+                          [[maybe_unused]] const Glib::RefPtr<Gio::DBus::Connection> &connection,
+                          [[maybe_unused]] const Glib::ustring &sender,
+                          [[maybe_unused]] const Glib::ustring &objectPath,
+                          [[maybe_unused]] const Glib::ustring &interfaceName,
                           const Glib::ustring &propertyName) {
             return (self->*fn)(property, propertyName);
         };
@@ -180,10 +180,10 @@ public:
     template <class C>
     static CallbackSet warp(C *self, const SimpleMethodFuncSet<C> &fn) noexcept {
         return
-            [self, fn](const Glib::RefPtr<Gio::DBus::Connection> &connection,
-                       const Glib::ustring &sender,
-                       const Glib::ustring &objectPath,
-                       const Glib::ustring &interfaceName,
+            [self, fn]([[maybe_unused]] const Glib::RefPtr<Gio::DBus::Connection> &connection,
+                       [[maybe_unused]] const Glib::ustring &sender,
+                       [[maybe_unused]] const Glib::ustring &objectPath,
+                       [[maybe_unused]] const Glib::ustring &interfaceName,
                        const Glib::ustring &propertyName,
                        const Glib::VariantBase &value) { return (self->*fn)(propertyName, value); };
     }
@@ -196,10 +196,10 @@ public:
     template <class C>
     static CallbackGet warp(const SimplePlainFuncGet &fn) noexcept {
         return [fn](Glib::VariantBase &property,
-                    const Glib::RefPtr<Gio::DBus::Connection> &connection,
-                    const Glib::ustring &sender,
-                    const Glib::ustring &objectPath,
-                    const Glib::ustring &interfaceName,
+                    [[maybe_unused]] const Glib::RefPtr<Gio::DBus::Connection> &connection,
+                    [[maybe_unused]] const Glib::ustring &sender,
+                    [[maybe_unused]] const Glib::ustring &objectPath,
+                    [[maybe_unused]] const Glib::ustring &interfaceName,
                     const Glib::ustring &propertyName) { return fn(property, propertyName); };
     }
 
@@ -210,10 +210,10 @@ public:
      * ***************************************************************************/
     template <class C>
     static CallbackSet warp(const SimplePlainFuncSet &fn) noexcept {
-        return [fn](const Glib::RefPtr<Gio::DBus::Connection> &connection,
-                    const Glib::ustring &sender,
-                    const Glib::ustring &objectPath,
-                    const Glib::ustring &interfaceName,
+        return [fn]([[maybe_unused]] const Glib::RefPtr<Gio::DBus::Connection> &connection,
+                    [[maybe_unused]] const Glib::ustring &sender,
+                    [[maybe_unused]] const Glib::ustring &objectPath,
+                    [[maybe_unused]] const Glib::ustring &interfaceName,
                     const Glib::ustring &propertyName,
                     const Glib::VariantBase &value) { return fn(propertyName, value); };
     }
@@ -258,6 +258,6 @@ private:
 
 }; // class Property
 
-}; // namespace DBus
+} // namespace DBus
 
 #endif // !DBUS_PROPERTY_H

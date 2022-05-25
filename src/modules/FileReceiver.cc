@@ -8,7 +8,7 @@
 
 #include "utils/sha256.h"
 
-TransferResponse FileReceiver::parseRequest(TransferRequest request) noexcept {
+TransferResponse FileReceiver::parseRequest([[maybe_unused]] TransferRequest request) noexcept {
     auto sock = Gio::Socket::create(Gio::SocketFamily::SOCKET_FAMILY_IPV4,
                                     Gio::SocketType::SOCKET_TYPE_STREAM,
                                     Gio::SocketProtocol::SOCKET_PROTOCOL_TCP);
@@ -117,7 +117,7 @@ void FileReceiver::m_recvFile(const Glib::RefPtr<Gio::Socket> &sock,
         if (base.type() == MessageType::SendFileBlockRequestType) {
             SPDLOG_INFO("recv SendFileBlockRequest");
             auto request = Message::recv_message_body<SendFileBlockRequest>(sock, base);
-            size_t len = fwrite(request.block_data().data(), 1, request.block_size(), fp);
+            [[maybe_unused]] size_t len = fwrite(request.block_data().data(), 1, request.block_size(), fp);
             Hash::sha256Update(&sha256, request.block_data().data(), request.block_size());
 
             SendFileBlockResponse response;

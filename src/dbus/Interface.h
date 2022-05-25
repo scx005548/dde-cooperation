@@ -126,6 +126,6 @@ protected:
 
 }; // class Interface
 
-}; // namespace DBus
+} // namespace DBus
 
 #endif // !DBUS_INTERFACE_H

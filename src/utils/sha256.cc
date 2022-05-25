@@ -11,7 +11,7 @@ static uint32_t rotateRight32(uint32_t n, uint8_t bits) {
     return (n >> bits) | (n << (32 - bits));
 }
 
-static uint64_t rotateRight64(uint64_t n, uint8_t bits) {
+[[maybe_unused]] static uint64_t rotateRight64(uint64_t n, uint8_t bits) {
     bits &= 0x3f;
     return (n >> bits) | (n << (64 - bits));
 }
@@ -21,7 +21,7 @@ static uint32_t readAsBigEndian32(uint8_t *data) {
            (((uint32_t)data[3]));
 }
 
-static uint64_t readAsBigEndian64(uint8_t *data) {
+[[maybe_unused]] static uint64_t readAsBigEndian64(uint8_t *data) {
     return (((uint64_t)data[0]) << 56) | (((uint64_t)data[1]) << 48) | (((uint64_t)data[2]) << 40) |
            (((uint64_t)data[3]) << 32) | (((uint64_t)data[4]) << 24) | (((uint64_t)data[5]) << 16) |
            (((uint64_t)data[6]) << 8) | (((uint64_t)data[7]));

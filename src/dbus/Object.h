@@ -109,6 +109,6 @@ protected:
     Service *m_parent;
 }; // class Object
 
-}; // namespace DBus
+} // namespace DBus
 
 #endif // !DBUS_OBJECT_H
