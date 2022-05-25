@@ -3,23 +3,13 @@
 #include <spdlog/spdlog.h>
 
 Cooperation::Cooperation() noexcept
-    : m_service(
-          new DBus::Service{"com.deepin.system.Cooperation", Gio::DBus::BusType::BUS_TYPE_SYSTEM})
-    , m_object(new DBus::Object("/com/deepin/system/Cooperation"))
-    , m_interface(new DBus::Interface("com.deepin.system.Cooperation"))
+    : m_service(new DBus::Service{"com.deepin.Cooperation", Gio::DBus::BusType::BUS_TYPE_SYSTEM})
+    , m_object(new DBus::Object("/com/deepin/Cooperation"))
+    , m_interface(new DBus::Interface("com.deepin.Cooperation"))
     , m_methodScan(new DBus::Method("Scan", DBus::Method::warp(this, &Cooperation::scan)))
-    , m_methodPair(new DBus::Method("Pair",
-                                    DBus::Method::warp(this, &Cooperation::pair),
-                                    {{"ip", "s"}, {"port", "i"}}))
-    , m_methodSendFile(new DBus::Method("SendFile",
-                                        DBus::Method::warp(this, &Cooperation::sendFile),
-                                        {{"filepath", "s"}}))
     , m_propertyDevices(
-          new DBus::Property("Devices", "as", DBus::Property::warp(this, &Cooperation::getDevices)))
-    , m_propertyPairedDevice(
-          new DBus::Property("PairedDevice",
-                             "s",
-                             DBus::Property::warp(this, &Cooperation::getPairedDevice)))
+          new DBus::Property("Devices", "ao", DBus::Property::warp(this, &Cooperation::getDevices)))
+    , m_lastDeviceIndex(0)
     , m_socketScan(Gio::Socket::create(Gio::SocketFamily::SOCKET_FAMILY_IPV4,
                                        Gio::SocketType::SOCKET_TYPE_DATAGRAM,
                                        Gio::SocketProtocol::SOCKET_PROTOCOL_UDP))
@@ -28,19 +18,10 @@ Cooperation::Cooperation() noexcept
                                              Gio::SocketProtocol::SOCKET_PROTOCOL_UDP))
     , m_socketListenPair(Gio::Socket::create(Gio::SocketFamily::SOCKET_FAMILY_IPV4,
                                              Gio::SocketType::SOCKET_TYPE_STREAM,
-                                             Gio::SocketProtocol::SOCKET_PROTOCOL_TCP))
-    , m_socketConnect(Gio::Socket::create(Gio::SocketFamily::SOCKET_FAMILY_IPV4,
-                                          Gio::SocketType::SOCKET_TYPE_STREAM,
-                                          Gio::SocketProtocol::SOCKET_PROTOCOL_TCP))
-    , m_socketConnected(Gio::Socket::create(Gio::SocketFamily::SOCKET_FAMILY_IPV4,
-                                            Gio::SocketType::SOCKET_TYPE_STREAM,
-                                            Gio::SocketProtocol::SOCKET_PROTOCOL_TCP)) {
+                                             Gio::SocketProtocol::SOCKET_PROTOCOL_TCP)) {
     m_service->registerService();
     m_interface->exportMethod(m_methodScan);
-    m_interface->exportMethod(m_methodPair);
-    m_interface->exportMethod(m_methodSendFile);
     m_interface->exportProperty(m_propertyDevices);
-    m_interface->exportProperty(m_propertyPairedDevice);
     m_object->exportInterface(m_interface);
     m_service->exportObject(m_object);
 
@@ -55,7 +36,6 @@ Cooperation::Cooperation() noexcept
     m_socketListenPair->listen();
 
     try {
-
         Gio::signal_socket().connect(
             [this](Glib::IOCondition cond) { return m_scanRequestHandler(cond); },
             m_socketListenScan,
@@ -81,60 +61,27 @@ void Cooperation::scan([[maybe_unused]] const Glib::VariantContainerBase &args,
         m_socketScan->set_broadcast(true);
         ScanRequest request;
         request.set_key(SCAN_KEY);
-        request.set_master_name(Net::getHostname());
-        request.set_os(DeviceOS::LINUX);
+        request.mutable_deviceinfo()->set_name(Net::getHostname());
+        request.mutable_deviceinfo()->set_os(DeviceOS::LINUX);
         Message::send_message_to(m_socketScan, MessageType::ScanRequestType, request, m_scanAddr);
         m_devices.clear();
+        m_lastDeviceIndex = 0;
     } catch (Gio::Error &e) {
         SPDLOG_ERROR("{} {}", e.code(), e.what().c_str());
     }
     invocation->return_value(Glib::VariantContainerBase{});
 }
 
-void Cooperation::pair(const Glib::VariantContainerBase &args,
-                       const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
-    Glib::Variant<Glib::ustring> ip;
-    Glib::Variant<int> port;
-
-    args.get_child(ip, 0);
-    args.get_child(port, 1);
-    m_socketConnect->connect(Net::makeSocketAddress(ip.get(), port.get()));
-    Gio::signal_socket().connect(
-        [this](Glib::IOCondition cond) { return m_mainHandler(cond, m_socketConnect); },
-        m_socketConnect,
-        Glib::IO_IN);
-
-    m_fileSender.setPilot(m_socketConnect);
-
-    PairRequest request;
-    request.set_key(SCAN_KEY);
-    request.set_master_name(Net::getHostname());
-    request.set_os(DeviceOS::LINUX);
-    Message::send_message(m_socketConnect, MessageType::PairRequestType, request);
-
-    invocation->return_value(Glib::VariantContainerBase{});
-}
-
-void Cooperation::sendFile(const Glib::VariantContainerBase &args,
-                           const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
-    Glib::Variant<Glib::ustring> filepath;
-    args.get_child(filepath, 0);
-    auto request = m_fileSender.makeStopTransferRequest();
-    m_fileSender.pushFile(filepath.get());
-    Message::send_message(m_socketConnect, TransferRequestType, request);
-    invocation->return_value(Glib::VariantContainerBase{});
-}
-
 void Cooperation::getDevices(Glib::VariantBase &property,
                              [[maybe_unused]] const Glib::ustring &propertyName) const noexcept {
-    auto devices = Glib::Variant<std::vector<Glib::ustring>>::create(m_devices);
-    property = devices;
-}
+    std::vector<Glib::ustring> devices;
+    devices.reserve(m_devices.size());
 
-void Cooperation::getPairedDevice(Glib::VariantBase &property,
-                                  [[maybe_unused]] const Glib::ustring &propertyName) const noexcept {
-    auto device = Glib::Variant<Glib::ustring>::create(m_pairedDevice);
-    property = device;
+    std::transform(m_devices.begin(), m_devices.end(), std::back_inserter(devices), [](auto &i) {
+        return i.second.path();
+    });
+
+    property = Glib::Variant<std::vector<Glib::ustring>>::create(devices);
 }
 
 bool Cooperation::m_scanRequestHandler([[maybe_unused]] Glib::IOCondition cond) const noexcept {
@@ -155,8 +102,8 @@ bool Cooperation::m_scanRequestHandler([[maybe_unused]] Glib::IOCondition cond) 
 
     ScanResponse response;
     response.set_key(SCAN_KEY);
-    response.set_slave_name(Net::getHostname());
-    response.set_os(DeviceOS::LINUX);
+    response.mutable_deviceinfo()->set_name(Net::getHostname());
+    response.mutable_deviceinfo()->set_os(DeviceOS::LINUX);
 
     auto local = Glib::RefPtr<Gio::InetSocketAddress>::cast_dynamic<Gio::SocketAddress>(
         m_socketListenPair->get_local_address());
@@ -177,64 +124,46 @@ bool Cooperation::m_scanResponseHandler([[maybe_unused]] Glib::IOCondition cond)
         return true;
     }
 
-    auto device = Glib::ustring::compose("%1@%2:%3",
-                                         response.slave_name(),
-                                         remote->get_address()->to_string(),
-                                         response.port());
-    m_devices.push_back(device);
-    SPDLOG_INFO("{} responsed", device.c_str());
+    // TODO: use fingerprint instead
+    m_devices.emplace(std::piecewise_construct,
+                      std::forward_as_tuple(response.deviceinfo().name()),
+                      std::forward_as_tuple(m_service, m_lastDeviceIndex, response.deviceinfo()));
+    m_lastDeviceIndex++;
+    SPDLOG_INFO("{} responsed", response.deviceinfo().name());
     return true;
 }
 
 bool Cooperation::m_pairRequestHandler([[maybe_unused]] Glib::IOCondition cond) noexcept {
-
-    m_socketConnected = m_socketListenPair->accept();
+    auto socketConnected = m_socketListenPair->accept();
     auto remote = Glib::RefPtr<Gio::InetSocketAddress>::cast_dynamic<Gio::SocketAddress>(
-        m_socketConnected->get_remote_address());
-    auto request = Message::recv_message<PairRequest>(m_socketConnected);
+        socketConnected->get_remote_address());
+    auto request = Message::recv_message<PairRequest>(socketConnected);
     if (request.key() != SCAN_KEY) {
         SPDLOG_ERROR("key mismatch {}", SCAN_KEY);
-        m_socketConnected->close();
+        socketConnected->close();
         return true;
     }
 
+    Device &device = ([this, &request]() -> Device & {
+        auto i = m_devices.find(request.deviceinfo().name());
+        if (i == m_devices.end()) {
+            return std::get<0>(m_devices.emplace(std::piecewise_construct,
+                                                 std::forward_as_tuple(request.deviceinfo().name()),
+                                                 std::forward_as_tuple(m_service,
+                                                                       m_lastDeviceIndex,
+                                                                       request.deviceinfo())))
+                ->second;
+        }
+
+        return i->second;
+    })();
+
+    device.onPair(socketConnected);
+
     SPDLOG_INFO("connected by {}@{}:{}\n",
-                request.master_name().c_str(),
+                request.deviceinfo().name().c_str(),
                 remote->get_address()->to_string().c_str(),
                 remote->get_port());
-    Gio::signal_socket().connect(
-        [this](Glib::IOCondition cond) { return m_mainHandler(cond, m_socketConnected); },
-        m_socketConnected,
-        Glib::IO_IN);
-
-    PairResponse response;
-    response.set_key(SCAN_KEY);
-    response.set_slave_name(Net::getHostname());
-    response.set_os(DeviceOS::LINUX);
-    response.set_agree(true); // TODO: 询问用户是否同意
-    Message::send_message(m_socketConnected, MessageType::PairResponseType, response);
-
-    return true;
-}
-
-bool Cooperation::m_mainHandler([[maybe_unused]] Glib::IOCondition cond,
-                                const Glib::RefPtr<Gio::Socket> &sock) noexcept {
-    auto base = Message::recv_message_header(sock);
-    switch (base.type()) {
-    case TransferRequestType: {
-        auto response = m_fileReciever.parseRequest(
-            Message::recv_message_body<TransferRequest>(sock, base));
-        Message::send_message<TransferResponse>(sock, TransferResponseType, response);
-        break;
-    }
-
-    case TransferResponseType:
-        m_fileSender.parseResponse(Message::recv_message_body<TransferResponse>(sock, base));
-        break;
-
-    default:
-        break;
-    }
 
     return true;
 }

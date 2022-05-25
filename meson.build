@@ -25,5 +25,5 @@ includes = include_directories('src')
 
 subdir('src')
 
-install_data('misc/conf/com.deepin.system.Cooperation.conf',
+install_data('misc/conf/com.deepin.Cooperation.conf',
              install_dir: 'share/dbus-1/system.d/')

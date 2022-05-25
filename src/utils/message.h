@@ -6,6 +6,8 @@
 
 #include "protocol/base_message.pb.h"
 
+#define SCAN_KEY "UOS-COOPERATION"
+
 namespace Message {
 
 template <typename T>
