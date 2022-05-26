@@ -1,6 +1,8 @@
 #include "Object.h"
 #include "Service.h"
 
+#include <cassert>
+
 namespace DBus {
 
 Object::Object(const Glib::ustring &path) noexcept
@@ -29,17 +31,7 @@ Glib::ustring Object::XML() const noexcept {
 }
 
 /*****************************************************************************
- * @brief 刷新所属服务
- * @return id
- * ***************************************************************************/
-guint Object::update() {
-    if (m_parent != nullptr) return m_parent->update();
-
-    return 0;
-}
-
-/*****************************************************************************
- * @brief 导出接口
+ * @brief 导出接口，必须在对象导出之前调用
  * @param[in] service 服务
  * @return id
  * ***************************************************************************/
@@ -49,28 +41,12 @@ bool Object::exportInterface(const Glib::RefPtr<Interface> &interface) noexcept 
         return false;
     }
 
+    assert(m_parent == nullptr);
+
     auto iter = m_interfaces.find(interface->name());
     if (iter == m_interfaces.end()) {
         interface->m_parent = this;
         m_interfaces[interface->name()] = interface;
-        update();
-        return true;
-    }
-
-    return false;
-}
-
-/*****************************************************************************
- * @brief 删除接口
- * @param[in] service 服务
- * @return id
- * ***************************************************************************/
-bool Object::unexportInterface(const Glib::ustring &name) noexcept {
-    auto iter = m_interfaces.find(name);
-    if (iter != m_interfaces.end()) {
-        iter->second->m_parent = nullptr;
-        m_interfaces.erase(iter);
-        update();
         return true;
     }
 

@@ -35,7 +35,7 @@ Cooperation::Cooperation() noexcept
     , m_socketConnected(Gio::Socket::create(Gio::SocketFamily::SOCKET_FAMILY_IPV4,
                                             Gio::SocketType::SOCKET_TYPE_STREAM,
                                             Gio::SocketProtocol::SOCKET_PROTOCOL_TCP)) {
-    DBus::Service::registerService(m_service);
+    m_service->registerService();
     m_interface->exportMethod(m_methodScan);
     m_interface->exportMethod(m_methodPair);
     m_interface->exportMethod(m_methodSendFile);

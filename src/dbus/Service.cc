@@ -2,15 +2,10 @@
 
 namespace DBus {
 
-/* 服务名 => 服务 */
-std::map<Glib::ustring, Glib::RefPtr<Service>> Service::services;
-
-/* 对象路径 => 所属服务 */
-std::map<Glib::ustring, Glib::RefPtr<Service>> Service::objServices;
-
 Service::Service(const Glib::ustring &name, Gio::DBus::BusType type)
     : m_name(name)
     , m_type(type)
+    , m_conn(nullptr)
     , m_vtable{Method::warp(this, &Service::onMethodCall),
                Property::warp(this, &Service::onGetProperty),
                Property::warp(this, &Service::onSetProperty)}
@@ -41,7 +36,11 @@ bool Service::exportObject(const Glib::RefPtr<DBus::Object> &obj) noexcept {
     if (iter == m_objects.end()) {
         obj->m_parent = this;
         m_objects[obj->path()] = obj;
-        update();
+
+        if (m_conn) {
+            exportObjectAux(obj);
+        }
+
         return true;
     }
 
@@ -58,36 +57,18 @@ bool Service::unexportObject(const Glib::ustring &path) noexcept {
     if (iter != m_objects.end()) {
         iter->second->m_parent = nullptr;
         m_objects.erase(iter);
-        update();
+
+        if (m_conn) {
+            auto ids = m_objIds.at(path);
+            for (auto id : ids) {
+                m_conn->unregister_object(id);
+            }
+        }
+
         return true;
     }
 
     return false;
-}
-
-/*****************************************************************************
- * @brief 刷新服务，在服务中增删对象、接口、方法、属性、信号时，需要调用这个函数进行更新
- *        并且，只有调用 registerService 注册过的服务才会更新，
- *        调用了 unregisterService 的服务则只会被删除
- * @param[in] service 服务
- * @return id
- * ***************************************************************************/
-guint Service::update() {
-    if (m_ownerId != 0) {
-        Gio::DBus::unown_name(m_ownerId);
-        m_ownerId = 0;
-    }
-
-    if (m_registered) {
-        m_ownerId = Gio::DBus::own_name(m_type,
-                                        m_name,
-                                        sigc::ptr_fun(&onBusAcquired),
-                                        sigc::ptr_fun(&onNameAcquired),
-                                        sigc::ptr_fun(&onNameLost));
-
-        return m_ownerId;
-    }
-    return 0;
 }
 
 /*****************************************************************************
@@ -96,28 +77,12 @@ guint Service::update() {
  * @param[in] type 总线类型
  * @return 注册id
  * ***************************************************************************/
-guint Service::registerService(const Glib::RefPtr<Service> &service) {
-    auto iter = Service::services.find(service->m_name);
-    if (iter != services.end()) {
-        fprintf(stderr, "conflicting service name '%s'\n", service->m_name.c_str());
-        return 0;
-    }
-
-    for (auto &obj : service->m_objects) {
-        auto path = obj.first;
-        if (Service::objServices.find(path) != Service::objServices.end()) {
-            fprintf(stderr, "conflicting object path '%s'\n", path.c_str());
-            return 0;
-        }
-    }
-
-    for (auto &obj : service->m_objects) {
-        Service::objServices[obj.first] = service;
-    }
-    Service::services[service->m_name] = service;
-
-    service->m_registered = true;
-    return service->update();
+guint Service::registerService() {
+    return Gio::DBus::own_name(m_type,
+                               m_name,
+                               sigc::mem_fun(this, &Service::onBusAcquired),
+                               sigc::mem_fun(this, &Service::onNameAcquired),
+                               sigc::mem_fun(this, &Service::onNameLost));
 }
 
 /*****************************************************************************
@@ -125,22 +90,19 @@ guint Service::registerService(const Glib::RefPtr<Service> &service) {
  * @param[in] name 名字
  * @return 是否成功
  * ***************************************************************************/
-bool Service::unregisterService(const Glib::ustring &name) {
-    auto iter = Service::services.find(name);
-    if (iter == Service::services.end()) {
-        return false;
-    }
+bool Service::unregisterService() {
+    Gio::DBus::unown_name(m_ownerId);
+    m_ownerId = 0;
 
-    auto service = iter->second;
-    Service::services.erase(iter);
-
-    for (auto &obj : service->m_objects) {
-        Service::objServices.erase(obj.first);
-    }
-
-    service->m_registered = false;
-    service->update();
     return true;
+}
+
+void Service::exportObjectAux(const Glib::RefPtr<DBus::Object> &obj) {
+    for (auto iter : obj->m_interfaces) {
+        auto introspectionData = Gio::DBus::NodeInfo::create_for_xml(iter.second->XML());
+        m_objIds[obj->path()].emplace_back(
+            m_conn->register_object(obj->path(), introspectionData->lookup_interface(), m_vtable));
+    }
 }
 
 /*****************************************************************************
@@ -149,21 +111,11 @@ bool Service::unregisterService(const Glib::ustring &name) {
  * @param[in] name 服务名
  * ***************************************************************************/
 void Service::onBusAcquired(const Glib::RefPtr<Gio::DBus::Connection> &connection,
-                            const Glib::ustring &name) {
+                            [[maybe_unused]] const Glib::ustring &name) {
     try {
-        auto service = Service::services.at(name);
-
-        for (auto iter : service->m_objects) {
-            auto name = iter.first;
-            auto obj = iter.second;
-
-            for (auto iter2 : obj->m_interfaces) {
-                auto introspectionData = Gio::DBus::NodeInfo::create_for_xml(iter2.second->XML());
-                service->m_objIds[name].emplace_back(
-                    connection->register_object(obj->path(),
-                                                introspectionData->lookup_interface(),
-                                                service->m_vtable));
-            }
+        m_conn = connection;
+        for (auto iter : m_objects) {
+            exportObjectAux(iter.second);
         }
     } catch (const std::exception &err) {
         fprintf(stderr, "onBusAcquired: %s\n", err.what());
@@ -188,8 +140,7 @@ void Service::onNameAcquired([[maybe_unused]] const Glib::RefPtr<Gio::DBus::Conn
 void Service::onNameLost(const Glib::RefPtr<Gio::DBus::Connection> &connection,
                          const Glib::ustring &name) {
     try {
-        auto service = Service::services.at(name);
-        for (auto id : service->m_objIds[name]) {
+        for (auto id : m_objIds[name]) {
             connection->unregister_object(id);
         }
     } catch (const std::exception &err) {

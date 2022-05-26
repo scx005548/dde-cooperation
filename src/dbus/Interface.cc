@@ -1,6 +1,8 @@
 #include "Interface.h"
 #include "Object.h"
 
+#include <cassert>
+
 namespace DBus {
 
 Interface::Interface(const Glib::ustring &name) noexcept
@@ -34,25 +36,16 @@ Glib::ustring Interface::XML() const noexcept {
 }
 
 /*****************************************************************************
- * @brief 刷新所属服务
- * @return id
- * ***************************************************************************/
-guint Interface::update() {
-    if (m_parent != nullptr) return m_parent->update();
-
-    return 0;
-}
-
-/*****************************************************************************
- * @brief 导出方法
+ * @brief 导出方法，必须在导出接口之前调用
  * @param[in] method 方法
  * @return 是否成功
  * ***************************************************************************/
 bool Interface::exportMethod(const Glib::RefPtr<Method> &method) noexcept {
+    assert(m_parent == nullptr);
+
     auto iter = m_methods.find(method->name());
     if (iter == m_methods.end()) {
         m_methods[method->name()] = method;
-        update();
         return true;
     }
 
@@ -60,47 +53,16 @@ bool Interface::exportMethod(const Glib::RefPtr<Method> &method) noexcept {
 }
 
 /*****************************************************************************
- * @brief 删除方法
- * @param[in] name 方法名
- * @return 是否成功
- * ***************************************************************************/
-bool Interface::unexportMethod(const Glib::ustring &name) noexcept {
-    auto iter = m_methods.find(name);
-    if (iter != m_methods.end()) {
-        m_methods.erase(iter);
-        update();
-        return true;
-    }
-
-    return false;
-}
-
-/*****************************************************************************
- * @brief 导出属性
+ * @brief 导出属性，必须在导出接口之前调用
  * @param[in] property 属性
  * @return 是否成功
  * ***************************************************************************/
 bool Interface::exportProperty(const Glib::RefPtr<Property> &property) noexcept {
+    assert(m_parent == nullptr);
+
     auto iter = m_properties.find(property->name());
     if (iter == m_properties.end()) {
         m_properties[property->name()] = property;
-        update();
-        return true;
-    }
-
-    return false;
-}
-
-/*****************************************************************************
- * @brief 删除属性
- * @param[in] name 属性名
- * @return 是否成功
- * ***************************************************************************/
-bool Interface::unexportProperty(const Glib::ustring &name) noexcept {
-    auto iter = m_properties.find(name);
-    if (iter != m_properties.end()) {
-        m_properties.erase(iter);
-        update();
         return true;
     }
 
