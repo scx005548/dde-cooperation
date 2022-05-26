@@ -12,6 +12,7 @@ Build-Depends:
  libnm-dev,
  libprotobuf-dev,
  libspdlog-dev,
+ libssl-dev,
  meson,
  protobuf-compiler,
  uuid-dev,

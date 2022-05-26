@@ -9,7 +9,7 @@
 #include <arpa/inet.h>
 
 #include "Device.h"
-
+#include "KeyPair.h"
 #include "dbus/dbus.h"
 #include "utils/net.h"
 
@@ -54,6 +54,8 @@ private:
     Glib::RefPtr<Gio::SocketAddress> m_scanAddr;
     Glib::RefPtr<Gio::SocketAddress> m_listenScanAddr;
     Glib::RefPtr<Gio::SocketAddress> m_listenPairAddr;
+
+    KeyPair m_keypair;
 
     void ensureDataDirExists();
     void initUUID();

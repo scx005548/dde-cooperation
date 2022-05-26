@@ -29,9 +29,12 @@ Cooperation::Cooperation()
                                              Gio::SocketProtocol::SOCKET_PROTOCOL_UDP))
     , m_socketListenPair(Gio::Socket::create(Gio::SocketFamily::SOCKET_FAMILY_IPV4,
                                              Gio::SocketType::SOCKET_TYPE_STREAM,
-                                             Gio::SocketProtocol::SOCKET_PROTOCOL_TCP)) {
+                                             Gio::SocketProtocol::SOCKET_PROTOCOL_TCP))
+    , m_keypair(dataDir, KeyPair::KeyType::ED25519) {
     ensureDataDirExists();
     initUUID();
+
+    m_keypair.load();
 
     m_service->registerService();
     m_interface->exportMethod(m_methodScan);
