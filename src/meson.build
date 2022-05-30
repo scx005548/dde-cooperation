@@ -41,6 +41,7 @@ executable('dde-cooperation',
     includes,
   ],
   dependencies: [
+    uuid,
     fmt,
     spdlog,
     libnm,

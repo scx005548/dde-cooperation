@@ -1,12 +1,17 @@
 #include "Device.h"
 
+#include "Cooperation.h"
 #include "utils/net.h"
 #include "utils/message.h"
 
 #include "protocol/pair.pb.h"
 
-Device::Device(Glib::RefPtr<DBus::Service> service, uint32_t id, const DeviceInfo &sp)
-    : m_path(Glib::ustring::compose("/com/deepin/Cooperation/Device/%1", id))
+Device::Device(Cooperation &cooperation,
+               Glib::RefPtr<DBus::Service> service,
+               uint32_t id,
+               const DeviceInfo &sp)
+    : m_cooperation(cooperation)
+    , m_path(Glib::ustring::compose("/com/deepin/Cooperation/Device/%1", id))
     , m_service(service)
     , m_object(new DBus::Object(m_path))
     , m_interface(new DBus::Interface("com.deepin.Cooperation.Device"))
@@ -14,6 +19,8 @@ Device::Device(Glib::RefPtr<DBus::Service> service, uint32_t id, const DeviceInf
     , m_methodSendFile(new DBus::Method("SendFile",
                                         DBus::Method::warp(this, &Device::sendFile),
                                         {{"filepath", "s"}}))
+    , m_uuid(sp.uuid())
+    , m_propertyUUID(new DBus::Property("UUID", "s", DBus::Property::warp(this, &Device::getUUID)))
     , m_name(sp.name())
     , m_propertyName(new DBus::Property("Name", "s", DBus::Property::warp(this, &Device::getName)))
     , m_paired(false)
@@ -61,6 +68,7 @@ void Device::pair(const Glib::VariantContainerBase &args,
 
     PairRequest request;
     request.set_key(SCAN_KEY);
+    request.mutable_deviceinfo()->set_uuid(m_cooperation.uuid());
     request.mutable_deviceinfo()->set_name(Net::getHostname());
     request.mutable_deviceinfo()->set_os(DeviceOS::LINUX);
     request.mutable_deviceinfo()->set_compositor(Compositor::NONE);
@@ -75,6 +83,7 @@ void Device::onPair(Glib::RefPtr<Gio::Socket> conn) {
 
     PairResponse response;
     response.set_key(SCAN_KEY);
+    response.mutable_deviceinfo()->set_uuid(m_cooperation.uuid());
     response.mutable_deviceinfo()->set_name(Net::getHostname());
     response.mutable_deviceinfo()->set_os(DeviceOS::LINUX);
     response.mutable_deviceinfo()->set_compositor(Compositor::NONE);
@@ -90,6 +99,11 @@ void Device::sendFile(const Glib::VariantContainerBase &args,
     m_fileSender.pushFile(filepath.get());
     Message::send_message(m_socketConnect, TransferRequestType, request);
     invocation->return_value(Glib::VariantContainerBase{});
+}
+
+void Device::getUUID(Glib::VariantBase &property,
+                     [[maybe_unused]] const Glib::ustring &propertyName) const {
+    property = Glib::Variant<Glib::ustring>::create(m_uuid);
 }
 
 void Device::getName(Glib::VariantBase &property,
@@ -113,7 +127,7 @@ void Device::getCompositor(Glib::VariantBase &property,
 }
 
 bool Device::mainHandler([[maybe_unused]] Glib::IOCondition cond,
-                           const Glib::RefPtr<Gio::Socket> &sock) noexcept {
+                         const Glib::RefPtr<Gio::Socket> &sock) noexcept {
     auto base = Message::recv_message_header(sock);
     switch (base.type()) {
     case PairResponseType: {

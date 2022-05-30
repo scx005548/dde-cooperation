@@ -9,9 +9,14 @@
 
 #include "protocol/pair.pb.h"
 
+class Cooperation;
+
 class Device {
 public:
-    Device(Glib::RefPtr<DBus::Service> service, uint32_t id, const DeviceInfo &sp);
+    Device(Cooperation &cooperation,
+           Glib::RefPtr<DBus::Service> service,
+           uint32_t id,
+           const DeviceInfo &sp);
     ~Device();
 
     Glib::ustring path() const { return m_path; }
@@ -25,12 +30,15 @@ protected:
     void sendFile(const Glib::VariantContainerBase &args,
                   const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
 
+    void getUUID(Glib::VariantBase &property, const Glib::ustring &propertyName) const;
     void getName(Glib::VariantBase &property, const Glib::ustring &propertyName) const;
     void getPaired(Glib::VariantBase &property, const Glib::ustring &propertyName) const;
     void getOS(Glib::VariantBase &property, const Glib::ustring &propertyName) const;
     void getCompositor(Glib::VariantBase &property, const Glib::ustring &propertyName) const;
 
 private:
+    Cooperation &m_cooperation;
+
     const Glib::ustring m_path;
 
     Glib::RefPtr<DBus::Service> m_service;
@@ -39,6 +47,9 @@ private:
 
     Glib::RefPtr<DBus::Method> m_methodPair;
     Glib::RefPtr<DBus::Method> m_methodSendFile;
+
+    Glib::ustring m_uuid;
+    Glib::RefPtr<DBus::Property> m_propertyUUID;
 
     Glib::ustring m_name;
     Glib::RefPtr<DBus::Property> m_propertyName;

@@ -2,6 +2,7 @@
 #define COOPERATION_H
 
 #include <map>
+#include <filesystem>
 
 #include <glibmm.h>
 #include <giomm.h>
@@ -16,7 +17,9 @@
 
 class Cooperation {
 public:
-    Cooperation() noexcept;
+    Cooperation();
+
+    std::string uuid() const noexcept { return m_uuid; }
 
 protected:
     // DBus method handlers
@@ -27,6 +30,10 @@ protected:
     void getDevices(Glib::VariantBase &property, const Glib::ustring &propertyName) const noexcept;
 
 private:
+    static const std::filesystem::path dataDir;
+
+    std::string m_uuid;
+
     Glib::RefPtr<DBus::Service> m_service;
     Glib::RefPtr<DBus::Object> m_object;
     Glib::RefPtr<DBus::Interface> m_interface;
@@ -47,6 +54,9 @@ private:
     Glib::RefPtr<Gio::SocketAddress> m_scanAddr;
     Glib::RefPtr<Gio::SocketAddress> m_listenScanAddr;
     Glib::RefPtr<Gio::SocketAddress> m_listenPairAddr;
+
+    void ensureDataDirExists();
+    void initUUID();
 
     bool m_scanRequestHandler(Glib::IOCondition cond) const noexcept;
     bool m_scanResponseHandler(Glib::IOCondition cond) noexcept;

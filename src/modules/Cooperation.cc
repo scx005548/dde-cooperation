@@ -1,8 +1,19 @@
 #include "Cooperation.h"
 
+#include <stdexcept>
+#include <fstream>
+
+#include <sys/stat.h>
+
+#include <uuid/uuid.h>
+#include <fmt/core.h>
 #include <spdlog/spdlog.h>
 
-Cooperation::Cooperation() noexcept
+namespace fs = std::filesystem;
+
+const std::filesystem::path Cooperation::dataDir = "/var/lib/dde-cooperation";
+
+Cooperation::Cooperation()
     : m_service(new DBus::Service{"com.deepin.Cooperation", Gio::DBus::BusType::BUS_TYPE_SYSTEM})
     , m_object(new DBus::Object("/com/deepin/Cooperation"))
     , m_interface(new DBus::Interface("com.deepin.Cooperation"))
@@ -19,6 +30,9 @@ Cooperation::Cooperation() noexcept
     , m_socketListenPair(Gio::Socket::create(Gio::SocketFamily::SOCKET_FAMILY_IPV4,
                                              Gio::SocketType::SOCKET_TYPE_STREAM,
                                              Gio::SocketProtocol::SOCKET_PROTOCOL_TCP)) {
+    ensureDataDirExists();
+    initUUID();
+
     m_service->registerService();
     m_interface->exportMethod(m_methodScan);
     m_interface->exportProperty(m_propertyDevices);
@@ -55,12 +69,55 @@ Cooperation::Cooperation() noexcept
     }
 }
 
+void Cooperation::ensureDataDirExists() {
+    if (fs::exists(dataDir)) {
+        if (fs::is_directory(dataDir)) {
+            return;
+        }
+
+        throw std::runtime_error(fmt::format("{} is not a directory", dataDir.string()));
+    }
+
+    auto oldMask = umask(077);
+    if (!fs::create_directory(dataDir)) {
+        throw std::runtime_error(fmt::format("failed to create directory {}", dataDir.string()));
+    }
+    umask(oldMask);
+}
+
+void Cooperation::initUUID() {
+    uuid_t uuid;
+
+    fs::path uuidPath = dataDir / ".uuid";
+    if (fs::exists(uuidPath)) {
+        std::ifstream f;
+        f.open(uuidPath);
+        std::getline(f, m_uuid);
+        f.close();
+
+        if (uuid_parse(m_uuid.data(), uuid) == 0) {
+            return;
+        } // else regenerate uuid
+    }
+
+    uuid_generate(uuid);
+    char uuidStr[100];
+    uuid_unparse(uuid, uuidStr);
+
+    m_uuid = uuidStr;
+    std::ofstream f;
+    f.open(uuidPath);
+    f << m_uuid;
+    f.close();
+}
+
 void Cooperation::scan([[maybe_unused]] const Glib::VariantContainerBase &args,
                        const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
     try {
         m_socketScan->set_broadcast(true);
         ScanRequest request;
         request.set_key(SCAN_KEY);
+        request.mutable_deviceinfo()->set_uuid(m_uuid);
         request.mutable_deviceinfo()->set_name(Net::getHostname());
         request.mutable_deviceinfo()->set_os(DeviceOS::LINUX);
         Message::send_message_to(m_socketScan, MessageType::ScanRequestType, request, m_scanAddr);
@@ -102,6 +159,7 @@ bool Cooperation::m_scanRequestHandler([[maybe_unused]] Glib::IOCondition cond) 
 
     ScanResponse response;
     response.set_key(SCAN_KEY);
+    response.mutable_deviceinfo()->set_uuid(m_uuid);
     response.mutable_deviceinfo()->set_name(Net::getHostname());
     response.mutable_deviceinfo()->set_os(DeviceOS::LINUX);
 
@@ -124,10 +182,10 @@ bool Cooperation::m_scanResponseHandler([[maybe_unused]] Glib::IOCondition cond)
         return true;
     }
 
-    // TODO: use fingerprint instead
-    m_devices.emplace(std::piecewise_construct,
-                      std::forward_as_tuple(response.deviceinfo().name()),
-                      std::forward_as_tuple(m_service, m_lastDeviceIndex, response.deviceinfo()));
+    m_devices.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(response.deviceinfo().uuid()),
+        std::forward_as_tuple(*this, m_service, m_lastDeviceIndex, response.deviceinfo()));
     m_lastDeviceIndex++;
     SPDLOG_INFO("{} responsed", response.deviceinfo().name());
     return true;
@@ -145,11 +203,12 @@ bool Cooperation::m_pairRequestHandler([[maybe_unused]] Glib::IOCondition cond) 
     }
 
     Device &device = ([this, &request]() -> Device & {
-        auto i = m_devices.find(request.deviceinfo().name());
+        auto i = m_devices.find(request.deviceinfo().uuid());
         if (i == m_devices.end()) {
             return std::get<0>(m_devices.emplace(std::piecewise_construct,
-                                                 std::forward_as_tuple(request.deviceinfo().name()),
-                                                 std::forward_as_tuple(m_service,
+                                                 std::forward_as_tuple(request.deviceinfo().uuid()),
+                                                 std::forward_as_tuple(*this,
+                                                                       m_service,
                                                                        m_lastDeviceIndex,
                                                                        request.deviceinfo())))
                 ->second;

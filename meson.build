@@ -8,6 +8,7 @@ project(
     ]
 )
 
+uuid = dependency('uuid', required: true)
 fmt = dependency('fmt', required: true)
 spdlog = dependency('spdlog', required: true)
 libnm = dependency('libnm', required: true)
