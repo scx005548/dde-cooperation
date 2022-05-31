@@ -43,6 +43,7 @@ executable('dde-cooperation',
     includes,
   ],
   dependencies: [
+    stdcxxfs,
     uuid,
     fmt,
     spdlog,

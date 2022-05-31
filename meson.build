@@ -8,6 +8,9 @@ project(
     ]
 )
 
+cxx = meson.get_compiler('cpp')
+stdcxxfs = cxx.find_library('stdc++fs', required: false)
+
 uuid = dependency('uuid', required: true)
 fmt = dependency('fmt', required: true)
 spdlog = dependency('spdlog', required: true)
