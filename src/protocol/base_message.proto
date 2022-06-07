@@ -11,18 +11,20 @@ enum MessageType
     StopPairRequestType = 1004;
     StopPairResponseType = 1005;
 
-    SendFileRequestType = 3000;
-    SendFileResponseType = 3001;
-    SendFileBlockRequestType = 3002;
-    SendFileBlockResponseType = 3003;
-    StopSendFileRequestType = 3004;
-    StopSendFileResponseType = 3005;
-    SendDirRequestType = 3006;
-    SendDirResponseType = 3007;
-    TransferRequestType = 3008;
-    TransferResponseType = 3009;
-    StopTransferRequestType = 3010;
-    StopTransferResponseType = 3011;
+    FsRequestType = 3000;
+    FsResponseType = 3001;
+    FsSendFileRequestType = 3002;
+    FsSendFileResponseType = 3003;
+    FsMethodGetAttrRequestType = 3100;
+    FsMethodGetAttrResponseType = 3101;
+    FsMethodReadRequestType = 3102;
+    FsMethodReadResponseType = 3103;
+    FsMethodReadDirRequestType = 3104;
+    FsMethodReadDirResponseType = 3105;
+    FsMethodOpenRequestType = 3106;
+    FsMethodOpenResponseType = 3107;
+    FsMethodReleaseRequestType = 3108;
+    FsMethodReleaseResponseType = 3109;
 
     InputEventRequestType = 4000;
     InputEventResponseType = 4001;

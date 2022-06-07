@@ -4,8 +4,6 @@
 #include <glibmm.h>
 
 #include "dbus/dbus.h"
-#include "FileSender.h"
-#include "FileReceiver.h"
 
 #include "protocol/pair.pb.h"
 
@@ -64,9 +62,6 @@ private:
     Glib::RefPtr<DBus::Property> m_propertyCompositor;
 
     Glib::RefPtr<Gio::Socket> m_socketConnect;
-
-    FileSender m_fileSender;
-    FileReceiver m_fileReciever;
 
     bool mainHandler(Glib::IOCondition cond, const Glib::RefPtr<Gio::Socket> &sock) noexcept;
     void handlePairRespinse(const PairResponse &resp);

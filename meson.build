@@ -23,7 +23,7 @@ protobuf = dependency('protobuf', required: true)
 protoc_exec = find_program('protoc')
 protoc = generator(protoc_exec,
   output: ['@BASENAME@.pb.cc', '@BASENAME@.pb.h'],
-  arguments: ['--proto_path=@CURRENT_SOURCE_DIR@', '--cpp_out=@BUILD_DIR@', '@INPUT@']
+  arguments: ['--proto_path=@CURRENT_SOURCE_DIR@', '--cpp_out=@BUILD_DIR@', '--experimental_allow_proto3_optional', '@INPUT@']
 )
 
 includes = include_directories('src')

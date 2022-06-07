@@ -64,8 +64,6 @@ void Device::pair(const Glib::VariantContainerBase &args,
         m_socketConnect,
         Glib::IO_IN);
 
-    m_fileSender.setPilot(m_socketConnect);
-
     PairRequest request;
     request.set_key(SCAN_KEY);
     request.mutable_deviceinfo()->set_uuid(m_cooperation.uuid());
@@ -95,9 +93,9 @@ void Device::sendFile(const Glib::VariantContainerBase &args,
                       const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
     Glib::Variant<Glib::ustring> filepath;
     args.get_child(filepath, 0);
-    auto request = m_fileSender.makeStopTransferRequest();
-    m_fileSender.pushFile(filepath.get());
-    Message::send_message(m_socketConnect, TransferRequestType, request);
+
+    // TODO: impl
+
     invocation->return_value(Glib::VariantContainerBase{});
 }
 
@@ -134,17 +132,6 @@ bool Device::mainHandler([[maybe_unused]] Glib::IOCondition cond,
         handlePairRespinse(Message::recv_message_body<PairResponse>(sock, base));
         break;
     }
-
-    case TransferRequestType: {
-        auto response = m_fileReciever.parseRequest(
-            Message::recv_message_body<TransferRequest>(sock, base));
-        Message::send_message<TransferResponse>(sock, TransferResponseType, response);
-        break;
-    }
-
-    case TransferResponseType:
-        m_fileSender.parseResponse(Message::recv_message_body<TransferResponse>(sock, base));
-        break;
 
     default:
         break;

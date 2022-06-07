@@ -9,6 +9,8 @@
 #include <fmt/core.h>
 #include <spdlog/spdlog.h>
 
+#include "utils/message.h"
+
 namespace fs = std::filesystem;
 
 const std::filesystem::path Cooperation::dataDir = "/var/lib/dde-cooperation";

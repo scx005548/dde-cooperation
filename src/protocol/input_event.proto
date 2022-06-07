@@ -6,8 +6,8 @@ message InputEventRequest
 {
     int64 serial = 1;   // 序号
     int32 type = 2;     // 事件类型
-	int32 code = 3;     // 事件码
-	int32 value = 4;    // 事件值
+    int32 code = 3;     // 事件码
+    int32 value = 4;    // 事件值
 }
 
 
