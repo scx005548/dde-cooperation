@@ -35,8 +35,8 @@ dde_cooperation_sources = files('''
   dde-cooperation/Cooperation.cc
   dde-cooperation/KeyPair.h
   dde-cooperation/KeyPair.cc
-  dde-cooperation/Device.h
-  dde-cooperation/Device.cc
+  dde-cooperation/Machine.h
+  dde-cooperation/Machine.cc
 '''.split())
 
 dde_cooperation_sources += common_sources + protocol

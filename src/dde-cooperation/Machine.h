@@ -9,13 +9,13 @@
 
 class Cooperation;
 
-class Device {
+class Machine {
 public:
-    Device(Cooperation &cooperation,
-           Glib::RefPtr<DBus::Service> service,
-           uint32_t id,
-           const DeviceInfo &sp);
-    ~Device();
+    Machine(Cooperation &cooperation,
+            Glib::RefPtr<DBus::Service> service,
+            uint32_t id,
+            const DeviceInfo &sp);
+    ~Machine();
 
     Glib::ustring path() const { return m_path; }
 

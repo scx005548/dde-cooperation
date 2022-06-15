@@ -8,7 +8,7 @@
 #include <giomm.h>
 #include <arpa/inet.h>
 
-#include "Device.h"
+#include "Machine.h"
 #include "KeyPair.h"
 #include "dbus/dbus.h"
 #include "utils/net.h"
@@ -43,7 +43,7 @@ private:
 
     // DBus properties
     Glib::RefPtr<DBus::Property> m_propertyDevices;
-    std::map<std::string, Device> m_devices;
+    std::map<std::string, Machine> m_machines;
     uint32_t m_lastDeviceIndex;
 
     Glib::RefPtr<Gio::Socket> m_socketScan;

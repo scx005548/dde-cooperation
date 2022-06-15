@@ -1,4 +1,4 @@
-#include "Device.h"
+#include "Machine.h"
 
 #include "Cooperation.h"
 #include "utils/net.h"
@@ -6,32 +6,33 @@
 
 #include "protocol/pair.pb.h"
 
-Device::Device(Cooperation &cooperation,
-               Glib::RefPtr<DBus::Service> service,
-               uint32_t id,
-               const DeviceInfo &sp)
+Machine::Machine(Cooperation &cooperation,
+                 Glib::RefPtr<DBus::Service> service,
+                 uint32_t id,
+                 const DeviceInfo &sp)
     : m_cooperation(cooperation)
-    , m_path(Glib::ustring::compose("/com/deepin/Cooperation/Device/%1", id))
+    , m_path(Glib::ustring::compose("/com/deepin/Cooperation/Machine/%1", id))
     , m_service(service)
     , m_object(new DBus::Object(m_path))
-    , m_interface(new DBus::Interface("com.deepin.Cooperation.Device"))
-    , m_methodPair(new DBus::Method("Pair", DBus::Method::warp(this, &Device::pair)))
+    , m_interface(new DBus::Interface("com.deepin.Cooperation.Machine"))
+    , m_methodPair(new DBus::Method("Pair", DBus::Method::warp(this, &Machine::pair)))
     , m_methodSendFile(new DBus::Method("SendFile",
-                                        DBus::Method::warp(this, &Device::sendFile),
+                                        DBus::Method::warp(this, &Machine::sendFile),
                                         {{"filepath", "s"}}))
     , m_uuid(sp.uuid())
-    , m_propertyUUID(new DBus::Property("UUID", "s", DBus::Property::warp(this, &Device::getUUID)))
+    , m_propertyUUID(new DBus::Property("UUID", "s", DBus::Property::warp(this, &Machine::getUUID)))
     , m_name(sp.name())
-    , m_propertyName(new DBus::Property("Name", "s", DBus::Property::warp(this, &Device::getName)))
+    , m_propertyName(new DBus::Property("Name", "s", DBus::Property::warp(this, &Machine::getName)))
     , m_paired(false)
     , m_propertyPaired(
-          new DBus::Property("Paired", "b", DBus::Property::warp(this, &Device::getPaired)))
+          new DBus::Property("Paired", "b", DBus::Property::warp(this, &Machine::getPaired)))
     , m_os(sp.os())
-    , m_propertyOS(new DBus::Property("OS", "u", DBus::Property::warp(this, &Device::getOS)))
+    , m_propertyOS(new DBus::Property("OS", "u", DBus::Property::warp(this, &Machine::getOS)))
     , m_compositor(sp.compositor())
-    , m_propertyCompositor(new DBus::Property("Compositor",
-                                              "u",
-                                              DBus::Property::warp(this, &Device::getCompositor))) {
+    , m_propertyCompositor(
+          new DBus::Property("Compositor",
+                             "u",
+                             DBus::Property::warp(this, &Machine::getCompositor))) {
 
     m_interface->exportMethod(m_methodPair);
     m_interface->exportMethod(m_methodSendFile);
@@ -43,12 +44,12 @@ Device::Device(Cooperation &cooperation,
     m_service->exportObject(m_object);
 }
 
-Device::~Device() {
+Machine::~Machine() {
     m_service->unexportObject(m_object->path());
 }
 
-void Device::pair(const Glib::VariantContainerBase &args,
-                  const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
+void Machine::pair(const Glib::VariantContainerBase &args,
+                   const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
     Glib::Variant<Glib::ustring> ip;
     Glib::Variant<int> port;
 
@@ -75,7 +76,7 @@ void Device::pair(const Glib::VariantContainerBase &args,
     invocation->return_value(Glib::VariantContainerBase{});
 }
 
-void Device::onPair(Glib::RefPtr<Gio::Socket> conn) {
+void Machine::onPair(Glib::RefPtr<Gio::Socket> conn) {
     m_socketConnect = conn;
     m_paired = true;
 
@@ -89,8 +90,8 @@ void Device::onPair(Glib::RefPtr<Gio::Socket> conn) {
     Message::send_message(m_socketConnect, MessageType::PairResponseType, response);
 }
 
-void Device::sendFile(const Glib::VariantContainerBase &args,
-                      const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
+void Machine::sendFile(const Glib::VariantContainerBase &args,
+                       const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
     Glib::Variant<Glib::ustring> filepath;
     args.get_child(filepath, 0);
 
@@ -99,33 +100,33 @@ void Device::sendFile(const Glib::VariantContainerBase &args,
     invocation->return_value(Glib::VariantContainerBase{});
 }
 
-void Device::getUUID(Glib::VariantBase &property,
-                     [[maybe_unused]] const Glib::ustring &propertyName) const {
+void Machine::getUUID(Glib::VariantBase &property,
+                      [[maybe_unused]] const Glib::ustring &propertyName) const {
     property = Glib::Variant<Glib::ustring>::create(m_uuid);
 }
 
-void Device::getName(Glib::VariantBase &property,
-                     [[maybe_unused]] const Glib::ustring &propertyName) const {
+void Machine::getName(Glib::VariantBase &property,
+                      [[maybe_unused]] const Glib::ustring &propertyName) const {
     property = Glib::Variant<Glib::ustring>::create(m_name);
 }
 
-void Device::getPaired(Glib::VariantBase &property,
-                       [[maybe_unused]] const Glib::ustring &propertyName) const {
+void Machine::getPaired(Glib::VariantBase &property,
+                        [[maybe_unused]] const Glib::ustring &propertyName) const {
     property = Glib::Variant<bool>::create(m_paired);
 }
 
-void Device::getOS(Glib::VariantBase &property,
-                   [[maybe_unused]] const Glib::ustring &propertyName) const {
+void Machine::getOS(Glib::VariantBase &property,
+                    [[maybe_unused]] const Glib::ustring &propertyName) const {
     property = Glib::Variant<uint32_t>::create(m_os);
 }
 
-void Device::getCompositor(Glib::VariantBase &property,
-                           [[maybe_unused]] const Glib::ustring &propertyName) const {
+void Machine::getCompositor(Glib::VariantBase &property,
+                            [[maybe_unused]] const Glib::ustring &propertyName) const {
     property = Glib::Variant<uint32_t>::create(m_compositor);
 }
 
-bool Device::mainHandler([[maybe_unused]] Glib::IOCondition cond,
-                         const Glib::RefPtr<Gio::Socket> &sock) noexcept {
+bool Machine::mainHandler([[maybe_unused]] Glib::IOCondition cond,
+                          const Glib::RefPtr<Gio::Socket> &sock) noexcept {
     auto base = Message::recv_message_header(sock);
     switch (base.type()) {
     case PairResponseType: {
@@ -140,7 +141,7 @@ bool Device::mainHandler([[maybe_unused]] Glib::IOCondition cond,
     return true;
 }
 
-void Device::handlePairRespinse(const PairResponse &resp) {
+void Machine::handlePairRespinse(const PairResponse &resp) {
     bool agree = resp.agree();
     if (agree) {
         m_paired = true;

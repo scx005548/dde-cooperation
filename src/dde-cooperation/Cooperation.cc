@@ -126,7 +126,7 @@ void Cooperation::scan([[maybe_unused]] const Glib::VariantContainerBase &args,
         request.mutable_deviceinfo()->set_name(Net::getHostname());
         request.mutable_deviceinfo()->set_os(DeviceOS::LINUX);
         Message::send_message_to(m_socketScan, MessageType::ScanRequestType, request, m_scanAddr);
-        m_devices.clear();
+        m_machines.clear();
         m_lastDeviceIndex = 0;
     } catch (Gio::Error &e) {
         SPDLOG_ERROR("{} {}", e.code(), e.what().c_str());
@@ -136,14 +136,14 @@ void Cooperation::scan([[maybe_unused]] const Glib::VariantContainerBase &args,
 
 void Cooperation::getDevices(Glib::VariantBase &property,
                              [[maybe_unused]] const Glib::ustring &propertyName) const noexcept {
-    std::vector<Glib::ustring> devices;
-    devices.reserve(m_devices.size());
+    std::vector<Glib::ustring> machines;
+    machines.reserve(m_machines.size());
 
-    std::transform(m_devices.begin(), m_devices.end(), std::back_inserter(devices), [](auto &i) {
+    std::transform(m_machines.begin(), m_machines.end(), std::back_inserter(machines), [](auto &i) {
         return i.second.path();
     });
 
-    property = Glib::Variant<std::vector<Glib::ustring>>::create(devices);
+    property = Glib::Variant<std::vector<Glib::ustring>>::create(machines);
 }
 
 bool Cooperation::m_scanRequestHandler([[maybe_unused]] Glib::IOCondition cond) const noexcept {
@@ -187,7 +187,7 @@ bool Cooperation::m_scanResponseHandler([[maybe_unused]] Glib::IOCondition cond)
         return true;
     }
 
-    m_devices.emplace(
+    m_machines.emplace(
         std::piecewise_construct,
         std::forward_as_tuple(response.deviceinfo().uuid()),
         std::forward_as_tuple(*this, m_service, m_lastDeviceIndex, response.deviceinfo()));
@@ -207,10 +207,10 @@ bool Cooperation::m_pairRequestHandler([[maybe_unused]] Glib::IOCondition cond) 
         return true;
     }
 
-    Device &device = ([this, &request]() -> Device & {
-        auto i = m_devices.find(request.deviceinfo().uuid());
-        if (i == m_devices.end()) {
-            return std::get<0>(m_devices.emplace(std::piecewise_construct,
+    Machine &machine = ([this, &request]() -> Machine & {
+        auto i = m_machines.find(request.deviceinfo().uuid());
+        if (i == m_machines.end()) {
+            return std::get<0>(m_machines.emplace(std::piecewise_construct,
                                                  std::forward_as_tuple(request.deviceinfo().uuid()),
                                                  std::forward_as_tuple(*this,
                                                                        m_service,
@@ -222,7 +222,7 @@ bool Cooperation::m_pairRequestHandler([[maybe_unused]] Glib::IOCondition cond) 
         return i->second;
     })();
 
-    device.onPair(socketConnected);
+    machine.onPair(socketConnected);
 
     SPDLOG_INFO("connected by {}@{}:{}\n",
                 request.deviceinfo().name().c_str(),
