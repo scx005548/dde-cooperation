@@ -228,4 +228,4 @@ bool Service::onSetProperty(const Glib::RefPtr<Gio::DBus::Connection> &connectio
     return false;
 }
 
-}; // namespace DBus
+} // namespace DBus

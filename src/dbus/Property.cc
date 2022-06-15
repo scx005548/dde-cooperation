@@ -87,4 +87,4 @@ bool Property::onSetProperty(const Glib::RefPtr<Gio::DBus::Connection> &connecti
     return m_set(connection, sender, objectPath, interfaceName, propertyName, value);
 }
 
-}; // namespace DBus
+} // namespace DBus

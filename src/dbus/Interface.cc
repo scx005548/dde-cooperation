@@ -144,4 +144,4 @@ bool Interface::onSetProperty(const Glib::RefPtr<Gio::DBus::Connection> &connect
     return false;
 }
 
-}; // namespace DBus
+} // namespace DBus

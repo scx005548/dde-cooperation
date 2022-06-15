@@ -73,4 +73,4 @@ void Method::onMethodCall(
     m_callback(connection, sender, objectPath, interfaceName, methodName, args, invocation);
 }
 
-}; // namespace DBus
+} // namespace DBus

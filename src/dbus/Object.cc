@@ -128,4 +128,4 @@ bool Object::onSetProperty(const Glib::RefPtr<Gio::DBus::Connection> &connection
     return false;
 }
 
-}; // namespace DBus
+} // namespace DBus
