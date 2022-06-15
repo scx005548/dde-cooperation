@@ -5,6 +5,7 @@
 #include <glibmm.h>
 
 #include "dbus/dbus.h"
+#include "EdgeDetector.h"
 
 class Agent {
 public:
@@ -20,6 +21,8 @@ private:
     Glib::RefPtr<DBus::Object> m_object;
     Glib::RefPtr<DBus::Interface> m_interface;
     Glib::RefPtr<DBus::Method> m_methodScan;
+
+    std::unique_ptr<EdgeDetector> m_edgeDetector;
 };
 
 #endif // !DDE_COOPERATION_AGENT_AGENT_H

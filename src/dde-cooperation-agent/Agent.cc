@@ -2,6 +2,8 @@
 
 #include <spdlog/spdlog.h>
 
+#include "EdgeDetector/X11.h"
+
 Agent::Agent()
     : m_conn(Gio::DBus::Connection::get_sync(Gio::DBus::BUS_TYPE_SYSTEM))
     , m_service(new DBus::Service(m_conn))
@@ -11,6 +13,13 @@ Agent::Agent()
     m_interface->exportMethod(m_methodScan);
     m_object->exportInterface(m_interface);
     m_service->exportObject(m_object);
+
+    if (getenv("WAYLAND_DISPLAY")) {
+        // TODO: wayland
+    } else {
+        m_edgeDetector = std::make_unique<X11>();
+    }
+    m_edgeDetector->start();
 }
 
 void Agent::scan([[maybe_unused]] const Glib::VariantContainerBase &args,

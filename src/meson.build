@@ -64,6 +64,10 @@ dde_cooperation_agent_sources = files('''
   dde-cooperation-agent/main.cc
   dde-cooperation-agent/Agent.h
   dde-cooperation-agent/Agent.cc
+  dde-cooperation-agent/EdgeDetector.h
+  dde-cooperation-agent/EdgeDetector.cc
+  dde-cooperation-agent/EdgeDetector/X11.h
+  dde-cooperation-agent/EdgeDetector/X11.cc
 '''.split())
 
 dde_cooperation_agent_sources += common_sources
@@ -74,6 +78,11 @@ executable('dde-cooperation-agent',
     fmt,
     glibmm,
     giomm,
+    x11_xcb,
+    xi,
+    xcb,
+    xcb_aux,
+    xcb_randr,
   ],
   install: true,
 )
