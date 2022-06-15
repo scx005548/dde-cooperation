@@ -14,6 +14,7 @@
 #include <spdlog/spdlog.h>
 
 #include <utils/net.h>
+#include <utils/ptr.h>
 
 namespace fs = std::filesystem;
 
@@ -31,11 +32,6 @@ KeyPair::KeyPair(const std::filesystem::path &dataDir, KeyType type)
 
     m_privatePath = dataDir / prikeyFilename;
     m_publicPath = dataDir / pubkeyFilename;
-}
-
-template <typename T, typename D>
-std::unique_ptr<T, D> make_handle(T *handle, D deleter) {
-    return std::unique_ptr<T, D>{handle, deleter};
 }
 
 inline std::string MD5(const std::string &s) {
