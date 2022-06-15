@@ -1,7 +1,6 @@
 #ifndef DDE_COOPERATION_AGENT_EDGE_DETECTOR_H
 #define DDE_COOPERATION_AGENT_EDGE_DETECTOR_H
 
-
 #include <vector>
 
 #include <cstdint>

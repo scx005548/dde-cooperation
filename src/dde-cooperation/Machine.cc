@@ -5,6 +5,7 @@
 #include "utils/message.h"
 
 #include "protocol/pair.pb.h"
+#include "protocol/cooperation.pb.h"
 
 Machine::Machine(Cooperation &cooperation,
                  Glib::RefPtr<DBus::Service> service,
@@ -130,7 +131,22 @@ bool Machine::mainHandler([[maybe_unused]] Glib::IOCondition cond,
     auto base = Message::recv_message_header(sock);
     switch (base.type()) {
     case PairResponseType: {
-        handlePairRespinse(Message::recv_message_body<PairResponse>(sock, base));
+        handlePairResponse(Message::recv_message_body<PairResponse>(sock, base));
+        break;
+    }
+
+    case InputEventRequestType: {
+        auto event = Message::recv_message_body<InputEventRequest>(sock, base);
+        m_signal_inputEvent.emit(event);
+
+        InputEventResponse response;
+        response.set_serial(event.serial());
+        response.set_success(true);
+        Message::send_message(sock, InputEventResponseType, response);
+        break;
+    }
+
+    case InputEventResponseType: {
         break;
     }
 
@@ -141,7 +157,7 @@ bool Machine::mainHandler([[maybe_unused]] Glib::IOCondition cond,
     return true;
 }
 
-void Machine::handlePairRespinse(const PairResponse &resp) {
+void Machine::handlePairResponse(const PairResponse &resp) {
     bool agree = resp.agree();
     if (agree) {
         m_paired = true;
@@ -149,4 +165,16 @@ void Machine::handlePairRespinse(const PairResponse &resp) {
     }
 
     // TODO: handle not agree
+}
+
+void Machine::handleCooperateRequest() {
+    bool accept = m_signal_cooperationRequest.emit(this);
+
+    CooperateResponse resp;
+    resp.set_accept(accept);
+    Message::send_message(m_socketConnect, CooperateResponseType, resp);
+}
+
+void Machine::handleInputEvent(const InputEventRequest &event) {
+    Message::send_message(m_socketConnect, InputEventRequestType, event);
 }

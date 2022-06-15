@@ -11,6 +11,8 @@
 
 #include "Machine.h"
 #include "KeyPair.h"
+#include "InputDevice.h"
+#include "InputEvent.h"
 #include "dbus/dbus.h"
 #include "utils/net.h"
 
@@ -58,6 +60,9 @@ private:
 
     KeyPair m_keypair;
 
+    std::unordered_map<std::string, std::unique_ptr<InputDevice>> m_inputDevices;
+    InputEvent m_inputEvent;
+
     void ensureDataDirExists();
     void initUUID();
 
@@ -65,6 +70,7 @@ private:
     bool m_scanResponseHandler(Glib::IOCondition cond) noexcept;
 
     bool m_pairRequestHandler(Glib::IOCondition cond) noexcept;
+    bool handleCooperateRequest(Machine *machine);
 };
 
 #endif // !DDE_COOPERATION_COOPERATION_H

@@ -13,6 +13,7 @@
 
 namespace fs = std::filesystem;
 
+const static fs::path inputDevicePath = "/dev/input";
 const std::filesystem::path Cooperation::dataDir = "/var/lib/dde-cooperation";
 
 Cooperation::Cooperation()
@@ -54,6 +55,15 @@ Cooperation::Cooperation()
     m_listenPairAddr = Net::makeSocketAddress("0.0.0.0", 0);
     m_socketListenPair->bind(m_listenPairAddr, true);
     m_socketListenPair->listen();
+
+    // TODO: inotify
+    for (const auto &entry : fs::directory_iterator(inputDevicePath)) {
+        if (entry.path().filename().string().rfind("event", 0) == 0) {
+            auto inputDevice = std::make_unique<InputDevice>(entry.path());
+            // starts with event
+            m_inputDevices.insert(std::pair(entry.path(), std::move(inputDevice)));
+        }
+    }
 
     try {
         Gio::signal_socket().connect(
@@ -188,9 +198,11 @@ bool Cooperation::m_scanResponseHandler([[maybe_unused]] Glib::IOCondition cond)
         return true;
     }
 
-    m_machines.insert(std::pair(
-        response.deviceinfo().uuid(),
-        std::make_unique<Machine>(*this, m_service, m_lastMachineIndex, response.deviceinfo())));
+    auto m = std::make_unique<Machine>(*this, m_service, m_lastMachineIndex, response.deviceinfo());
+    m->onCooperationRequest().connect(sigc::mem_fun(this, &Cooperation::handleCooperateRequest));
+    m->inputEvent().connect(sigc::mem_fun(&m_inputEvent, &InputEvent::emit));
+    m_machines.insert(std::pair(response.deviceinfo().uuid(), std::move(m)));
+
     m_lastMachineIndex++;
     SPDLOG_INFO("{} responsed", response.deviceinfo().name());
     return true;
@@ -216,6 +228,7 @@ bool Cooperation::m_pairRequestHandler([[maybe_unused]] Glib::IOCondition cond) 
                                                request.deviceinfo());
             m_machines.insert(std::pair(request.deviceinfo().uuid(), std::move(m)));
             i = m_machines.find(request.deviceinfo().uuid());
+            m_lastMachineIndex++;
         }
 
         return i->second;
@@ -227,6 +240,18 @@ bool Cooperation::m_pairRequestHandler([[maybe_unused]] Glib::IOCondition cond) 
                 request.deviceinfo().name().c_str(),
                 remote->get_address()->to_string().c_str(),
                 remote->get_port());
+
+    return true;
+}
+
+bool Cooperation::handleCooperateRequest(Machine *machine) {
+    // TODO: request accept
+
+    for (auto &inputDevice : m_inputDevices) {
+        inputDevice.second->inputEvent().clear();
+        inputDevice.second->inputEvent().connect(
+            sigc::mem_fun(machine, &Machine::handleInputEvent));
+    }
 
     return true;
 }

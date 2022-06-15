@@ -11,6 +11,10 @@ enum MessageType
     StopPairRequestType = 1004;
     StopPairResponseType = 1005;
 
+    CooperateRequestType = 2000;
+    CooperateResponseType = 2001;
+    FlowRequestType = 2100;
+
     FsRequestType = 3000;
     FsResponseType = 3001;
     FsSendFileRequestType = 3002;

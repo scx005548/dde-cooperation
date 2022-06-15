@@ -10,7 +10,6 @@ message InputEventRequest
     int32 value = 4;    // 事件值
 }
 
-
 message InputEventResponse
 {
     int64 serial = 1; // 序号

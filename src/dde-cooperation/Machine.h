@@ -6,6 +6,7 @@
 #include "dbus/dbus.h"
 
 #include "protocol/pair.pb.h"
+#include "protocol/input_event.pb.h"
 
 class Cooperation;
 
@@ -20,6 +21,17 @@ public:
     Glib::ustring path() const { return m_path; }
 
     void onPair(Glib::RefPtr<Gio::Socket> conn);
+
+    using type_signal_cooperationRequest = sigc::signal<bool(Machine *)>;
+    type_signal_cooperationRequest onCooperationRequest() { return m_signal_cooperationRequest; }
+
+    using type_signal_flowRequest = sigc::signal<void()>;
+    type_signal_flowRequest flowRequest() { return m_signal_flowRequest; }
+
+    using type_signal_inputEvent = sigc::signal<bool(const InputEventRequest &)>;
+    type_signal_inputEvent inputEvent() { return m_signal_inputEvent; }
+
+    void handleInputEvent(const InputEventRequest &event);
 
 protected:
     void pair(const Glib::VariantContainerBase &args,
@@ -36,6 +48,10 @@ protected:
 
 private:
     Cooperation &m_cooperation;
+
+    type_signal_cooperationRequest m_signal_cooperationRequest;
+    type_signal_flowRequest m_signal_flowRequest;
+    type_signal_inputEvent m_signal_inputEvent;
 
     const Glib::ustring m_path;
 
@@ -64,7 +80,8 @@ private:
     Glib::RefPtr<Gio::Socket> m_socketConnect;
 
     bool mainHandler(Glib::IOCondition cond, const Glib::RefPtr<Gio::Socket> &sock) noexcept;
-    void handlePairRespinse(const PairResponse &resp);
+    void handlePairResponse(const PairResponse &resp);
+    void handleCooperateRequest();
 };
 
 #endif // !DDE_COOPERATION_DEVICE_H

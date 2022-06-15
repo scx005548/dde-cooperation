@@ -6,6 +6,7 @@ protocol = protoc.process(
     'protocol/pair.proto',
     'protocol/remote_display.proto',
     'protocol/input_event.proto',
+    'protocol/cooperation.proto',
   ],
   preserve_path_from: meson.current_source_dir(),
 )
@@ -35,6 +36,10 @@ dde_cooperation_sources = files('''
   dde-cooperation/KeyPair.cc
   dde-cooperation/Machine.h
   dde-cooperation/Machine.cc
+  dde-cooperation/InputDevice.h
+  dde-cooperation/InputDevice.cc
+  dde-cooperation/InputEvent.h
+  dde-cooperation/InputEvent.cc
 '''.split())
 
 dde_cooperation_sources += common_sources + protocol
@@ -50,6 +55,7 @@ executable('dde-cooperation',
     fmt,
     spdlog,
     openssl,
+    libevdev,
     glibmm,
     giomm,
     protobuf,
