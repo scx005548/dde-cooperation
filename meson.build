@@ -8,6 +8,9 @@ project(
     ]
 )
 
+prefixdir = get_option('prefix')
+datadir = join_paths(prefixdir, get_option('datadir'))
+
 cxx = meson.get_compiler('cpp')
 stdcxxfs = cxx.find_library('stdc++fs', required: false)
 
@@ -31,9 +34,16 @@ protoc = generator(protoc_exec,
   arguments: ['--proto_path=@CURRENT_SOURCE_DIR@', '--cpp_out=@BUILD_DIR@', '--experimental_allow_proto3_optional', '@INPUT@']
 )
 
+systemd = dependency('systemd')
+systemd_system_unit_dir = systemd.get_pkgconfig_variable('systemdsystemunitdir')
+
 includes = include_directories('src')
 
 subdir('src')
 
-install_data('misc/conf/com.deepin.Cooperation.conf',
-             install_dir: 'share/dbus-1/system.d/')
+install_data('misc/dbus/system.d/com.deepin.Cooperation.conf',
+             install_dir: join_paths(datadir, 'dbus-1', 'system.d'))
+install_data('misc/dbus/system-services/com.deepin.Cooperation.service',
+             install_dir: join_paths(datadir, 'dbus-1', 'system-services'))
+install_data('misc/systemd-service/dde-cooperation.service',
+             install_dir: systemd_system_unit_dir)
