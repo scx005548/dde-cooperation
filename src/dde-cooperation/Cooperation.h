@@ -3,6 +3,7 @@
 
 #include <map>
 #include <filesystem>
+#include <memory>
 
 #include <glibmm.h>
 #include <giomm.h>
@@ -43,7 +44,7 @@ private:
 
     // DBus properties
     Glib::RefPtr<DBus::Property> m_propertyDevices;
-    std::map<std::string, Machine> m_machines;
+    std::map<std::string, std::unique_ptr<Machine>> m_machines;
     uint32_t m_lastDeviceIndex;
 
     Glib::RefPtr<Gio::Socket> m_socketScan;

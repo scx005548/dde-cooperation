@@ -140,7 +140,7 @@ void Cooperation::getDevices(Glib::VariantBase &property,
     machines.reserve(m_machines.size());
 
     std::transform(m_machines.begin(), m_machines.end(), std::back_inserter(machines), [](auto &i) {
-        return i.second.path();
+        return i.second->path();
     });
 
     property = Glib::Variant<std::vector<Glib::ustring>>::create(machines);
@@ -187,10 +187,9 @@ bool Cooperation::m_scanResponseHandler([[maybe_unused]] Glib::IOCondition cond)
         return true;
     }
 
-    m_machines.emplace(
-        std::piecewise_construct,
-        std::forward_as_tuple(response.deviceinfo().uuid()),
-        std::forward_as_tuple(*this, m_service, m_lastDeviceIndex, response.deviceinfo()));
+    m_machines.insert(std::pair(
+        response.deviceinfo().uuid(),
+        std::make_unique<Machine>(*this, m_service, m_lastDeviceIndex, response.deviceinfo())));
     m_lastDeviceIndex++;
     SPDLOG_INFO("{} responsed", response.deviceinfo().name());
     return true;
@@ -207,22 +206,21 @@ bool Cooperation::m_pairRequestHandler([[maybe_unused]] Glib::IOCondition cond) 
         return true;
     }
 
-    Machine &machine = ([this, &request]() -> Machine & {
+    auto &machine = ([ this, &request ]() -> auto & {
         auto i = m_machines.find(request.deviceinfo().uuid());
         if (i == m_machines.end()) {
-            return std::get<0>(m_machines.emplace(std::piecewise_construct,
-                                                 std::forward_as_tuple(request.deviceinfo().uuid()),
-                                                 std::forward_as_tuple(*this,
-                                                                       m_service,
-                                                                       m_lastDeviceIndex,
-                                                                       request.deviceinfo())))
-                ->second;
+            auto m = std::make_unique<Machine>(*this,
+                                               m_service,
+                                               m_lastDeviceIndex,
+                                               request.deviceinfo());
+            m_machines.insert(std::pair(request.deviceinfo().uuid(), std::move(m)));
+            i = m_machines.find(request.deviceinfo().uuid());
         }
 
         return i->second;
     })();
 
-    machine.onPair(socketConnected);
+    machine->onPair(socketConnected);
 
     SPDLOG_INFO("connected by {}@{}:{}\n",
                 request.deviceinfo().name().c_str(),
