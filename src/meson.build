@@ -22,11 +22,9 @@ common_sources = files('''
   dbus/Service.cc
   dbus/Object.h
   dbus/Object.cc
-  utils/sha256.h
-  utils/sha256.cc
-  utils/idxubyte.h
   utils/message.h
   utils/net.h
+  utils/ptr.h
 '''.split())
 
 dde_cooperation_sources = files('''
@@ -52,7 +50,6 @@ executable('dde-cooperation',
     fmt,
     spdlog,
     openssl,
-    libnm,
     glibmm,
     giomm,
     protobuf,

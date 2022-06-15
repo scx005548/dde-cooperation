@@ -9,7 +9,6 @@ Build-Depends:
  debhelper-compat (= 11),
  libfmt-dev,
  libglibmm-2.4-dev,
- libnm-dev,
  libprotobuf-dev,
  libspdlog-dev,
  libssl-dev,

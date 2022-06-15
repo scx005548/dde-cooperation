@@ -8,7 +8,6 @@
 
 #include <string>
 
-#include <NetworkManager.h>
 #include <giomm.h>
 
 namespace Net {
@@ -27,34 +26,6 @@ inline std::string getIpAddress(void) {
     if (hostEntry != nullptr) return inet_ntoa(*(struct in_addr *)(hostEntry->h_addr_list[0]));
 
     return "";
-}
-
-inline guint getIpPrefix(const std::string &addr) {
-    NMClient *client = nm_client_new(nullptr, nullptr);
-    const GPtrArray *devices = nm_client_get_all_devices(client);
-
-    for (guint i = 0; i < devices->len; i++) {
-        NMDevice *device = reinterpret_cast<NMDevice *>(devices->pdata[i]);
-        std::string iface = nm_device_get_iface(device);
-        if (iface == "lo") continue;
-
-        NMIPConfig *config = nm_device_get_ip4_config(device);
-        if (config == nullptr) continue;
-
-        GPtrArray *addresses = nm_ip_config_get_addresses(config);
-        for (guint j = 0; j < addresses->len; j++) {
-            NMIPAddress *address = reinterpret_cast<NMIPAddress *>(addresses->pdata[j]);
-            std::string ip = nm_ip_address_get_address(address);
-            if (ip == addr) {
-                guint num = nm_ip_address_get_prefix(address);
-                g_object_unref(client);
-                return num;
-            }
-        }
-    }
-
-    g_object_unref(client);
-    return 0;
 }
 
 template <int N>
