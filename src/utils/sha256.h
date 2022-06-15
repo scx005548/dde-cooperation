@@ -1,5 +1,5 @@
-#ifndef SHA256_H
-#define SHA256_H
+#ifndef UTILS_SHA256_H
+#define UTILS_SHA256_H
 
 #include <cstdint>
 #include <cstddef>
@@ -43,4 +43,4 @@ const char *sha256OfString(Sha256 *sha256, const char *str);
 
 } // namespace Hash
 
-#endif // !SHA256_H
+#endif // !UTILS_SHA256_H

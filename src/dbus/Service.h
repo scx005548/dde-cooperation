@@ -16,6 +16,7 @@ class Service : public Glib::Object {
 public:
     explicit Service(const Glib::ustring &name,
                      Gio::DBus::BusType type = Gio::DBus::BusType::BUS_TYPE_SESSION);
+    explicit Service(Glib::RefPtr<Gio::DBus::Connection> conn);
     ~Service() = default;
 
     /*****************************************************************************
@@ -59,7 +60,6 @@ private:
     Glib::RefPtr<Gio::DBus::Connection> m_conn;
     Gio::DBus::InterfaceVTable m_vtable; // DBus 虚表
     guint m_ownerId;
-    bool m_registered;
 
     std::map<Glib::ustring, Glib::RefPtr<DBus::Object>> m_objects;
     std::map<Glib::ustring, std::vector<guint>> m_objIds;

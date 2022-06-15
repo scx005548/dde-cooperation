@@ -1,5 +1,5 @@
-#ifndef DEVICE_H
-#define DEVICE_H
+#ifndef DDE_COOPERATION_DEVICE_H
+#define DDE_COOPERATION_DEVICE_H
 
 #include <glibmm.h>
 
@@ -67,4 +67,4 @@ private:
     void handlePairRespinse(const PairResponse &resp);
 };
 
-#endif // !DEVICE_H
+#endif // !DDE_COOPERATION_DEVICE_H

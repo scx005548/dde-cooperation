@@ -1,5 +1,5 @@
-#ifndef COOPERATION_H
-#define COOPERATION_H
+#ifndef DDE_COOPERATION_COOPERATION_H
+#define DDE_COOPERATION_COOPERATION_H
 
 #include <map>
 #include <filesystem>
@@ -66,4 +66,4 @@ private:
     bool m_pairRequestHandler(Glib::IOCondition cond) noexcept;
 };
 
-#endif // !COOPERATION_H
+#endif // !DDE_COOPERATION_COOPERATION_H

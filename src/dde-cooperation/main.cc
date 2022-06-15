@@ -1,7 +1,7 @@
 #include <glibmm.h>
 #include <giomm.h>
 
-#include "modules/Cooperation.h"
+#include "Cooperation.h"
 
 int main() {
     Glib::init();

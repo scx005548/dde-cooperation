@@ -1,5 +1,5 @@
-#ifndef MESSAGE_H
-#define MESSAGE_H
+#ifndef UTILS_MESSAGE_H
+#define UTILS_MESSAGE_H
 
 #include <giomm.h>
 #include <spdlog/spdlog.h>
@@ -127,4 +127,4 @@ inline T recv_message_from(const Glib::RefPtr<Gio::Socket> &sock,
 
 } // namespace Message
 
-#endif // !MESSAGE_H
+#endif // !UTILS_MESSAGE_H

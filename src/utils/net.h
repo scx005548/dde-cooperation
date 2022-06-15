@@ -1,5 +1,5 @@
-#ifndef NET_H
-#define NET_H
+#ifndef UTILS_NET_H
+#define UTILS_NET_H
 
 #include <stdio.h>
 #include <unistd.h>
@@ -87,4 +87,4 @@ inline Glib::RefPtr<Gio::SocketAddress> makeSocketAddress(const std::string &ip,
 
 } // namespace Net
 
-#endif // !NET_H
+#endif // !UTILS_NET_H

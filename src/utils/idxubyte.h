@@ -1,5 +1,5 @@
-#ifndef IDX_UBYTE_H
-#define IDX_UBYTE_H
+#ifndef UTILS_IDX_UBYTE_H
+#define UTILS_IDX_UBYTE_H
 
 #include <cstdio>
 #include <cstdint>
@@ -147,4 +147,4 @@ private:
     }
 };
 
-#endif // !IDX_UBYTE_H
+#endif // !UTILS_IDX_UBYTE_H

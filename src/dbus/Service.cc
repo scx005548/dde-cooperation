@@ -9,8 +9,15 @@ Service::Service(const Glib::ustring &name, Gio::DBus::BusType type)
     , m_vtable{Method::warp(this, &Service::onMethodCall),
                Property::warp(this, &Service::onGetProperty),
                Property::warp(this, &Service::onSetProperty)}
-    , m_ownerId(0)
-    , m_registered(false) {
+    , m_ownerId(0) {
+}
+
+Service::Service(Glib::RefPtr<Gio::DBus::Connection> conn)
+    : m_conn(conn)
+    , m_vtable{Method::warp(this, &Service::onMethodCall),
+               Property::warp(this, &Service::onGetProperty),
+               Property::warp(this, &Service::onSetProperty)}
+    , m_ownerId(0) {
 }
 
 /*****************************************************************************
