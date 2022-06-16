@@ -9,7 +9,8 @@ project(
 )
 
 prefixdir = get_option('prefix')
-datadir = join_paths(prefixdir, get_option('datadir'))
+datadir = prefixdir / get_option('datadir')
+libexecdir = prefixdir / get_option('libexecdir')
 
 cxx = meson.get_compiler('cpp')
 stdcxxfs = cxx.find_library('stdc++fs', required: false)
@@ -47,5 +48,13 @@ install_data('misc/dbus/system.d/com.deepin.Cooperation.conf',
              install_dir: join_paths(datadir, 'dbus-1', 'system.d'))
 install_data('misc/dbus/system-services/com.deepin.Cooperation.service',
              install_dir: join_paths(datadir, 'dbus-1', 'system-services'))
-install_data('misc/systemd-service/dde-cooperation.service',
-             install_dir: systemd_system_unit_dir)
+
+data = configuration_data()
+data.set('libexecdir', libexecdir)
+
+configure_file(
+  input: 'misc/systemd-service/dde-cooperation.service.in',
+  output: 'dde-cooperation.service',
+  configuration: data,
+  install_dir: systemd_system_unit_dir,
+)

@@ -31,4 +31,5 @@ executable('dde-cooperation-daemon',
     protobuf,
   ],
   install: true,
+  install_dir: join_paths(libexecdir, 'dde-cooperation'),
 )

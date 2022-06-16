@@ -26,4 +26,5 @@ executable('dde-cooperation-user',
     xcb_randr,
   ],
   install: true,
+  install_dir: join_paths(libexecdir, 'dde-cooperation'),
 )
