@@ -20,9 +20,10 @@ Cooperation::Cooperation()
     , m_object(new DBus::Object("/com/deepin/Cooperation"))
     , m_interface(new DBus::Interface("com.deepin.Cooperation"))
     , m_methodScan(new DBus::Method("Scan", DBus::Method::warp(this, &Cooperation::scan)))
-    , m_propertyDevices(
-          new DBus::Property("Devices", "ao", DBus::Property::warp(this, &Cooperation::getDevices)))
-    , m_lastDeviceIndex(0)
+    , m_propertyMachines(new DBus::Property("Machines",
+                                            "ao",
+                                            DBus::Property::warp(this, &Cooperation::getMachines)))
+    , m_lastMachineIndex(0)
     , m_socketScan(Gio::Socket::create(Gio::SocketFamily::SOCKET_FAMILY_IPV4,
                                        Gio::SocketType::SOCKET_TYPE_DATAGRAM,
                                        Gio::SocketProtocol::SOCKET_PROTOCOL_UDP))
@@ -40,7 +41,7 @@ Cooperation::Cooperation()
 
     m_service->registerService();
     m_interface->exportMethod(m_methodScan);
-    m_interface->exportProperty(m_propertyDevices);
+    m_interface->exportProperty(m_propertyMachines);
     m_object->exportInterface(m_interface);
     m_service->exportObject(m_object);
 
@@ -127,23 +128,23 @@ void Cooperation::scan([[maybe_unused]] const Glib::VariantContainerBase &args,
         request.mutable_deviceinfo()->set_os(DeviceOS::LINUX);
         Message::send_message_to(m_socketScan, MessageType::ScanRequestType, request, m_scanAddr);
         m_machines.clear();
-        m_lastDeviceIndex = 0;
+        m_lastMachineIndex = 0;
     } catch (Gio::Error &e) {
         SPDLOG_ERROR("{} {}", e.code(), e.what().c_str());
     }
     invocation->return_value(Glib::VariantContainerBase{});
 }
 
-void Cooperation::getDevices(Glib::VariantBase &property,
-                             [[maybe_unused]] const Glib::ustring &propertyName) const noexcept {
-    std::vector<Glib::ustring> machines;
+void Cooperation::getMachines(Glib::VariantBase &property,
+                              [[maybe_unused]] const Glib::ustring &propertyName) const noexcept {
+    std::vector<Glib::DBusObjectPathString> machines;
     machines.reserve(m_machines.size());
 
     std::transform(m_machines.begin(), m_machines.end(), std::back_inserter(machines), [](auto &i) {
-        return i.second->path();
+        return Glib::DBusObjectPathString(i.second->path());
     });
 
-    property = Glib::Variant<std::vector<Glib::ustring>>::create(machines);
+    property = Glib::Variant<std::vector<Glib::DBusObjectPathString>>::create(machines);
 }
 
 bool Cooperation::m_scanRequestHandler([[maybe_unused]] Glib::IOCondition cond) const noexcept {
@@ -189,8 +190,8 @@ bool Cooperation::m_scanResponseHandler([[maybe_unused]] Glib::IOCondition cond)
 
     m_machines.insert(std::pair(
         response.deviceinfo().uuid(),
-        std::make_unique<Machine>(*this, m_service, m_lastDeviceIndex, response.deviceinfo())));
-    m_lastDeviceIndex++;
+        std::make_unique<Machine>(*this, m_service, m_lastMachineIndex, response.deviceinfo())));
+    m_lastMachineIndex++;
     SPDLOG_INFO("{} responsed", response.deviceinfo().name());
     return true;
 }
@@ -211,7 +212,7 @@ bool Cooperation::m_pairRequestHandler([[maybe_unused]] Glib::IOCondition cond) 
         if (i == m_machines.end()) {
             auto m = std::make_unique<Machine>(*this,
                                                m_service,
-                                               m_lastDeviceIndex,
+                                               m_lastMachineIndex,
                                                request.deviceinfo());
             m_machines.insert(std::pair(request.deviceinfo().uuid(), std::move(m)));
             i = m_machines.find(request.deviceinfo().uuid());

@@ -28,7 +28,7 @@ protected:
               const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
 
     // DBus property handlers
-    void getDevices(Glib::VariantBase &property, const Glib::ustring &propertyName) const noexcept;
+    void getMachines(Glib::VariantBase &property, const Glib::ustring &propertyName) const noexcept;
 
 private:
     static const std::filesystem::path dataDir;
@@ -43,9 +43,9 @@ private:
     Glib::RefPtr<DBus::Method> m_methodScan;
 
     // DBus properties
-    Glib::RefPtr<DBus::Property> m_propertyDevices;
+    Glib::RefPtr<DBus::Property> m_propertyMachines;
     std::map<std::string, std::unique_ptr<Machine>> m_machines;
-    uint32_t m_lastDeviceIndex;
+    uint32_t m_lastMachineIndex;
 
     Glib::RefPtr<Gio::Socket> m_socketScan;
     Glib::RefPtr<Gio::Socket> m_socketListenScan;
