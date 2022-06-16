@@ -1,14 +1,11 @@
-#include <glibmm.h>
-#include <giomm.h>
+#include <QtGui/QGuiApplication>
 
-#include "Cooperation.h"
+int main(int argc, char *argv[]) {
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+#endif
 
-int main() {
-    Glib::init();
-    Gio::init();
+    QGuiApplication app(argc, argv);
 
-    Cooperation cooperation;
-
-    Glib::RefPtr<Glib::MainLoop> loop = Glib::MainLoop::create();
-    loop->run();
+    return app.exec();
 }

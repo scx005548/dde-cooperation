@@ -1,11 +1,11 @@
 [Unit]
-Description=DDE cooperation
+Description=DDE cooperation daemon
 After=network.target
 
 [Service]
 Type=dbus
 BusName=com.deepin.Cooperation
-ExecStart=/usr/bin/dde-cooperation
+ExecStart=/usr/bin/dde-cooperation-daemon
 
 [Install]
 WantedBy=multi-user.target

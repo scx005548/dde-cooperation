@@ -1,5 +1,5 @@
-#ifndef DDE_COOPERATION_DEVICE_H
-#define DDE_COOPERATION_DEVICE_H
+#ifndef DDE_COOPERATION_DAEMON_DEVICE_H
+#define DDE_COOPERATION_DAEMON_DEVICE_H
 
 #include <glibmm.h>
 
@@ -84,4 +84,4 @@ private:
     void handleCooperateRequest();
 };
 
-#endif // !DDE_COOPERATION_DEVICE_H
+#endif // !DDE_COOPERATION_DAEMON_DEVICE_H

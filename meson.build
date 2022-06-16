@@ -27,6 +27,9 @@ xcb = dependency('xcb', required: true)
 xcb_aux = dependency('xcb-aux', required: true)
 xcb_randr = dependency('xcb-randr', required: true)
 
+qt5 = import('qt5')
+qt5dep = dependency('qt5', modules: ['Core', 'Gui', 'DBus'])
+
 protobuf = dependency('protobuf', required: true)
 protoc_exec = find_program('protoc')
 protoc = generator(protoc_exec,
@@ -37,7 +40,6 @@ protoc = generator(protoc_exec,
 systemd = dependency('systemd')
 systemd_system_unit_dir = systemd.get_pkgconfig_variable('systemdsystemunitdir')
 
-includes = include_directories('src')
 
 subdir('src')
 

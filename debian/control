@@ -20,6 +20,8 @@ Build-Depends:
  libxi-dev,
  meson,
  protobuf-compiler,
+ qtbase5-dev,
+ qttools5-dev-tools,
  systemd,
  uuid-dev,
 Standards-Version: 4.5.1

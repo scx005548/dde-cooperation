@@ -1,5 +1,5 @@
-#ifndef DDE_COOPERATION_AGENT_AGENT_H
-#define DDE_COOPERATION_AGENT_AGENT_H
+#ifndef DDE_COOPERATION_USER_AGENT_H
+#define DDE_COOPERATION_USER_AGENT_H
 
 #include <memory>
 #include <glibmm.h>
@@ -7,9 +7,9 @@
 #include "dbus/dbus.h"
 #include "EdgeDetector.h"
 
-class Agent {
+class Manager {
 public:
-    Agent();
+    Manager();
 
 protected:
     void scan(const Glib::VariantContainerBase &args,
@@ -25,4 +25,4 @@ private:
     std::unique_ptr<EdgeDetector> m_edgeDetector;
 };
 
-#endif // !DDE_COOPERATION_AGENT_AGENT_H
+#endif // !DDE_COOPERATION_USER_AGENT_H

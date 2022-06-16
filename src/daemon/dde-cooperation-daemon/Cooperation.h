@@ -1,5 +1,5 @@
-#ifndef DDE_COOPERATION_COOPERATION_H
-#define DDE_COOPERATION_COOPERATION_H
+#ifndef DDE_COOPERATION_DAEMON_COOPERATION_H
+#define DDE_COOPERATION_DAEMON_COOPERATION_H
 
 #include <map>
 #include <filesystem>
@@ -73,4 +73,4 @@ private:
     bool handleCooperateRequest(Machine *machine);
 };
 
-#endif // !DDE_COOPERATION_COOPERATION_H
+#endif // !DDE_COOPERATION_DAEMON_COOPERATION_H

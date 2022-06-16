@@ -1,13 +1,13 @@
 #include <glibmm.h>
 #include <giomm.h>
 
-#include "Agent.h"
+#include "Cooperation.h"
 
 int main() {
     Glib::init();
     Gio::init();
 
-    Agent agent;
+    Cooperation cooperation;
 
     Glib::RefPtr<Glib::MainLoop> loop = Glib::MainLoop::create();
     loop->run();
