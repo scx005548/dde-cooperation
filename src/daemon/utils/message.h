@@ -10,10 +10,9 @@
 
 namespace Message {
 
-template <typename T>
 inline void send_message(const Glib::RefPtr<Gio::Socket> &sock,
                          uint32_t type,
-                         const T &response) noexcept {
+                         const google::protobuf::Message &response) noexcept {
     BaseMessage base;
     base.set_type(type);
     base.set_size(response.ByteSizeLong());
