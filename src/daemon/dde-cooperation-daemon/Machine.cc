@@ -37,6 +37,7 @@ Machine::Machine(Cooperation &cooperation,
 
     m_interface->exportMethod(m_methodPair);
     m_interface->exportMethod(m_methodSendFile);
+    m_interface->exportProperty(m_propertyUUID);
     m_interface->exportProperty(m_propertyName);
     m_interface->exportProperty(m_propertyPaired);
     m_interface->exportProperty(m_propertyOS);
