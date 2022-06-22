@@ -15,6 +15,8 @@
 
 #include "utils/ptr.h"
 
+extern std::shared_ptr<spdlog::logger> logger;
+
 X11::X11()
     : m_dpy(make_handle(XOpenDisplay(nullptr), &XCloseDisplay))
     , m_conn(XGetXCBConnection(m_dpy.get())) {
@@ -47,12 +49,12 @@ X11::X11()
     int res = XIQueryVersion(m_dpy.get(), &xiMajor, &xiMinor);
     if (res != Success) {
         if (res == BadRequest) {
-            SPDLOG_ERROR("X server does not support XInput 2");
+            logger->error("X server does not support XInput 2");
         }
-        SPDLOG_ERROR("internal error");
+        logger->error("internal error");
     }
 
-    SPDLOG_DEBUG("XInput version {}.{}", xiMajor, xi2Minor);
+    logger->debug("XInput version {}.{}", xiMajor, xiMinor);
 
     uint32_t mask = XCB_EVENT_MASK_STRUCTURE_NOTIFY;
     xcb_change_window_attributes(m_conn, m_screen->root, XCB_CW_EVENT_MASK, &mask);
@@ -91,7 +93,7 @@ void X11::start() {
                 auto rep = std::unique_ptr<xcb_query_pointer_reply_t>(
                     xcb_query_pointer_reply(m_conn, cookie, &err));
                 if (err != nullptr) {
-                    SPDLOG_WARN("failed to query pointer: {}", err->error_code);
+                    logger->warn("failed to query pointer: {}", err->error_code);
                     break;
                 }
 

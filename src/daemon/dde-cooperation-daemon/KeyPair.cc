@@ -16,6 +16,8 @@
 #include <utils/net.h>
 #include <utils/ptr.h>
 
+extern std::shared_ptr<spdlog::logger> logger;
+
 namespace fs = std::filesystem;
 
 KeyPair::KeyPair(const std::filesystem::path &dataDir, KeyType type)
@@ -92,7 +94,7 @@ bool KeyPair::generateNewKey() {
         fs::create_directories(dir);
     } else {
         if (!fs::is_directory(dir)) {
-            SPDLOG_CRITICAL("path {} is not a directory", dir.string());
+            logger->critical("path {} is not a directory", dir.string());
             return false;
         }
     }

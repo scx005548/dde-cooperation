@@ -23,6 +23,6 @@ Manager::Manager()
 }
 
 void Manager::scan([[maybe_unused]] const Glib::VariantContainerBase &args,
-                 const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
+                   const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
     invocation->return_value(Glib::VariantContainerBase{});
 }
