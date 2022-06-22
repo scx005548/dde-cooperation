@@ -23,6 +23,9 @@ Cooperation::Cooperation()
     , m_object(new DBus::Object("/com/deepin/Cooperation"))
     , m_interface(new DBus::Interface("com.deepin.Cooperation"))
     , m_methodScan(new DBus::Method("Scan", DBus::Method::warp(this, &Cooperation::scan)))
+    , m_methodKnock(new DBus::Method("Knock",
+                                     DBus::Method::warp(this, &Cooperation::knock),
+                                     {{"ip", "s"}, {"port", "i"}}))
     , m_propertyMachines(new DBus::Property("Machines",
                                             "ao",
                                             DBus::Property::warp(this, &Cooperation::getMachines)))
@@ -44,6 +47,7 @@ Cooperation::Cooperation()
 
     m_service->registerService();
     m_interface->exportMethod(m_methodScan);
+    m_interface->exportMethod(m_methodKnock);
     m_interface->exportProperty(m_propertyMachines);
     m_object->exportInterface(m_interface);
     m_service->exportObject(m_object);
@@ -138,12 +142,40 @@ void Cooperation::scan([[maybe_unused]] const Glib::VariantContainerBase &args,
         request.mutable_deviceinfo()->set_uuid(m_uuid);
         request.mutable_deviceinfo()->set_name(Net::getHostname());
         request.mutable_deviceinfo()->set_os(DeviceOS::LINUX);
+
+        auto local = Glib::RefPtr<Gio::InetSocketAddress>::cast_dynamic<Gio::SocketAddress>(
+            m_socketListenPair->get_local_address());
+        request.set_port(local->get_port());
+
         Message::send_message_to(m_socketScan, MessageType::ScanRequestType, request, m_scanAddr);
         m_machines.clear();
         m_lastMachineIndex = 0;
     } catch (Gio::Error &e) {
         logger->error("{} {}", e.code(), e.what().c_str());
     }
+    invocation->return_value(Glib::VariantContainerBase{});
+}
+
+void Cooperation::knock(const Glib::VariantContainerBase &args,
+                        const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
+    Glib::Variant<Glib::ustring> ip;
+    Glib::Variant<int> port;
+
+    args.get_child(ip, 0);
+    args.get_child(port, 1);
+    auto addr = Net::makeSocketAddress(ip.get(), port.get());
+    ScanRequest request;
+    request.set_key(SCAN_KEY);
+    request.mutable_deviceinfo()->set_uuid(m_uuid);
+    request.mutable_deviceinfo()->set_name(Net::getHostname());
+    request.mutable_deviceinfo()->set_os(DeviceOS::LINUX);
+
+    auto local = Glib::RefPtr<Gio::InetSocketAddress>::cast_dynamic<Gio::SocketAddress>(
+        m_socketListenPair->get_local_address());
+    request.set_port(local->get_port());
+
+    Message::send_message_to(m_socketScan, MessageType::ScanRequestType, request, addr);
+
     invocation->return_value(Glib::VariantContainerBase{});
 }
 
@@ -159,9 +191,19 @@ void Cooperation::getMachines(Glib::VariantBase &property,
     property = Glib::Variant<std::vector<Glib::DBusObjectPathString>>::create(machines);
 }
 
-bool Cooperation::m_scanRequestHandler([[maybe_unused]] Glib::IOCondition cond) const noexcept {
+void Cooperation::addMachine(const Glib::ustring &ip, uint16_t port, const DeviceInfo &devInfo) {
+    auto m = std::make_unique<Machine>(*this, m_service, m_lastMachineIndex, ip, port, devInfo);
+    m->onCooperationRequest().connect(sigc::mem_fun(this, &Cooperation::handleCooperateRequest));
+    m->inputEvent().connect(sigc::mem_fun(&m_inputEvent, &InputEvent::emit));
+    m_machines.insert(std::pair(devInfo.uuid(), std::move(m)));
+
+    m_lastMachineIndex++;
+}
+
+bool Cooperation::m_scanRequestHandler([[maybe_unused]] Glib::IOCondition cond) noexcept {
     Glib::RefPtr<Gio::SocketAddress> addr;
     auto request = Message::recv_message_from<ScanRequest>(m_socketListenScan, addr);
+    auto remote = Glib::RefPtr<Gio::InetSocketAddress>::cast_dynamic<Gio::SocketAddress>(addr);
 
     if (request.key() != SCAN_KEY) {
         logger->error("key mismatch {}", SCAN_KEY);
@@ -174,6 +216,8 @@ bool Cooperation::m_scanRequestHandler([[maybe_unused]] Glib::IOCondition cond) 
     // {
     //     return true;
     // }
+
+    addMachine(remote->get_address()->to_string(), request.port(), request.deviceinfo());
 
     ScanResponse response;
     response.set_key(SCAN_KEY);
@@ -200,12 +244,8 @@ bool Cooperation::m_scanResponseHandler([[maybe_unused]] Glib::IOCondition cond)
         return true;
     }
 
-    auto m = std::make_unique<Machine>(*this, m_service, m_lastMachineIndex, response.deviceinfo());
-    m->onCooperationRequest().connect(sigc::mem_fun(this, &Cooperation::handleCooperateRequest));
-    m->inputEvent().connect(sigc::mem_fun(&m_inputEvent, &InputEvent::emit));
-    m_machines.insert(std::pair(response.deviceinfo().uuid(), std::move(m)));
+    addMachine(remote->get_address()->to_string(), response.port(), response.deviceinfo());
 
-    m_lastMachineIndex++;
     logger->info("{} responsed", response.deviceinfo().name());
     return true;
 }
@@ -221,22 +261,12 @@ bool Cooperation::m_pairRequestHandler([[maybe_unused]] Glib::IOCondition cond) 
         return true;
     }
 
-    auto &machine = ([ this, &request ]() -> auto & {
-        auto i = m_machines.find(request.deviceinfo().uuid());
-        if (i == m_machines.end()) {
-            auto m = std::make_unique<Machine>(*this,
-                                               m_service,
-                                               m_lastMachineIndex,
-                                               request.deviceinfo());
-            m_machines.insert(std::pair(request.deviceinfo().uuid(), std::move(m)));
-            i = m_machines.find(request.deviceinfo().uuid());
-            m_lastMachineIndex++;
-        }
+    auto i = m_machines.find(request.deviceinfo().uuid());
+    if (i == m_machines.end()) {
+        // TODO: return failed
+    }
 
-        return i->second;
-    })();
-
-    machine->onPair(socketConnected);
+    i->second->onPair(socketConnected);
 
     logger->info("connected by {}@{}:{}\n",
                  request.deviceinfo().name().c_str(),

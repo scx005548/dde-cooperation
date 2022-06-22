@@ -15,6 +15,8 @@ public:
     Machine(Cooperation &cooperation,
             Glib::RefPtr<DBus::Service> service,
             uint32_t id,
+            const Glib::ustring &ip,
+            uint16_t port,
             const DeviceInfo &sp);
     ~Machine();
 
@@ -40,6 +42,8 @@ protected:
     void sendFile(const Glib::VariantContainerBase &args,
                   const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
 
+    void getIP(Glib::VariantBase &property, const Glib::ustring &propertyName) const;
+    void getPort(Glib::VariantBase &property, const Glib::ustring &propertyName) const;
     void getUUID(Glib::VariantBase &property, const Glib::ustring &propertyName) const;
     void getName(Glib::VariantBase &property, const Glib::ustring &propertyName) const;
     void getPaired(Glib::VariantBase &property, const Glib::ustring &propertyName) const;
@@ -61,6 +65,12 @@ private:
 
     Glib::RefPtr<DBus::Method> m_methodPair;
     Glib::RefPtr<DBus::Method> m_methodSendFile;
+
+    Glib::ustring m_ip;
+    Glib::RefPtr<DBus::Property> m_propertyIP;
+
+    uint16_t m_port;
+    Glib::RefPtr<DBus::Property> m_propertyPort;
 
     Glib::ustring m_uuid;
     Glib::RefPtr<DBus::Property> m_propertyUUID;

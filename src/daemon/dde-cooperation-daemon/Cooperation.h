@@ -28,6 +28,8 @@ protected:
     // DBus method handlers
     void scan(const Glib::VariantContainerBase &args,
               const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
+    void knock(const Glib::VariantContainerBase &args,
+               const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
 
     // DBus property handlers
     void getMachines(Glib::VariantBase &property, const Glib::ustring &propertyName) const noexcept;
@@ -43,6 +45,7 @@ private:
 
     // DBus methods
     Glib::RefPtr<DBus::Method> m_methodScan;
+    Glib::RefPtr<DBus::Method> m_methodKnock;
 
     // DBus properties
     Glib::RefPtr<DBus::Property> m_propertyMachines;
@@ -66,7 +69,9 @@ private:
     void ensureDataDirExists();
     void initUUID();
 
-    bool m_scanRequestHandler(Glib::IOCondition cond) const noexcept;
+    void addMachine(const Glib::ustring &ip, uint16_t port, const DeviceInfo &devInfo);
+
+    bool m_scanRequestHandler(Glib::IOCondition cond) noexcept;
     bool m_scanResponseHandler(Glib::IOCondition cond) noexcept;
 
     bool m_pairRequestHandler(Glib::IOCondition cond) noexcept;

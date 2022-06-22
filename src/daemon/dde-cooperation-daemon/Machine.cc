@@ -10,6 +10,8 @@
 Machine::Machine(Cooperation &cooperation,
                  Glib::RefPtr<DBus::Service> service,
                  uint32_t id,
+                 const Glib::ustring &ip,
+                 uint16_t port,
                  const DeviceInfo &sp)
     : m_cooperation(cooperation)
     , m_path(Glib::ustring::compose("/com/deepin/Cooperation/Machine/%1", id))
@@ -20,6 +22,10 @@ Machine::Machine(Cooperation &cooperation,
     , m_methodSendFile(new DBus::Method("SendFile",
                                         DBus::Method::warp(this, &Machine::sendFile),
                                         {{"filepath", "s"}}))
+    , m_ip(ip)
+    , m_propertyIP(new DBus::Property("IP", "s", DBus::Property::warp(this, &Machine::getIP)))
+    , m_port(port)
+    , m_propertyPort(new DBus::Property("Port", "q", DBus::Property::warp(this, &Machine::getPort)))
     , m_uuid(sp.uuid())
     , m_propertyUUID(new DBus::Property("UUID", "s", DBus::Property::warp(this, &Machine::getUUID)))
     , m_name(sp.name())
@@ -37,6 +43,8 @@ Machine::Machine(Cooperation &cooperation,
 
     m_interface->exportMethod(m_methodPair);
     m_interface->exportMethod(m_methodSendFile);
+    m_interface->exportProperty(m_propertyIP);
+    m_interface->exportProperty(m_propertyPort);
     m_interface->exportProperty(m_propertyUUID);
     m_interface->exportProperty(m_propertyName);
     m_interface->exportProperty(m_propertyPaired);
@@ -50,18 +58,12 @@ Machine::~Machine() {
     m_service->unexportObject(m_object->path());
 }
 
-void Machine::pair(const Glib::VariantContainerBase &args,
+void Machine::pair([[maybe_unused]] const Glib::VariantContainerBase &args,
                    const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
-    Glib::Variant<Glib::ustring> ip;
-    Glib::Variant<int> port;
-
     m_socketConnect = Gio::Socket::create(Gio::SocketFamily::SOCKET_FAMILY_IPV4,
                                           Gio::SocketType::SOCKET_TYPE_STREAM,
                                           Gio::SocketProtocol::SOCKET_PROTOCOL_TCP);
-
-    args.get_child(ip, 0);
-    args.get_child(port, 1);
-    m_socketConnect->connect(Net::makeSocketAddress(ip.get(), port.get()));
+    m_socketConnect->connect(Net::makeSocketAddress(m_ip, m_port));
     Gio::signal_socket().connect(
         [this](Glib::IOCondition cond) { return mainHandler(cond, m_socketConnect); },
         m_socketConnect,
@@ -100,6 +102,16 @@ void Machine::sendFile(const Glib::VariantContainerBase &args,
     // TODO: impl
 
     invocation->return_value(Glib::VariantContainerBase{});
+}
+
+void Machine::getIP(Glib::VariantBase &property,
+                    [[maybe_unused]] const Glib::ustring &propertyName) const {
+    property = Glib::Variant<Glib::ustring>::create(m_ip);
+}
+
+void Machine::getPort(Glib::VariantBase &property,
+                      [[maybe_unused]] const Glib::ustring &propertyName) const {
+    property = Glib::Variant<uint16_t>::create(m_port);
 }
 
 void Machine::getUUID(Glib::VariantBase &property,

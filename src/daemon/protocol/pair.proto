@@ -30,6 +30,7 @@ message ScanRequest
 {
     string key = 1;             // 固定值 "UOS-COOPERATION"
     DeviceInfo deviceInfo = 2;
+    int32 port = 3;             // TCP 端口
 }
 
 // UDP，向 ScanRequest 来源的 IP:PORT 返回
