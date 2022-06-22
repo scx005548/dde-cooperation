@@ -10,43 +10,75 @@
 
 extern std::shared_ptr<spdlog::logger> logger;
 
-InputEvent::InputEvent()
+InputEvent::InputEvent(DeviceType type)
     : m_dev(make_handle(libevdev_new(), &libevdev_free))
     , m_uidev(nullptr, &libevdev_uinput_destroy) {
-    libevdev_set_name(m_dev.get(), "DDE Cooperation");
+    std::string name("DDE Cooperation ");
 
-    int rc;
-    rc = libevdev_enable_event_type(m_dev.get(), EV_SYN);
-    if (rc != 0) {
-        logger->warn("failed to enable event type EV_SYN");
-    }
+    enableEventType(EV_SYN);
+    enableEventType(EV_KEY);
 
-    rc = libevdev_enable_event_type(m_dev.get(), EV_KEY);
-    if (rc != 0) {
-        logger->warn("failed to enable event type EV_KEY");
-    }
+    switch (type) {
+    case DeviceType::Keyboard: {
+        name.append("Keyboard");
+        enableEventType(EV_LED);
+        enableEventType(EV_REP);
 
-    rc = libevdev_enable_event_type(m_dev.get(), EV_LED);
-    if (rc != 0) {
-        logger->warn("failed to enable event type EV_LED");
-    }
-
-    for (unsigned int code = 1; code < KEY_MAX; code++) {
-        rc = libevdev_enable_event_code(m_dev.get(), EV_KEY, code, nullptr);
-        if (rc != 0) {
-            logger->warn("failed to enable event code: type: EV_KEY, code: {}",
-                         libevdev_event_code_get_name(EV_KEY, code));
+        for (unsigned int code = 1; code < KEY_MAX; code++) {
+            enableEventCode(EV_KEY, code);
         }
+
+        for (unsigned int code = 0; code < REP_MAX; code++) {
+            enableEventCode(EV_REP, code);
+        }
+        break;
     }
+    case DeviceType::Mouse: {
+        name.append("Mouse");
+        enableEventType(EV_REL);
+        enableEventCode(EV_REL, REL_X);
+        enableEventCode(EV_REL, REL_Y);
+        enableEventCode(EV_REL, REL_HWHEEL);
+        enableEventCode(EV_REL, REL_WHEEL);
+
+        enableEventCode(EV_KEY, BTN_LEFT);
+        enableEventCode(EV_KEY, BTN_RIGHT);
+        enableEventCode(EV_KEY, BTN_MIDDLE);
+        enableEventCode(EV_KEY, BTN_SIDE);
+        enableEventCode(EV_KEY, BTN_EXTRA);
+        break;
+    }
+    default:
+        SPDLOG_WARN("unknown device type: {}", type);
+        break;
+    }
+
+    libevdev_set_name(m_dev.get(), name.c_str());
 
     libevdev_uinput *uidev;
-    rc = libevdev_uinput_create_from_device(m_dev.get(), LIBEVDEV_UINPUT_OPEN_MANAGED, &uidev);
+    int rc = libevdev_uinput_create_from_device(m_dev.get(), LIBEVDEV_UINPUT_OPEN_MANAGED, &uidev);
     if (rc != 0) {
         logger->error("failed to create uinput device: {}", strerror(-rc));
         return;
     }
 
     m_uidev = make_handle(uidev, &libevdev_uinput_destroy);
+}
+
+void InputEvent::enableEventType(unsigned int type) {
+    int rc = libevdev_enable_event_type(m_dev.get(), type);
+    if (rc != 0) {
+        logger->warn("failed to enable event type {}", libevdev_event_type_get_name(type));
+    }
+}
+
+void InputEvent::enableEventCode(unsigned int type, unsigned int code, const void *data) {
+    int rc = libevdev_enable_event_code(m_dev.get(), type, code, data);
+    if (rc != 0) {
+        logger->warn("failed to enable event code: type: {}, code: {}",
+                     libevdev_event_type_get_name(type),
+                     libevdev_event_code_get_name(type, code));
+    }
 }
 
 bool InputEvent::emit(const InputEventRequest &event) {

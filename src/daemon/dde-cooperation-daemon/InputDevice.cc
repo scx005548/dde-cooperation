@@ -23,14 +23,11 @@ InputDevice::InputDevice(const fs::path &path)
         exit(1);
     }
 
-    printf("Input device name: \"%s\"\n", libevdev_get_name(m_dev));
-    printf("Input device ID: bus %#x vendor %#x product %#x\n",
-           libevdev_get_id_bustype(m_dev),
-           libevdev_get_id_vendor(m_dev),
-           libevdev_get_id_product(m_dev));
-    if (libevdev_has_event_type(m_dev, EV_REL) &&
-        libevdev_has_event_code(m_dev, EV_KEY, BTN_LEFT)) {
-        m_isMouse = true;
+    if (libevdev_has_event_type(m_dev, EV_KEY) && libevdev_has_event_type(m_dev, EV_REP)) {
+        m_type = DeviceType::Keyboard;
+    } else if (libevdev_has_event_type(m_dev, EV_REL) &&
+               libevdev_has_event_code(m_dev, EV_KEY, BTN_LEFT)) {
+        m_type = DeviceType::Mouse;
     }
 }
 
@@ -60,6 +57,7 @@ void InputDevice::start() {
                               ev.value);
 
                 InputEventRequest event;
+                event.set_devicetype(m_type);
                 event.set_type(ev.type);
                 event.set_code(ev.code);
                 event.set_value(ev.value);

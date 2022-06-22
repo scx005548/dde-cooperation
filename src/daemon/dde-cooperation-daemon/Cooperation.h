@@ -64,7 +64,7 @@ private:
     KeyPair m_keypair;
 
     std::unordered_map<std::string, std::unique_ptr<InputDevice>> m_inputDevices;
-    InputEvent m_inputEvent;
+    std::unordered_map<DeviceType, std::unique_ptr<InputEvent>> m_inputEvents;
 
     void ensureDataDirExists();
     void initUUID();
@@ -76,6 +76,7 @@ private:
 
     bool m_pairRequestHandler(Glib::IOCondition cond) noexcept;
     bool handleCooperateRequest(Machine *machine);
+    bool handleInputEventRequest(const InputEventRequest &event);
 };
 
 #endif // !DDE_COOPERATION_DAEMON_COOPERATION_H

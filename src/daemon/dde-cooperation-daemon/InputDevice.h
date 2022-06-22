@@ -17,6 +17,8 @@ public:
     void start();
     void stop();
 
+    DeviceType type() { return m_type; };
+
     using type_signal_inputEvent = sigc::signal<void(const InputEventRequest &)>;
     type_signal_inputEvent inputEvent() { return m_signal_inputEvent; }
 
@@ -28,7 +30,7 @@ private:
     const std::filesystem::path &m_path;
     libevdev *m_dev;
 
-    bool m_isMouse;
+    DeviceType m_type;
 
     std::thread m_thread;
     bool m_stop;

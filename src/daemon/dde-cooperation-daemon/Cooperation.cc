@@ -71,6 +71,11 @@ Cooperation::Cooperation()
         }
     }
 
+    m_inputEvents.emplace(
+        std::make_pair(DeviceType::Keyboard, std::make_unique<InputEvent>(DeviceType::Keyboard)));
+    m_inputEvents.emplace(
+        std::make_pair(DeviceType::Mouse, std::make_unique<InputEvent>(DeviceType::Mouse)));
+
     try {
         Gio::signal_socket().connect(
             [this](Glib::IOCondition cond) { return m_scanRequestHandler(cond); },
@@ -194,7 +199,7 @@ void Cooperation::getMachines(Glib::VariantBase &property,
 void Cooperation::addMachine(const Glib::ustring &ip, uint16_t port, const DeviceInfo &devInfo) {
     auto m = std::make_unique<Machine>(*this, m_service, m_lastMachineIndex, ip, port, devInfo);
     m->onCooperationRequest().connect(sigc::mem_fun(this, &Cooperation::handleCooperateRequest));
-    m->inputEvent().connect(sigc::mem_fun(&m_inputEvent, &InputEvent::emit));
+    m->inputEvent().connect(sigc::mem_fun(this, &Cooperation::handleInputEventRequest));
     m_machines.insert(std::pair(devInfo.uuid(), std::move(m)));
 
     m_lastMachineIndex++;
@@ -283,7 +288,12 @@ bool Cooperation::handleCooperateRequest(Machine *machine) {
         inputDevice.second->inputEvent().clear();
         inputDevice.second->inputEvent().connect(
             sigc::mem_fun(machine, &Machine::handleInputEvent));
+        inputDevice.second->start();
     }
 
     return true;
+}
+
+bool Cooperation::handleInputEventRequest(const InputEventRequest &event) {
+    return m_inputEvents[event.devicetype()]->emit(event);
 }
