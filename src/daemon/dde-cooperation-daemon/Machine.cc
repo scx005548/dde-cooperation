@@ -22,6 +22,10 @@ Machine::Machine(Cooperation &cooperation,
     , m_methodSendFile(new DBus::Method("SendFile",
                                         DBus::Method::warp(this, &Machine::sendFile),
                                         {{"filepath", "s"}}))
+    , m_methodRequestCooperate(
+          new DBus::Method("RequestCooperate",
+                           DBus::Method::warp(this, &Machine::requestCooperate),
+                           {}))
     , m_ip(ip)
     , m_propertyIP(new DBus::Property("IP", "s", DBus::Property::warp(this, &Machine::getIP)))
     , m_port(port)
@@ -43,6 +47,7 @@ Machine::Machine(Cooperation &cooperation,
 
     m_interface->exportMethod(m_methodPair);
     m_interface->exportMethod(m_methodSendFile);
+    m_interface->exportMethod(m_methodRequestCooperate);
     m_interface->exportProperty(m_propertyIP);
     m_interface->exportProperty(m_propertyPort);
     m_interface->exportProperty(m_propertyUUID);
@@ -109,6 +114,20 @@ void Machine::sendFile(const Glib::VariantContainerBase &args,
     invocation->return_value(Glib::VariantContainerBase{});
 }
 
+void Machine::requestCooperate(
+    [[maybe_unused]] const Glib::VariantContainerBase &args,
+    const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
+    if (!m_socketConnect->is_connected()) {
+        invocation->return_error(
+            Gio::DBus::Error{Gio::DBus::Error::ACCESS_DENIED, "connect first"});
+        return;
+    }
+
+    Message::send_message_header(m_socketConnect, MessageType::CooperateRequestType);
+
+    invocation->return_value(Glib::VariantContainerBase{});
+}
+
 void Machine::getIP(Glib::VariantBase &property,
                     [[maybe_unused]] const Glib::ustring &propertyName) const {
     property = Glib::Variant<Glib::ustring>::create(m_ip);
@@ -150,6 +169,15 @@ bool Machine::mainHandler([[maybe_unused]] Glib::IOCondition cond,
     switch (base.type()) {
     case PairResponseType: {
         handlePairResponse(Message::recv_message_body<PairResponse>(sock, base));
+        break;
+    }
+
+    case CooperateRequestType: {
+        handleCooperateRequest();
+        break;
+    }
+
+    case CooperateResponseType: {
         break;
     }
 

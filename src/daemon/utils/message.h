@@ -12,12 +12,12 @@ extern std::shared_ptr<spdlog::logger> logger;
 
 namespace Message {
 
-inline void send_message(const Glib::RefPtr<Gio::Socket> &sock,
-                         uint32_t type,
-                         const google::protobuf::Message &response) noexcept {
+inline void send_message_header(const Glib::RefPtr<Gio::Socket> &sock,
+                                uint32_t type,
+                                size_t size = 0) noexcept {
     BaseMessage base;
     base.set_type(type);
-    base.set_size(response.ByteSizeLong());
+    base.set_size(size);
 
     char *buffer = new char[base.ByteSizeLong()];
     base.SerializeToArray(buffer, base.ByteSizeLong());
@@ -27,8 +27,14 @@ inline void send_message(const Glib::RefPtr<Gio::Socket> &sock,
         logger->error("{}", e.what().c_str());
     }
     delete[] buffer;
+}
 
-    buffer = new char[response.ByteSizeLong()];
+inline void send_message(const Glib::RefPtr<Gio::Socket> &sock,
+                         uint32_t type,
+                         const google::protobuf::Message &response) noexcept {
+    send_message_header(sock, type, response.ByteSizeLong());
+
+    char *buffer = new char[response.ByteSizeLong()];
     response.SerializeToArray(buffer, response.ByteSizeLong());
     try {
         sock->send(buffer, response.ByteSizeLong());

@@ -40,9 +40,10 @@ public:
 protected:
     void pair(const Glib::VariantContainerBase &args,
               const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
-
     void sendFile(const Glib::VariantContainerBase &args,
                   const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
+    void requestCooperate(const Glib::VariantContainerBase &args,
+                          const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
 
     void getIP(Glib::VariantBase &property, const Glib::ustring &propertyName) const;
     void getPort(Glib::VariantBase &property, const Glib::ustring &propertyName) const;
@@ -67,6 +68,7 @@ private:
 
     Glib::RefPtr<DBus::Method> m_methodPair;
     Glib::RefPtr<DBus::Method> m_methodSendFile;
+    Glib::RefPtr<DBus::Method> m_methodRequestCooperate;
 
     Glib::ustring m_ip;
     Glib::RefPtr<DBus::Property> m_propertyIP;
