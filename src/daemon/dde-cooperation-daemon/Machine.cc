@@ -155,7 +155,7 @@ bool Machine::mainHandler([[maybe_unused]] Glib::IOCondition cond,
 
     case InputEventRequestType: {
         auto event = Message::recv_message_body<InputEventRequest>(sock, base);
-        m_signal_inputEvent.emit(event);
+        m_signal_receivedInputEvent.emit(event);
 
         InputEventResponse response;
         response.set_serial(event.serial());
@@ -186,7 +186,7 @@ void Machine::handlePairResponse(const PairResponse &resp) {
 }
 
 void Machine::handleCooperateRequest() {
-    bool accept = m_signal_cooperationRequest.emit(this);
+    bool accept = m_signal_receivedCooperationRequest.emit(this);
 
     CooperateResponse resp;
     resp.set_accept(accept);

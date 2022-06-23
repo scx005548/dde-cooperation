@@ -65,8 +65,8 @@ Cooperation::Cooperation()
     // TODO: inotify
     for (const auto &entry : fs::directory_iterator(inputDevicePath)) {
         if (entry.path().filename().string().rfind("event", 0) == 0) {
-            auto inputDevice = std::make_unique<InputDevice>(entry.path());
             // starts with event
+            auto inputDevice = std::make_unique<InputDevice>(entry.path());
             m_inputDevices.insert(std::pair(entry.path(), std::move(inputDevice)));
         }
     }
@@ -78,17 +78,17 @@ Cooperation::Cooperation()
 
     try {
         Gio::signal_socket().connect(
-            [this](Glib::IOCondition cond) { return m_scanRequestHandler(cond); },
+            [this](Glib::IOCondition cond) { return handleReceivedScanRequest(cond); },
             m_socketListenScan,
             Glib::IO_IN);
 
         Gio::signal_socket().connect(
-            [this](Glib::IOCondition cond) { return m_scanResponseHandler(cond); },
+            [this](Glib::IOCondition cond) { return handleReceivedScanResponse(cond); },
             m_socketScan,
             Glib::IO_IN);
 
         Gio::signal_socket().connect(
-            [this](Glib::IOCondition cond) { return m_pairRequestHandler(cond); },
+            [this](Glib::IOCondition cond) { return handleReceivedPairRequest(cond); },
             m_socketListenPair,
             Glib::IO_IN);
     } catch (Gio::Error &e) {
@@ -198,14 +198,16 @@ void Cooperation::getMachines(Glib::VariantBase &property,
 
 void Cooperation::addMachine(const Glib::ustring &ip, uint16_t port, const DeviceInfo &devInfo) {
     auto m = std::make_unique<Machine>(*this, m_service, m_lastMachineIndex, ip, port, devInfo);
-    m->onCooperationRequest().connect(sigc::mem_fun(this, &Cooperation::handleCooperateRequest));
-    m->inputEvent().connect(sigc::mem_fun(this, &Cooperation::handleInputEventRequest));
+    m->onReceivedCooperationRequest().connect(
+        sigc::mem_fun(this, &Cooperation::handleReceivedCooperateRequest));
+    m->onReceivedInputEvent().connect(
+        sigc::mem_fun(this, &Cooperation::handleReceivedInputEventRequest));
     m_machines.insert(std::pair(devInfo.uuid(), std::move(m)));
 
     m_lastMachineIndex++;
 }
 
-bool Cooperation::m_scanRequestHandler([[maybe_unused]] Glib::IOCondition cond) noexcept {
+bool Cooperation::handleReceivedScanRequest([[maybe_unused]] Glib::IOCondition cond) noexcept {
     Glib::RefPtr<Gio::SocketAddress> addr;
     auto request = Message::recv_message_from<ScanRequest>(m_socketListenScan, addr);
     auto remote = Glib::RefPtr<Gio::InetSocketAddress>::cast_dynamic<Gio::SocketAddress>(addr);
@@ -238,7 +240,7 @@ bool Cooperation::m_scanRequestHandler([[maybe_unused]] Glib::IOCondition cond) 
     return true;
 }
 
-bool Cooperation::m_scanResponseHandler([[maybe_unused]] Glib::IOCondition cond) noexcept {
+bool Cooperation::handleReceivedScanResponse([[maybe_unused]] Glib::IOCondition cond) noexcept {
     Glib::RefPtr<Gio::SocketAddress> addr;
     auto response = Message::recv_message_from<ScanResponse>(m_socketScan, addr);
     auto remote = Glib::RefPtr<Gio::InetSocketAddress>::cast_dynamic<Gio::SocketAddress>(addr);
@@ -254,7 +256,7 @@ bool Cooperation::m_scanResponseHandler([[maybe_unused]] Glib::IOCondition cond)
     return true;
 }
 
-bool Cooperation::m_pairRequestHandler([[maybe_unused]] Glib::IOCondition cond) noexcept {
+bool Cooperation::handleReceivedPairRequest([[maybe_unused]] Glib::IOCondition cond) noexcept {
     auto socketConnected = m_socketListenPair->accept();
     auto remote = Glib::RefPtr<Gio::InetSocketAddress>::cast_dynamic<Gio::SocketAddress>(
         socketConnected->get_remote_address());
@@ -280,7 +282,7 @@ bool Cooperation::m_pairRequestHandler([[maybe_unused]] Glib::IOCondition cond) 
     return true;
 }
 
-bool Cooperation::handleCooperateRequest(Machine *machine) {
+bool Cooperation::handleReceivedCooperateRequest(Machine *machine) {
     // TODO: request accept
 
     for (auto &inputDevice : m_inputDevices) {
@@ -293,6 +295,6 @@ bool Cooperation::handleCooperateRequest(Machine *machine) {
     return true;
 }
 
-bool Cooperation::handleInputEventRequest(const InputEventRequest &event) {
+bool Cooperation::handleReceivedInputEventRequest(const InputEventRequest &event) {
     return m_inputEvents[event.devicetype()]->emit(event);
 }

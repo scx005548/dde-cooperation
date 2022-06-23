@@ -71,12 +71,11 @@ private:
 
     void addMachine(const Glib::ustring &ip, uint16_t port, const DeviceInfo &devInfo);
 
-    bool m_scanRequestHandler(Glib::IOCondition cond) noexcept;
-    bool m_scanResponseHandler(Glib::IOCondition cond) noexcept;
-
-    bool m_pairRequestHandler(Glib::IOCondition cond) noexcept;
-    bool handleCooperateRequest(Machine *machine);
-    bool handleInputEventRequest(const InputEventRequest &event);
+    bool handleReceivedScanRequest(Glib::IOCondition cond) noexcept;
+    bool handleReceivedScanResponse(Glib::IOCondition cond) noexcept;
+    bool handleReceivedPairRequest(Glib::IOCondition cond) noexcept;
+    bool handleReceivedCooperateRequest(Machine *machine);
+    bool handleReceivedInputEventRequest(const InputEventRequest &event);
 };
 
 #endif // !DDE_COOPERATION_DAEMON_COOPERATION_H

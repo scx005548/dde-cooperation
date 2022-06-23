@@ -24,14 +24,16 @@ public:
 
     void onPair(Glib::RefPtr<Gio::Socket> conn);
 
-    using type_signal_cooperationRequest = sigc::signal<bool(Machine *)>;
-    type_signal_cooperationRequest onCooperationRequest() { return m_signal_cooperationRequest; }
+    using type_signal_receivedCooperationRequest = sigc::signal<bool(Machine *)>;
+    type_signal_receivedCooperationRequest onReceivedCooperationRequest() {
+        return m_signal_receivedCooperationRequest;
+    }
 
-    using type_signal_flowRequest = sigc::signal<void()>;
-    type_signal_flowRequest flowRequest() { return m_signal_flowRequest; }
+    using type_signal_receivedFlowRequest = sigc::signal<void()>;
+    type_signal_receivedFlowRequest onReceivedFlowRequest() { return m_signal_receivedFlowRequest; }
 
-    using type_signal_inputEvent = sigc::signal<bool(const InputEventRequest &)>;
-    type_signal_inputEvent inputEvent() { return m_signal_inputEvent; }
+    using type_signal_receivedInputEvent = sigc::signal<bool(const InputEventRequest &)>;
+    type_signal_receivedInputEvent onReceivedInputEvent() { return m_signal_receivedInputEvent; }
 
     void handleInputEvent(const InputEventRequest &event);
 
@@ -53,9 +55,9 @@ protected:
 private:
     Cooperation &m_cooperation;
 
-    type_signal_cooperationRequest m_signal_cooperationRequest;
-    type_signal_flowRequest m_signal_flowRequest;
-    type_signal_inputEvent m_signal_inputEvent;
+    type_signal_receivedCooperationRequest m_signal_receivedCooperationRequest;
+    type_signal_receivedFlowRequest m_signal_receivedFlowRequest;
+    type_signal_receivedInputEvent m_signal_receivedInputEvent;
 
     const Glib::ustring m_path;
 
