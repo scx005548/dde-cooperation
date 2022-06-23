@@ -209,6 +209,7 @@ bool Cooperation::m_scanRequestHandler([[maybe_unused]] Glib::IOCondition cond) 
     Glib::RefPtr<Gio::SocketAddress> addr;
     auto request = Message::recv_message_from<ScanRequest>(m_socketListenScan, addr);
     auto remote = Glib::RefPtr<Gio::InetSocketAddress>::cast_dynamic<Gio::SocketAddress>(addr);
+    logger->debug("scan request received: {}", std::string(addr->to_string()));
 
     if (request.key() != SCAN_KEY) {
         logger->error("key mismatch {}", SCAN_KEY);
@@ -216,11 +217,9 @@ bool Cooperation::m_scanRequestHandler([[maybe_unused]] Glib::IOCondition cond) 
     }
 
     // 自己扫描到自己，忽略
-    // auto remote = Glib::RefPtr<Gio::InetSocketAddress>::cast_dynamic<Gio::SocketAddress>(addr);
-    // if (remote->get_address()->to_string() == Net::getIpAddress())
-    // {
-    //     return true;
-    // }
+    if (request.deviceinfo().uuid() == m_uuid) {
+        return true;
+    }
 
     addMachine(remote->get_address()->to_string(), request.port(), request.deviceinfo());
 
