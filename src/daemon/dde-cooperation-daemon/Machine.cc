@@ -82,6 +82,11 @@ void Machine::pair([[maybe_unused]] const Glib::VariantContainerBase &args,
 
 void Machine::onPair(Glib::RefPtr<Gio::Socket> conn) {
     m_socketConnect = conn;
+    Gio::signal_socket().connect(
+        [this](Glib::IOCondition cond) { return mainHandler(cond, m_socketConnect); },
+        m_socketConnect,
+        Glib::IO_IN);
+
     m_paired = true;
 
     PairResponse response;
