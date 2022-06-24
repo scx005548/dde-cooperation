@@ -93,6 +93,7 @@ void Machine::onPair(Glib::RefPtr<Gio::Socket> conn) {
         Glib::IO_IN);
 
     m_paired = true;
+    m_propertyPaired->emitChanged(Glib::Variant<bool>::create(m_paired));
 
     PairResponse response;
     response.set_key(SCAN_KEY);
@@ -207,6 +208,7 @@ void Machine::handlePairResponse(const PairResponse &resp) {
     bool agree = resp.agree();
     if (agree) {
         m_paired = true;
+        m_propertyPaired->emitChanged(Glib::Variant<bool>::create(m_paired));
         return;
     }
 

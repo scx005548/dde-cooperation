@@ -1,7 +1,15 @@
 #include "Interface.h"
-#include "Object.h"
 
 #include <cassert>
+
+#include <spdlog/spdlog.h>
+
+#include "Object.h"
+#include "Method.h"
+#include "Property.h"
+#include "Signal.h"
+
+extern std::shared_ptr<spdlog::logger> logger;
 
 namespace DBus {
 
@@ -28,6 +36,9 @@ Glib::ustring Interface::XML() const noexcept {
         xml += m.second->XML();
     }
     for (auto &p : m_properties) {
+        xml += p.second->XML();
+    }
+    for (auto &p : m_signals) {
         xml += p.second->XML();
     }
     xml += "  </interface>\n</node>\n";
@@ -58,15 +69,62 @@ bool Interface::exportMethod(const Glib::RefPtr<Method> &method) noexcept {
  * @return 是否成功
  * ***************************************************************************/
 bool Interface::exportProperty(const Glib::RefPtr<Property> &property) noexcept {
+    if (property->m_parent != nullptr) {
+        logger->error("{} already have a parent", std::string(property->name()));
+        return false;
+    }
+
     assert(m_parent == nullptr);
 
     auto iter = m_properties.find(property->name());
     if (iter == m_properties.end()) {
+        property->m_parent = this;
         m_properties[property->name()] = property;
         return true;
     }
 
     return false;
+}
+
+/*****************************************************************************
+ * @brief 导出信号，必须在导出接口之前调用
+ * @param[in] signal 信号
+ * @return 是否成功
+ * ***************************************************************************/
+bool Interface::exportSignal(const Glib::RefPtr<Signal> &signal) noexcept {
+    if (signal->m_parent != nullptr) {
+        logger->error("{} already have a parent", std::string(signal->name()));
+        return false;
+    }
+
+    assert(m_parent == nullptr);
+
+    auto iter = m_signals.find(signal->name());
+    if (iter == m_signals.end()) {
+        signal->m_parent = this;
+        m_signals[signal->name()] = signal;
+        return true;
+    }
+
+    return false;
+}
+
+void Interface::emitSignal(const Glib::ustring &signal,
+                           const Glib::VariantContainerBase &value) noexcept {
+    m_parent->emitSignal(m_name, signal, value);
+}
+
+void Interface::emitPropertyChanged(const Glib::ustring &property,
+                                    const Glib::VariantBase &value) noexcept {
+    auto iface = Glib::Variant<Glib::ustring>::create(m_name);
+    auto changedProps = Glib::Variant<std::map<Glib::ustring, Glib::VariantBase>>::create(
+        {{property, value}});
+    auto noValChangedProps = Glib::Variant<std::vector<Glib::ustring>>::create({});
+
+    auto v = Glib::Variant<std::vector<Glib::VariantBase>>::create_tuple(
+        {iface, changedProps, noValChangedProps});
+
+    m_parent->emitSignal("org.freedesktop.DBus.Properties", "PropertiesChanged", v);
 }
 
 /*****************************************************************************

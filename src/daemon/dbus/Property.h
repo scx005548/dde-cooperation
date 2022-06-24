@@ -96,6 +96,8 @@ public:
      * ***************************************************************************/
     Glib::ustring XML() const noexcept;
 
+    void emitChanged(const Glib::VariantBase &value) noexcept;
+
     /*****************************************************************************
      * @brief 封装完整参数的成员函数作为Get
      * @param[in] self 对象指针
@@ -255,6 +257,9 @@ private:
                        const Glib::ustring &interfaceName,
                        const Glib::ustring &propertyName,
                        const Glib::VariantBase &value) noexcept;
+
+protected:
+    Interface *m_parent;
 
 }; // class Property
 

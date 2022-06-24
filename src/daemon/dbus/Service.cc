@@ -2,6 +2,10 @@
 
 #include <spdlog/spdlog.h>
 
+#include "Method.h"
+#include "Property.h"
+#include "Signal.h"
+
 extern std::shared_ptr<spdlog::logger> logger;
 
 namespace DBus {
@@ -114,6 +118,13 @@ void Service::exportObjectAux(const Glib::RefPtr<DBus::Object> &obj) {
         m_objIds[obj->path()].emplace_back(
             m_conn->register_object(obj->path(), introspectionData->lookup_interface(), m_vtable));
     }
+}
+
+void Service::emitSignal(const Glib::ustring &service,
+                         const Glib::ustring &interface,
+                         const Glib::ustring &signal,
+                         const Glib::VariantContainerBase &value) noexcept {
+    m_conn->emit_signal(service, interface, signal, "", value);
 }
 
 /*****************************************************************************

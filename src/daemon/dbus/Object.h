@@ -37,6 +37,10 @@ public:
      * ***************************************************************************/
     bool exportInterface(const Glib::RefPtr<Interface> &interface) noexcept;
 
+    void emitSignal(const Glib::ustring &interface,
+                    const Glib::ustring &signal,
+                    const Glib::VariantContainerBase &value) noexcept;
+
 protected:
     /*****************************************************************************
      * @brief 回调函数，DBus 方法调用

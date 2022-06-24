@@ -57,6 +57,12 @@ bool Object::exportInterface(const Glib::RefPtr<Interface> &interface) noexcept 
     return false;
 }
 
+void Object::emitSignal(const Glib::ustring &interface,
+                        const Glib::ustring &signal,
+                        const Glib::VariantContainerBase &value) noexcept {
+    m_parent->emitSignal(m_path, interface, signal, value);
+}
+
 /*****************************************************************************
  * @brief 回调函数，DBus 方法调用
  * @param[in] connection DBus连接

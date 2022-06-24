@@ -1,5 +1,7 @@
 #include "Property.h"
 
+#include "Interface.h"
+
 namespace DBus {
 
 /*****************************************************************************
@@ -16,7 +18,8 @@ Property::Property(const Glib::ustring &name,
     : m_name(name)
     , m_type(type)
     , m_get(getFn)
-    , m_set(setFn) {
+    , m_set(setFn)
+    , m_parent(nullptr) {
 }
 
 /*****************************************************************************
@@ -49,6 +52,10 @@ Glib::ustring Property::XML() const noexcept {
                                   m_name,
                                   m_type,
                                   access);
+}
+
+void Property::emitChanged(const Glib::VariantBase &value) noexcept {
+    m_parent->emitPropertyChanged(m_name, value);
 }
 
 /*****************************************************************************

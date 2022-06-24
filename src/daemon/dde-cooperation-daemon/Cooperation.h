@@ -70,6 +70,7 @@ private:
     void initUUID();
 
     void addMachine(const Glib::ustring &ip, uint16_t port, const DeviceInfo &devInfo);
+    std::vector<Glib::DBusObjectPathString> getMachinePaths() const noexcept;
 
     bool handleReceivedScanRequest(Glib::IOCondition cond) noexcept;
     bool handleReceivedScanResponse(Glib::IOCondition cond) noexcept;

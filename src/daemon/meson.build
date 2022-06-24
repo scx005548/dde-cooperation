@@ -17,6 +17,8 @@ common_sources = files('''
   dbus/Method.cc
   dbus/Property.h
   dbus/Property.cc
+  dbus/Signal.h
+  dbus/Signal.cc
   dbus/Interface.h
   dbus/Interface.cc
   dbus/Service.h

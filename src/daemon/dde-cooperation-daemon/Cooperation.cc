@@ -154,6 +154,8 @@ void Cooperation::scan([[maybe_unused]] const Glib::VariantContainerBase &args,
 
         Message::send_message_to(m_socketScan, MessageType::ScanRequestType, request, m_scanAddr);
         m_machines.clear();
+        m_propertyMachines->emitChanged(
+            Glib::Variant<std::vector<Glib::DBusObjectPathString>>::create(getMachinePaths()));
         m_lastMachineIndex = 0;
     } catch (Gio::Error &e) {
         logger->error("{} {}", e.code(), e.what().c_str());
@@ -184,8 +186,7 @@ void Cooperation::knock(const Glib::VariantContainerBase &args,
     invocation->return_value(Glib::VariantContainerBase{});
 }
 
-void Cooperation::getMachines(Glib::VariantBase &property,
-                              [[maybe_unused]] const Glib::ustring &propertyName) const noexcept {
+std::vector<Glib::DBusObjectPathString> Cooperation::getMachinePaths() const noexcept {
     std::vector<Glib::DBusObjectPathString> machines;
     machines.reserve(m_machines.size());
 
@@ -193,7 +194,13 @@ void Cooperation::getMachines(Glib::VariantBase &property,
         return Glib::DBusObjectPathString(i.second->path());
     });
 
-    property = Glib::Variant<std::vector<Glib::DBusObjectPathString>>::create(machines);
+    return machines;
+}
+
+void Cooperation::getMachines(Glib::VariantBase &property,
+                              [[maybe_unused]] const Glib::ustring &propertyName) const noexcept {
+
+    property = Glib::Variant<std::vector<Glib::DBusObjectPathString>>::create(getMachinePaths());
 }
 
 void Cooperation::addMachine(const Glib::ustring &ip, uint16_t port, const DeviceInfo &devInfo) {
@@ -205,6 +212,9 @@ void Cooperation::addMachine(const Glib::ustring &ip, uint16_t port, const Devic
     m_machines.insert(std::pair(devInfo.uuid(), std::move(m)));
 
     m_lastMachineIndex++;
+
+    m_propertyMachines->emitChanged(
+        Glib::Variant<std::vector<Glib::DBusObjectPathString>>::create(getMachinePaths()));
 }
 
 bool Cooperation::handleReceivedScanRequest([[maybe_unused]] Glib::IOCondition cond) noexcept {

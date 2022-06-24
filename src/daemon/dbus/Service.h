@@ -53,6 +53,11 @@ public:
      * ***************************************************************************/
     bool unregisterService();
 
+    void emitSignal(const Glib::ustring &service,
+                    const Glib::ustring &interface,
+                    const Glib::ustring &signal,
+                    const Glib::VariantContainerBase &value) noexcept;
+
 private:
     Glib::ustring m_name;
     Gio::DBus::BusType m_type;

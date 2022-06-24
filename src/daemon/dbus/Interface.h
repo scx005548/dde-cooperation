@@ -6,12 +6,12 @@
 #include <giomm.h>
 #include <glibmm.h>
 
-#include "Method.h"
-#include "Property.h"
-
 namespace DBus {
 
 class Object;
+class Method;
+class Property;
+class Signal;
 
 class Interface : public Glib::Object {
     friend DBus::Object;
@@ -44,6 +44,17 @@ public:
      * @return 是否成功
      * ***************************************************************************/
     bool exportProperty(const Glib::RefPtr<Property> &property) noexcept;
+
+    /*****************************************************************************
+     * @brief 导出信号
+     * @param[in] signal 信号
+     * @return 是否成功
+     * ***************************************************************************/
+    bool exportSignal(const Glib::RefPtr<Signal> &signal) noexcept;
+
+    void emitSignal(const Glib::ustring &signal, const Glib::VariantContainerBase &value) noexcept;
+    void emitPropertyChanged(const Glib::ustring &property,
+                             const Glib::VariantBase &value) noexcept;
 
 protected:
     /*****************************************************************************
@@ -100,6 +111,7 @@ private:
     Glib::ustring m_name;
     std::map<Glib::ustring, Glib::RefPtr<Method>> m_methods;      // 方法函数表
     std::map<Glib::ustring, Glib::RefPtr<Property>> m_properties; // 属性表
+    std::map<Glib::ustring, Glib::RefPtr<Signal>> m_signals;      // 信号表
 
 protected:
     DBus::Object *m_parent;
