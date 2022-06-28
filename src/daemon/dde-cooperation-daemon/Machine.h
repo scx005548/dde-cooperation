@@ -33,6 +33,7 @@ public:
 
     void onPair(const std::shared_ptr<uvxx::TCP> &sock);
     void setCooperationRequest(const std::shared_ptr<Request> &req);
+    void setFilesystemRequest(const std::shared_ptr<Request> &req);
 
     const Glib::ustring &ip() const { return m_ip; };
 
@@ -51,6 +52,8 @@ protected:
                          const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
     void flowTo(const Glib::VariantContainerBase &args,
                 const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
+    void mountFs(const Glib::VariantContainerBase &args,
+                 const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
 
     void getIP(Glib::VariantBase &property, const Glib::ustring &propertyName) const;
     void getPort(Glib::VariantBase &property, const Glib::ustring &propertyName) const;
@@ -77,6 +80,7 @@ private:
     Glib::RefPtr<DBus::Method> m_methodRequestCooperate;
     Glib::RefPtr<DBus::Method> m_methodStopCooperation;
     Glib::RefPtr<DBus::Method> m_methodFlowTo;
+    Glib::RefPtr<DBus::Method> m_methodMountFs;
 
     Glib::ustring m_ip;
     Glib::RefPtr<DBus::Property> m_propertyIP;
@@ -110,6 +114,7 @@ private:
     std::shared_ptr<uvxx::TCP> m_conn;
 
     std::shared_ptr<Request> m_cooperationRequest;
+    std::shared_ptr<Request> m_filesystemRequest;
 
     void handleDisconnected();
     void dispatcher(std::shared_ptr<char[]> buffer, ssize_t size) noexcept;
@@ -117,9 +122,13 @@ private:
     void handleCooperateRequest();
     void handleCooperateRequestAccepted();
     void handleStopCooperation();
+
     void handleAcceptCooperation(bool accepted,
                                  const std::map<Glib::ustring, Glib::VariantBase> &hint,
                                  uint32_t serial);
+    void handleAcceptFilesystem(bool accepted,
+                                const std::map<Glib::ustring, Glib::VariantBase> &hint,
+                                uint32_t serial);
 
     void stopCooperationAux();
 };

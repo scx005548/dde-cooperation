@@ -173,15 +173,15 @@ void Cooperation::scan([[maybe_unused]] const Glib::VariantContainerBase &args,
         return;
     }
 
-    Message msg;
-    ScanRequest *request = msg.mutable_scanrequest();
+    Message base;
+    ScanRequest *request = base.mutable_scanrequest();
     request->set_key(SCAN_KEY);
     request->mutable_deviceinfo()->set_uuid(m_uuid);
     request->mutable_deviceinfo()->set_name(Net::getHostname());
     request->mutable_deviceinfo()->set_os(DeviceOS::LINUX);
     request->set_port(m_port);
 
-    m_socketScan->send(m_scanAddr, MessageHelper::genMessage(msg));
+    m_socketScan->send(m_scanAddr, MessageHelper::genMessage(base));
 
     m_machines.clear();
     m_propertyMachines->emitChanged(
@@ -459,6 +459,42 @@ void Cooperation::handleFlowOut(std::weak_ptr<Machine> machine) {
         inputDevice.second->setMachine(machine);
         inputDevice.second->start();
     }
+}
+
+void Cooperation::handleReceivedFsRequest(Machine *machine, const FsRequest &req) {
+    // TODO: request accept
+    if (!m_userServiceProxy) {
+        spdlog::warn("no user service proxy");
+        return;
+    }
+
+    m_lastRequestId++;
+    auto r = std::make_shared<Request>(m_service,
+                                       m_lastRequestId,
+                                       Request::Type::Fuse,
+                                       req.serial());
+    machine->setFilesystemRequest(r);
+
+    auto params = Glib::Variant<std::vector<Glib::VariantBase>>::create_tuple({
+        Glib::Variant<Glib::DBusObjectPathString>::create(r->path()),
+    });
+    m_userServiceProxy->call_sync("NewRequest", params);
+}
+
+void Cooperation::handleReceivedFsResponse(Machine *machine, const FsResponse &res) {
+    if (!res.accepted()) {
+        // TODO: handle
+        spdlog::info("handleReceivedFsResponse: not accepted");
+        return;
+    }
+
+    auto machinePath = Glib::Variant<Glib::DBusObjectPathString>::create(
+        Glib::DBusObjectPathString(machine->path()));
+    auto ip = Glib::Variant<Glib::ustring>::create(machine->ip());
+    auto port = Glib::Variant<uint16_t>::create(res.port());
+    auto params = Glib::Variant<std::vector<Glib::VariantBase>>::create_tuple(
+        {machinePath, ip, port});
+    m_userServiceProxy->call_sync("MountFuse", params);
 }
 
 void Cooperation::handleDBusServiceSignal([[maybe_unused]] const Glib::ustring &sender,

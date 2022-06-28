@@ -1,8 +1,15 @@
 #include "Manager.h"
 
+#include <map>
+#include <filesystem>
+
 #include <spdlog/spdlog.h>
 
 #include "DisplayServer/X11.h"
+#include "utils/net.h"
+#include "uvxx/TCP.h"
+
+namespace fs = std::filesystem;
 
 Manager::Manager()
     : m_conn(Gio::DBus::Connection::get_sync(Gio::DBus::BUS_TYPE_SYSTEM))
@@ -16,14 +23,35 @@ Manager::Manager()
     , m_methodFlowBack(new DBus::Method("FlowBack",
                                         DBus::Method::warp(this, &Manager::flowBack),
                                         {{"direction", "q"}, {"x", "q"}, {"y", "q"}}))
+    , m_methodNewRequest(new DBus::Method("NewRequest",
+                                          DBus::Method::warp(this, &Manager::newRequest),
+                                          {{"path", "o"}}))
+    , m_methodMountFuse(new DBus::Method("MountFuse",
+                                         DBus::Method::warp(this, &Manager::mountFuse),
+                                         {{"machine", "o"}, {"ip", "s"}, {"port", "q"}}))
     , m_serviceProxy(Gio::DBus::Proxy::Proxy::create_sync(m_conn,
                                                           "com.deepin.Cooperation",
                                                           "/com/deepin/Cooperation",
                                                           "com.deepin.Cooperation")) {
     m_interface->exportMethod(m_methodStartCooperation);
     m_interface->exportMethod(m_methodFlowBack);
+    m_interface->exportMethod(m_methodNewRequest);
+    m_interface->exportMethod(m_methodMountFuse);
     m_object->exportInterface(m_interface);
     m_service->exportObject(m_object);
+
+    std::string runtimeDir = getenv("XDG_RUNTIME_DIR");
+    if (runtimeDir.empty()) {
+        // TODO: default dir
+    }
+
+    fs::path mountpoint = runtimeDir;
+    mountpoint /= "dde-cooperation";
+    m_mountpoint = mountpoint;
+    spdlog::info("mountpoint: {}", m_mountpoint.string());
+    if (!fs::exists(m_mountpoint)) {
+        fs::create_directories(m_mountpoint);
+    }
 
     m_serviceProxy->call_sync("RegisterUserDeamon");
 
@@ -33,7 +61,7 @@ Manager::Manager()
     m_displayServer = std::make_unique<X11>(this);
     // }
 
-    m_edgeDetectorThread = std::thread([this] { m_displayServer->start(); });
+    m_displayServerThread = std::thread([this] { m_displayServer->start(); });
 }
 
 bool Manager::onFlow(uint16_t direction, uint16_t x, uint16_t y) {
@@ -50,7 +78,7 @@ bool Manager::onFlow(uint16_t direction, uint16_t x, uint16_t y) {
                                                                path,
                                                                "com.deepin.Cooperation.Machine");
         Glib::Variant<uint16_t> dirV;
-        machineTmp->get_cached_property(dirV, "direction");
+        machineTmp->get_cached_property(dirV, "Direction");
 
         uint16_t dir = dirV.get();
         if (dir == direction) {
@@ -101,8 +129,11 @@ void Manager::newRequest(const Glib::VariantContainerBase &args,
                          const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
     Glib::Variant<Glib::DBusObjectPathString> path;
     args.get_child(path, 0);
+
     invocation->return_value(Glib::VariantContainerBase{});
+
     spdlog::info("new request: {}", std::string(path.get()));
+
     auto req = Gio::DBus::Proxy::Proxy::create_sync(m_service->conn(),
                                                     "com.deepin.Cooperation",
                                                     path.get(),
@@ -114,7 +145,38 @@ void Manager::newRequest(const Glib::VariantContainerBase &args,
         newCooperationReq(req);
         break;
     }
+    case 1: {
+        newFilesystemServer(req);
+        break;
     }
+    }
+}
+
+void Manager::mountFuse(const Glib::VariantContainerBase &args,
+                        const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
+    Glib::Variant<Glib::DBusObjectPathString> machinePath;
+    Glib::Variant<Glib::ustring> ip;
+    Glib::Variant<uint16_t> port;
+    args.get_child(machinePath, 0);
+    args.get_child(ip, 1);
+    args.get_child(port, 2);
+
+    invocation->return_value(Glib::VariantContainerBase{});
+
+    auto machine = Gio::DBus::Proxy::Proxy::create_sync(m_service->conn(),
+                                                        "com.deepin.Cooperation",
+                                                        machinePath.get(),
+                                                        "com.deepin.Cooperation.Machine");
+    Glib::Variant<Glib::ustring> uuidV;
+    machine->get_cached_property(uuidV, "UUID");
+
+    std::string dir = std::string(uuidV.get());
+    dir.resize(8);
+    spdlog::info("dir: {}", dir);
+
+    fs::path mountpoint = m_mountpoint / dir;
+    auto client = std::make_unique<FuseClient>(std::string(ip.get()), port.get(), mountpoint);
+    m_fuseClients.emplace(std::pair{mountpoint.string(), std::move(client)});
 }
 
 void Manager::newCooperationReq(Glib::RefPtr<Gio::DBus::Proxy> req) {
@@ -122,4 +184,24 @@ void Manager::newCooperationReq(Glib::RefPtr<Gio::DBus::Proxy> req) {
     auto hint = Glib::Variant<std::map<Glib::ustring, Glib::VariantBase>>::create({});
     auto params = Glib::Variant<std::vector<Glib::VariantBase>>::create_tuple({accept, hint});
     req->call_sync("Accept", params);
+}
+
+void Manager::newFilesystemServer(Glib::RefPtr<Gio::DBus::Proxy> req) {
+    try {
+        fs::path p{"/"};
+
+        auto server = std::make_unique<FuseServer>(p);
+        auto port = server->port();
+
+        m_fuseServers.emplace(std::pair{p.string(), std::move(server)});
+
+        auto accept = Glib::Variant<bool>::create(true);
+        auto hint = Glib::Variant<std::map<Glib::ustring, Glib::VariantBase>>::create(
+            std::map<Glib::ustring, Glib::VariantBase>{
+                std::pair{"port", Glib::Variant<uint16_t>::create(port)}});
+        auto params = Glib::Variant<std::vector<Glib::VariantBase>>::create_tuple({accept, hint});
+        req->call_sync("Accept", params);
+    } catch (Glib::Error &e) {
+        spdlog::error("newFilesystemServer: {}", std::string(e.what()));
+    }
 }

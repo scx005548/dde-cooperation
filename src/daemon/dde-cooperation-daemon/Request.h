@@ -8,7 +8,6 @@ public:
     enum class Type {
         Cooperation,
         Fuse,
-        SendFile,
     };
 
     Request(const Glib::RefPtr<DBus::Service> &service, uint32_t id, Type type, uint32_t serial);

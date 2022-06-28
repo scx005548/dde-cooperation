@@ -5,6 +5,7 @@
 #include <giomm.h>
 
 #include "Manager.h"
+#include "FuseClient.h"
 
 int main() {
     spdlog::set_default_logger(spdlog::stdout_color_mt("console"));

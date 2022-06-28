@@ -2,12 +2,15 @@
 #define DDE_COOPERATION_USER_AGENT_H
 
 #include <memory>
+#include <unordered_map>
 #include <thread>
 
 #include <glibmm.h>
 
 #include "dbus/dbus.h"
 #include "DisplayServer.h"
+#include "FuseServer.h"
+#include "FuseClient.h"
 
 class Manager {
 public:
@@ -23,8 +26,12 @@ protected:
                   const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
     void newRequest(const Glib::VariantContainerBase &args,
                     const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
+    void mountFuse(const Glib::VariantContainerBase &args,
+                   const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
 
 private:
+    std::filesystem::path m_mountpoint;
+
     Glib::RefPtr<Gio::DBus::Connection> m_conn;
     Glib::RefPtr<DBus::Service> m_service;
     Glib::RefPtr<DBus::Object> m_object;
@@ -32,14 +39,20 @@ private:
 
     Glib::RefPtr<DBus::Method> m_methodStartCooperation;
     Glib::RefPtr<DBus::Method> m_methodFlowBack;
+    Glib::RefPtr<DBus::Method> m_methodNewRequest;
+    Glib::RefPtr<DBus::Method> m_methodMountFuse;
 
     Glib::RefPtr<Gio::DBus::Proxy> m_serviceProxy;
 
     std::unique_ptr<DisplayServer> m_displayServer;
 
-    std::thread m_edgeDetectorThread;
+    std::unordered_map<std::string, std::unique_ptr<FuseServer>> m_fuseServers;
+    std::unordered_map<std::string, std::unique_ptr<FuseClient>> m_fuseClients;
+
+    std::thread m_displayServerThread;
 
     void newCooperationReq(Glib::RefPtr<Gio::DBus::Proxy> req);
+    void newFilesystemServer(Glib::RefPtr<Gio::DBus::Proxy> req);
 };
 
 #endif // !DDE_COOPERATION_USER_AGENT_H

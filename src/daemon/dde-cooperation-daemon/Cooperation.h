@@ -28,6 +28,8 @@ class TCP;
 class UDP;
 } // namespace uvxx
 
+class FsRequest;
+class FsResponse;
 class Machine;
 
 class Cooperation : public noncopyable {
@@ -44,6 +46,8 @@ public:
     void handleStopCooperation();
     void handleFlowBack(uint16_t direction, uint16_t x, uint16_t y);
     void handleFlowOut(std::weak_ptr<Machine> machine);
+    void handleReceivedFsRequest(Machine *machine, const FsRequest &req);
+    void handleReceivedFsResponse(Machine *machine, const FsResponse &res);
 
 protected:
     // DBus method handlers

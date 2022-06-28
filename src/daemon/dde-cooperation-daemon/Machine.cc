@@ -43,6 +43,8 @@ Machine::Machine(Cooperation *cooperation,
     , m_methodFlowTo(new DBus::Method("FlowTo",
                                       DBus::Method::warp(this, &Machine::flowTo),
                                       {{"direction", "q"}, {"x", "q"}, {"y", "q"}}))
+    , m_methodMountFs(
+          new DBus::Method("MountFs", DBus::Method::warp(this, &Machine::mountFs), {{"path", "s"}}))
     , m_ip(ip)
     , m_propertyIP(new DBus::Property("IP", "s", DBus::Property::warp(this, &Machine::getIP)))
     , m_port(port)
@@ -77,6 +79,7 @@ Machine::Machine(Cooperation *cooperation,
     m_interface->exportMethod(m_methodRequestCooperate);
     m_interface->exportMethod(m_methodStopCooperation);
     m_interface->exportMethod(m_methodFlowTo);
+    m_interface->exportMethod(m_methodMountFs);
     m_interface->exportProperty(m_propertyIP);
     m_interface->exportProperty(m_propertyPort);
     m_interface->exportProperty(m_propertyUUID);
@@ -232,6 +235,27 @@ void Machine::flowTo([[maybe_unused]] const Glib::VariantContainerBase &args,
     invocation->return_value(Glib::VariantContainerBase{});
 }
 
+void Machine::mountFs(const Glib::VariantContainerBase &args,
+                      const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
+    if (!m_conn) {
+        invocation->return_error(
+            Gio::DBus::Error{Gio::DBus::Error::ACCESS_DENIED, "connect first"});
+        return;
+    }
+
+    Glib::Variant<Glib::ustring> path;
+    args.get_child(path, 0);
+
+    m_async->wake([this, path = path.get()]() {
+        Message msg;
+        auto *request = msg.mutable_fsrequest();
+        request->set_path(path);
+        m_conn->write(MessageHelper::genMessage(msg));
+    });
+
+    invocation->return_value(Glib::VariantContainerBase{});
+}
+
 void Machine::getIP(Glib::VariantBase &property,
                     [[maybe_unused]] const Glib::ustring &propertyName) const {
     property = Glib::Variant<Glib::ustring>::create(m_ip);
@@ -303,15 +327,15 @@ void Machine::dispatcher(std::shared_ptr<char[]> buffer, ssize_t size) noexcept 
             break;
         }
 
-        auto base = MessageHelper::parseMessageBody(buff, header.size);
-        spdlog::info("received packet, type: {}", base.payload_case());
+        auto msg = MessageHelper::parseMessageBody(buff, header.size);
+        spdlog::info("received packet, type: {}", msg.payload_case());
 
         buff += header.size;
         size -= header.size;
 
-        switch (base.payload_case()) {
+        switch (msg.payload_case()) {
         case Message::PayloadCase::kPairResponse: {
-            handlePairResponse(base.pairresponse());
+            handlePairResponse(msg.pairresponse());
             break;
         }
 
@@ -321,7 +345,7 @@ void Machine::dispatcher(std::shared_ptr<char[]> buffer, ssize_t size) noexcept 
         }
 
         case Message::PayloadCase::kCooperateResponse: {
-            const auto &resp = base.cooperateresponse();
+            const auto &resp = msg.cooperateresponse();
             if (!resp.accept()) {
                 // TODO: handle not accepted
                 break;
@@ -341,16 +365,16 @@ void Machine::dispatcher(std::shared_ptr<char[]> buffer, ssize_t size) noexcept 
         }
 
         case Message::PayloadCase::kInputEventRequest: {
-            const auto &event = base.inputeventrequest();
+            const auto &event = msg.inputeventrequest();
 
             m_cooperation->handleReceivedInputEventRequest(event);
 
-            Message msg;
-            InputEventResponse *response = msg.mutable_inputeventresponse();
+            Message resp;
+            InputEventResponse *response = resp.mutable_inputeventresponse();
             response->set_serial(event.serial());
             response->set_success(true);
 
-            m_conn->write(MessageHelper::genMessage(msg));
+            m_conn->write(MessageHelper::genMessage(resp));
             break;
         }
 
@@ -359,7 +383,7 @@ void Machine::dispatcher(std::shared_ptr<char[]> buffer, ssize_t size) noexcept 
         }
 
         case Message::PayloadCase::kFlowRequest: {
-            const auto &req = base.flowrequest();
+            const auto &req = msg.flowrequest();
 
             m_cooperation->handleFlowBack(req.direction(), req.x(), req.y());
             break;
@@ -369,8 +393,26 @@ void Machine::dispatcher(std::shared_ptr<char[]> buffer, ssize_t size) noexcept 
             break;
         }
 
-        default:
+        case Message::PayloadCase::kFsRequest: {
+            const auto &req = msg.fsrequest();
+
+            m_cooperation->handleReceivedFsRequest(this, req);
             break;
+        }
+
+        case Message::PayloadCase::kFsResponse: {
+            const auto &resp = msg.fsresponse();
+
+            m_cooperation->handleReceivedFsResponse(this, resp);
+            break;
+        }
+
+        default: {
+            spdlog::warn("invalid message type: {}", msg.payload_case());
+            m_conn->close();
+            return;
+            break;
+        }
         }
     }
 }
@@ -418,6 +460,12 @@ void Machine::setCooperationRequest(const std::shared_ptr<Request> &req) {
         sigc::mem_fun(this, &Machine::handleAcceptCooperation));
 }
 
+void Machine::setFilesystemRequest(const std::shared_ptr<Request> &req) {
+    m_filesystemRequest = req;
+
+    m_filesystemRequest->onAccept().connect(sigc::mem_fun(this, &Machine::handleAcceptFilesystem));
+};
+
 void Machine::handleAcceptCooperation(
     bool accepted,
     [[maybe_unused]] const std::map<Glib::ustring, Glib::VariantBase> &hint,
@@ -438,6 +486,22 @@ void Machine::handleAcceptCooperation(
             auto wptr = weak_from_this();
             m_cooperation->handleStartCooperation(wptr);
         }
+    });
+}
+
+void Machine::handleAcceptFilesystem(bool accepted,
+                                     const std::map<Glib::ustring, Glib::VariantBase> &hint,
+                                     uint32_t serial) {
+    m_async->wake([this, accepted, hint, serial]() {
+        auto port = *static_cast<const uint16_t *>(hint.at("port").get_data());
+
+        Message msg;
+        FsResponse *resp = msg.mutable_fsresponse();
+        resp->set_accepted(accepted);
+        resp->set_port(port);
+        resp->set_serial(serial);
+
+        m_conn->write(MessageHelper::genMessage(msg));
     });
 }
 

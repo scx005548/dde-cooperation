@@ -6,6 +6,8 @@ dde_cooperation_daemon_sources = files('''
   KeyPair.cc
   Machine.h
   Machine.cc
+  Request.h
+  Request.cc
   InputDevice.h
   InputDevice.cc
   InputEvent.h
