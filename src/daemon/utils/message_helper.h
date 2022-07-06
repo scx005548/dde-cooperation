@@ -19,96 +19,63 @@ struct MessageHeader {
 };
 #pragma pack(pop)
 
-const size_t header_size = sizeof(MessageHeader);
+const ssize_t header_size = sizeof(MessageHeader);
 
 namespace MessageHelper {
 
-inline void send_message(const Glib::RefPtr<Gio::Socket> &sock, const Message &response) noexcept {
-    MessageHeader header{.size = response.ByteSizeLong()};
-    char *buffer = new char[header_size + response.ByteSizeLong()];
-    memcpy(buffer, &header, header_size);
+inline std::vector<char> genMessage(const Message &msg) {
+#if __cplusplus < 202002L
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wc++20-designator"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#endif
+#endif
+    MessageHeader header{.size = msg.ByteSizeLong()};
+#if __cplusplus < 202002L
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
+#endif
 
-    response.SerializeToArray(buffer, response.ByteSizeLong());
-    try {
-        sock->send(buffer, response.ByteSizeLong());
-    } catch (Gio::Error &e) {
-        spdlog::error("{}", e.what().c_str());
-    }
-    delete[] buffer;
+    std::vector<char> buff(header_size + msg.ByteSizeLong());
+    memcpy(buff.data(), &header, header_size);
+    msg.SerializeToArray(buff.data() + header_size, msg.ByteSizeLong());
+
+    return buff;
 }
 
-inline MessageHeader recv_messageheader(const Glib::RefPtr<Gio::Socket> &sock) noexcept {
+inline MessageHeader parseMessageHeader(const char *buffer) noexcept {
     MessageHeader header;
-    try {
-        sock->receive(reinterpret_cast<char *>(&header), header_size);
-    } catch (Gio::Error &e) {
-        spdlog::error("{}", e.what().c_str());
-    }
-
+    memcpy(&header, buffer, header_size);
     return header;
 }
 
-inline Message recv_message_body(const Glib::RefPtr<Gio::Socket> &sock, size_t size) noexcept {
-    char *buffer = new char[size];
-    try {
-        sock->receive(buffer, size);
-    } catch (Gio::Error &e) {
-        spdlog::error("{}", e.what().c_str());
-    }
-    Message response;
-    response.ParseFromArray(buffer, size);
-    delete[] buffer;
+inline Message parseMessageBody(const char *buffer, size_t size) noexcept {
+    Message msg;
+    msg.ParseFromArray(buffer, size);
 
-    return response;
+    return msg;
 }
 
-inline Message recv_message(const Glib::RefPtr<Gio::Socket> &sock) noexcept {
-    MessageHeader header;
-    try {
-        sock->receive(reinterpret_cast<char *>(&header), header_size);
-    } catch (Gio::Error &e) {
-        spdlog::error("{}", e.what().c_str());
-    }
+// template <typename T>
+// inline T parseMessage(const char *buffer, size_t size) noexcept {
+//     assert(size >= base_msg_size);
 
-    char *buffer = new char[header.size];
-    try {
-        sock->receive(buffer, header.size);
-    } catch (Gio::Error &e) {
-        spdlog::error("{}", e.what().c_str());
-    }
-    Message response;
-    response.ParseFromArray(buffer, header.size);
-    delete[] buffer;
+//     BaseMessage base;
+//     base.ParseFromArray(buffer, base_msg_size);
 
-    return response;
-}
+//     assert(size >= base_msg_size + base.size());
 
-inline void send_message_to(const Glib::RefPtr<Gio::Socket> &sock,
-                            const Message &message,
-                            const Glib::RefPtr<Gio::SocketAddress> &addr) noexcept {
-    MessageHeader header{.size = message.ByteSizeLong()};
+//     T response;
+//     response.ParseFromArray(buffer + base_msg_size, size - base_msg_size);
 
-    char *buffer = new char[header_size + message.ByteSizeLong()];
-    memcpy(buffer, &header, header_size);
-    message.SerializeToArray(buffer + header_size, message.ByteSizeLong());
-    sock->send_to(addr, buffer, header_size + message.ByteSizeLong());
-    delete[] buffer;
-}
-
-inline Message recv_message_from(const Glib::RefPtr<Gio::Socket> &sock,
-                                 Glib::RefPtr<Gio::SocketAddress> &addr) noexcept {
-    MessageHeader header;
-    Message base;
-    sock->receive(reinterpret_cast<char *>(&header), header_size);
-
-    char *buffer = new char[header.size];
-    sock->receive_from(addr, buffer, header.size);
-    Message message;
-    message.ParseFromArray(buffer, header.size);
-    delete[] buffer;
-
-    return message;
-}
+//     return response;
+// }
 
 } // namespace MessageHelper
 

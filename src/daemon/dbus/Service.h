@@ -19,6 +19,8 @@ public:
     explicit Service(Glib::RefPtr<Gio::DBus::Connection> conn);
     ~Service() = default;
 
+    Glib::RefPtr<Gio::DBus::Connection> conn() const noexcept;
+
     /*****************************************************************************
      * @brief 返回服务名
      * @return 服务名

@@ -46,6 +46,25 @@ InputEvent::InputEvent(DeviceType type)
         enableEventCode(EV_KEY, BTN_EXTRA);
         break;
     }
+    case DeviceType::Touchpad: {
+        enableEventCode(EV_KEY, BTN_LEFT);
+        enableEventCode(EV_KEY, BTN_TOOL_FINGER);
+        enableEventCode(EV_KEY, BTN_TOOL_QUINTTAP);
+        enableEventCode(EV_KEY, BTN_TOUCH);
+        enableEventCode(EV_KEY, BTN_TOOL_DOUBLETAP);
+        enableEventCode(EV_KEY, BTN_TOOL_TRIPLETAP);
+        enableEventCode(EV_KEY, BTN_TOOL_QUADTAP);
+
+        enableEventType(EV_ABS);
+        enableEventCode(EV_ABS, ABS_X, nullptr);
+        enableEventCode(EV_ABS, ABS_Y, nullptr);
+        enableEventCode(EV_ABS, ABS_MT_SLOT, nullptr);
+        enableEventCode(EV_ABS, ABS_MT_POSITION_X, nullptr);
+        enableEventCode(EV_ABS, ABS_MT_POSITION_Y, nullptr);
+        enableEventCode(EV_ABS, ABS_MT_TOOL_TYPE, nullptr);
+        enableEventCode(EV_ABS, ABS_MT_TRACKING_ID, nullptr);
+        break;
+    }
     default:
         SPDLOG_WARN("unknown device type: {}", type);
         break;
@@ -80,6 +99,10 @@ void InputEvent::enableEventCode(unsigned int type, unsigned int code, const voi
 }
 
 bool InputEvent::emit(const InputEventRequest &event) {
+    spdlog::info("emitting event: {}, {}, {}",
+                 libevdev_event_type_get_name(event.type()),
+                 libevdev_event_code_get_name(event.type(), event.code()),
+                 event.value());
     int rc = libevdev_uinput_write_event(m_uidev.get(), event.type(), event.code(), event.value());
     if (rc != 0) {
         spdlog::warn("failed to write event: {}", strerror(-rc));

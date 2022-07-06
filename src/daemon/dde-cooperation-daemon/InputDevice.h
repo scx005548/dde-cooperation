@@ -9,16 +9,24 @@
 
 #include "protocol/cooperation.pb.h"
 
+namespace uvxx {
+class Loop;
+class Poll;
+} // namespace uvxx
+
 class Machine;
 
 class InputDevice {
 public:
-    explicit InputDevice(const std::filesystem::path &path);
+    explicit InputDevice(const std::filesystem::path &path,
+                         const std::shared_ptr<uvxx::Loop> &uvLoop);
     ~InputDevice();
 
+    void init();
     void start();
     void stop();
 
+    bool shouldIgnore();
     DeviceType type() { return m_type; };
 
     void setMachine(const std::weak_ptr<Machine> &machine) { m_machine = machine; }
@@ -26,15 +34,19 @@ public:
 private:
     std::weak_ptr<Machine> m_machine;
 
+    const std::filesystem::path &m_path;
+
     int m_fd;
 
-    const std::filesystem::path &m_path;
+    std::shared_ptr<uvxx::Loop> m_uvLoop;
+    std::shared_ptr<uvxx::Poll> m_uvPoll;
+
     libevdev *m_dev;
 
+    std::string m_name;
     DeviceType m_type;
 
-    std::thread m_thread;
-    bool m_stop;
+    void handlePollEvent(int events);
 };
 
 #endif // !INPUT_DEVICE_H

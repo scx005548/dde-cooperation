@@ -26,6 +26,10 @@ Service::Service(Glib::RefPtr<Gio::DBus::Connection> conn)
     , m_ownerId(0) {
 }
 
+Glib::RefPtr<Gio::DBus::Connection> Service::conn() const noexcept {
+    return m_conn;
+}
+
 /*****************************************************************************
  * @brief 返回服务名
  * @return 服务名

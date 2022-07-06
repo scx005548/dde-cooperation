@@ -10,9 +10,11 @@ dde_cooperation_daemon_sources = files('''
   InputDevice.cc
   InputEvent.h
   InputEvent.cc
+  Request.h
+  Request.cc
 '''.split())
 
-dde_cooperation_daemon_sources += common_sources + protocol
+dde_cooperation_daemon_sources += common_sources + uvxx_sources + protocol
 
 executable('dde-cooperation-daemon',
   dde_cooperation_daemon_sources,
@@ -21,11 +23,13 @@ executable('dde-cooperation-daemon',
   ],
   dependencies: [
     stdcxxfs,
+    thread,
     uuid,
     fmt,
     spdlog,
     openssl,
     libevdev,
+    uv,
     glibmm,
     giomm,
     protobuf,
