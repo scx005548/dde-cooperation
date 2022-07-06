@@ -66,12 +66,10 @@ Machine::~Machine() {
 void Machine::pair([[maybe_unused]] const Glib::VariantContainerBase &args,
                    const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
     m_sock = Gio::Socket::create(Gio::SocketFamily::SOCKET_FAMILY_IPV4,
-                                          Gio::SocketType::SOCKET_TYPE_STREAM,
-                                          Gio::SocketProtocol::SOCKET_PROTOCOL_TCP);
+                                 Gio::SocketType::SOCKET_TYPE_STREAM,
+                                 Gio::SocketProtocol::SOCKET_PROTOCOL_TCP);
     m_sock->connect(Net::makeSocketAddress(m_ip, m_port));
-    Gio::signal_socket().connect(sigc::mem_fun(this, &Machine::dispatcher),
-                                 m_sock,
-                                 Glib::IO_IN);
+    Gio::signal_socket().connect(sigc::mem_fun(this, &Machine::dispatcher), m_sock, Glib::IO_IN);
 
     PairRequest request;
     request.set_key(SCAN_KEY);
@@ -86,9 +84,7 @@ void Machine::pair([[maybe_unused]] const Glib::VariantContainerBase &args,
 
 void Machine::onPair(Glib::RefPtr<Gio::Socket> conn) {
     m_sock = conn;
-    Gio::signal_socket().connect(sigc::mem_fun(this, &Machine::dispatcher),
-                                 m_sock,
-                                 Glib::IO_IN);
+    Gio::signal_socket().connect(sigc::mem_fun(this, &Machine::dispatcher), m_sock, Glib::IO_IN);
 
     m_paired = true;
     m_propertyPaired->emitChanged(Glib::Variant<bool>::create(m_paired));
@@ -165,6 +161,10 @@ void Machine::getCompositor(Glib::VariantBase &property,
 bool Machine::dispatcher([[maybe_unused]] Glib::IOCondition cond) noexcept {
     auto base = Message::recv_message_header(m_sock);
     switch (base.type()) {
+    case InvalidType: {
+        m_sock->close();
+        break;
+    }
     case PairResponseType: {
         handlePairResponse(Message::recv_message_body<PairResponse>(m_sock, base));
         break;
