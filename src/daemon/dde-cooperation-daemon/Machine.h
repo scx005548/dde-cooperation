@@ -91,9 +91,9 @@ private:
     Compositor m_compositor;
     Glib::RefPtr<DBus::Property> m_propertyCompositor;
 
-    Glib::RefPtr<Gio::Socket> m_socketConnect;
+    Glib::RefPtr<Gio::Socket> m_sock;
 
-    bool mainHandler(Glib::IOCondition cond, const Glib::RefPtr<Gio::Socket> &sock) noexcept;
+    bool dispatcher(Glib::IOCondition cond) noexcept;
     void handlePairResponse(const PairResponse &resp);
     void handleCooperateRequest();
 };

@@ -65,14 +65,13 @@ Machine::~Machine() {
 
 void Machine::pair([[maybe_unused]] const Glib::VariantContainerBase &args,
                    const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
-    m_socketConnect = Gio::Socket::create(Gio::SocketFamily::SOCKET_FAMILY_IPV4,
+    m_sock = Gio::Socket::create(Gio::SocketFamily::SOCKET_FAMILY_IPV4,
                                           Gio::SocketType::SOCKET_TYPE_STREAM,
                                           Gio::SocketProtocol::SOCKET_PROTOCOL_TCP);
-    m_socketConnect->connect(Net::makeSocketAddress(m_ip, m_port));
-    Gio::signal_socket().connect(
-        [this](Glib::IOCondition cond) { return mainHandler(cond, m_socketConnect); },
-        m_socketConnect,
-        Glib::IO_IN);
+    m_sock->connect(Net::makeSocketAddress(m_ip, m_port));
+    Gio::signal_socket().connect(sigc::mem_fun(this, &Machine::dispatcher),
+                                 m_sock,
+                                 Glib::IO_IN);
 
     PairRequest request;
     request.set_key(SCAN_KEY);
@@ -80,17 +79,16 @@ void Machine::pair([[maybe_unused]] const Glib::VariantContainerBase &args,
     request.mutable_deviceinfo()->set_name(Net::getHostname());
     request.mutable_deviceinfo()->set_os(DeviceOS::LINUX);
     request.mutable_deviceinfo()->set_compositor(Compositor::NONE);
-    Message::send_message(m_socketConnect, MessageType::PairRequestType, request);
+    Message::send_message(m_sock, MessageType::PairRequestType, request);
 
     invocation->return_value(Glib::VariantContainerBase{});
 }
 
 void Machine::onPair(Glib::RefPtr<Gio::Socket> conn) {
-    m_socketConnect = conn;
-    Gio::signal_socket().connect(
-        [this](Glib::IOCondition cond) { return mainHandler(cond, m_socketConnect); },
-        m_socketConnect,
-        Glib::IO_IN);
+    m_sock = conn;
+    Gio::signal_socket().connect(sigc::mem_fun(this, &Machine::dispatcher),
+                                 m_sock,
+                                 Glib::IO_IN);
 
     m_paired = true;
     m_propertyPaired->emitChanged(Glib::Variant<bool>::create(m_paired));
@@ -102,7 +100,7 @@ void Machine::onPair(Glib::RefPtr<Gio::Socket> conn) {
     response.mutable_deviceinfo()->set_os(DeviceOS::LINUX);
     response.mutable_deviceinfo()->set_compositor(Compositor::NONE);
     response.set_agree(true); // TODO: 询问用户是否同意
-    Message::send_message(m_socketConnect, MessageType::PairResponseType, response);
+    Message::send_message(m_sock, MessageType::PairResponseType, response);
 }
 
 void Machine::sendFile(const Glib::VariantContainerBase &args,
@@ -118,13 +116,13 @@ void Machine::sendFile(const Glib::VariantContainerBase &args,
 void Machine::requestCooperate(
     [[maybe_unused]] const Glib::VariantContainerBase &args,
     const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
-    if (!m_socketConnect->is_connected()) {
+    if (!m_sock->is_connected()) {
         invocation->return_error(
             Gio::DBus::Error{Gio::DBus::Error::ACCESS_DENIED, "connect first"});
         return;
     }
 
-    Message::send_message_header(m_socketConnect, MessageType::CooperateRequestType);
+    Message::send_message_header(m_sock, MessageType::CooperateRequestType);
 
     invocation->return_value(Glib::VariantContainerBase{});
 }
@@ -164,12 +162,11 @@ void Machine::getCompositor(Glib::VariantBase &property,
     property = Glib::Variant<uint32_t>::create(m_compositor);
 }
 
-bool Machine::mainHandler([[maybe_unused]] Glib::IOCondition cond,
-                          const Glib::RefPtr<Gio::Socket> &sock) noexcept {
-    auto base = Message::recv_message_header(sock);
+bool Machine::dispatcher([[maybe_unused]] Glib::IOCondition cond) noexcept {
+    auto base = Message::recv_message_header(m_sock);
     switch (base.type()) {
     case PairResponseType: {
-        handlePairResponse(Message::recv_message_body<PairResponse>(sock, base));
+        handlePairResponse(Message::recv_message_body<PairResponse>(m_sock, base));
         break;
     }
 
@@ -183,13 +180,13 @@ bool Machine::mainHandler([[maybe_unused]] Glib::IOCondition cond,
     }
 
     case InputEventRequestType: {
-        auto event = Message::recv_message_body<InputEventRequest>(sock, base);
+        auto event = Message::recv_message_body<InputEventRequest>(m_sock, base);
         m_signal_receivedInputEvent.emit(event);
 
         InputEventResponse response;
         response.set_serial(event.serial());
         response.set_success(true);
-        Message::send_message(sock, InputEventResponseType, response);
+        Message::send_message(m_sock, InputEventResponseType, response);
         break;
     }
 
@@ -220,9 +217,9 @@ void Machine::handleCooperateRequest() {
 
     CooperateResponse resp;
     resp.set_accept(accept);
-    Message::send_message(m_socketConnect, CooperateResponseType, resp);
+    Message::send_message(m_sock, CooperateResponseType, resp);
 }
 
 void Machine::handleInputEvent(const InputEventRequest &event) {
-    Message::send_message(m_socketConnect, InputEventRequestType, event);
+    Message::send_message(m_sock, InputEventRequestType, event);
 }

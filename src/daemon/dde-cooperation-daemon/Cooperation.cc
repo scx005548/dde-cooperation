@@ -75,20 +75,17 @@ Cooperation::Cooperation()
         std::make_pair(DeviceType::Mouse, std::make_unique<InputEvent>(DeviceType::Mouse)));
 
     try {
-        Gio::signal_socket().connect(
-            [this](Glib::IOCondition cond) { return handleReceivedScanRequest(cond); },
-            m_socketListenScan,
-            Glib::IO_IN);
+        Gio::signal_socket().connect(sigc::mem_fun(this, &Cooperation::handleReceivedScanRequest),
+                                     m_socketListenScan,
+                                     Glib::IO_IN);
 
-        Gio::signal_socket().connect(
-            [this](Glib::IOCondition cond) { return handleReceivedScanResponse(cond); },
-            m_socketScan,
-            Glib::IO_IN);
+        Gio::signal_socket().connect(sigc::mem_fun(this, &Cooperation::handleReceivedScanResponse),
+                                     m_socketScan,
+                                     Glib::IO_IN);
 
-        Gio::signal_socket().connect(
-            [this](Glib::IOCondition cond) { return handleReceivedPairRequest(cond); },
-            m_socketListenPair,
-            Glib::IO_IN);
+        Gio::signal_socket().connect(sigc::mem_fun(this, &Cooperation::handleReceivedPairRequest),
+                                     m_socketListenPair,
+                                     Glib::IO_IN);
     } catch (Gio::Error &e) {
         spdlog::error("{} {}", e.code(), e.what().c_str());
     }
