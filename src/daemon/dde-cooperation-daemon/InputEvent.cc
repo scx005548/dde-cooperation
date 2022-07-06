@@ -8,8 +8,6 @@
 
 #include "utils/ptr.h"
 
-extern std::shared_ptr<spdlog::logger> logger;
-
 InputEvent::InputEvent(DeviceType type)
     : m_dev(make_handle(libevdev_new(), &libevdev_free))
     , m_uidev(nullptr, &libevdev_uinput_destroy) {
@@ -58,7 +56,7 @@ InputEvent::InputEvent(DeviceType type)
     libevdev_uinput *uidev;
     int rc = libevdev_uinput_create_from_device(m_dev.get(), LIBEVDEV_UINPUT_OPEN_MANAGED, &uidev);
     if (rc != 0) {
-        logger->error("failed to create uinput device: {}", strerror(-rc));
+        spdlog::error("failed to create uinput device: {}", strerror(-rc));
         return;
     }
 
@@ -68,14 +66,14 @@ InputEvent::InputEvent(DeviceType type)
 void InputEvent::enableEventType(unsigned int type) {
     int rc = libevdev_enable_event_type(m_dev.get(), type);
     if (rc != 0) {
-        logger->warn("failed to enable event type {}", libevdev_event_type_get_name(type));
+        spdlog::warn("failed to enable event type {}", libevdev_event_type_get_name(type));
     }
 }
 
 void InputEvent::enableEventCode(unsigned int type, unsigned int code, const void *data) {
     int rc = libevdev_enable_event_code(m_dev.get(), type, code, data);
     if (rc != 0) {
-        logger->warn("failed to enable event code: type: {}, code: {}",
+        spdlog::warn("failed to enable event code: type: {}, code: {}",
                      libevdev_event_type_get_name(type),
                      libevdev_event_code_get_name(type, code));
     }
@@ -84,7 +82,7 @@ void InputEvent::enableEventCode(unsigned int type, unsigned int code, const voi
 bool InputEvent::emit(const InputEventRequest &event) {
     int rc = libevdev_uinput_write_event(m_uidev.get(), event.type(), event.code(), event.value());
     if (rc != 0) {
-        logger->warn("failed to write event: {}", strerror(-rc));
+        spdlog::warn("failed to write event: {}", strerror(-rc));
         return false;
     }
 

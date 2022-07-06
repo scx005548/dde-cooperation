@@ -4,8 +4,6 @@
 
 #include "Interface.h"
 
-extern std::shared_ptr<spdlog::logger> logger;
-
 namespace DBus {
 
 /*****************************************************************************
@@ -61,7 +59,7 @@ Glib::ustring Signal::XML() const noexcept {
 
 void Signal::emit(const Glib::VariantContainerBase &value) noexcept {
     if (value.get_type_string() != m_type) {
-        logger->error("wrong type, expect {}, received {}",
+        spdlog::error("wrong type, expect {}, received {}",
                       std::string(m_type),
                       value.get_type_string());
         return;

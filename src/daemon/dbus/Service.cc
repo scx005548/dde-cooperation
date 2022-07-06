@@ -6,8 +6,6 @@
 #include "Property.h"
 #include "Signal.h"
 
-extern std::shared_ptr<spdlog::logger> logger;
-
 namespace DBus {
 
 Service::Service(const Glib::ustring &name, Gio::DBus::BusType type)
@@ -43,7 +41,7 @@ Glib::ustring Service::name() const noexcept {
  * ***************************************************************************/
 bool Service::exportObject(const Glib::RefPtr<DBus::Object> &obj) noexcept {
     if (obj->m_parent != nullptr) {
-        logger->error("{} already have a parent", std::string(obj->path()));
+        spdlog::error("{} already have a parent", std::string(obj->path()));
         return false;
     }
 
@@ -140,7 +138,7 @@ void Service::onBusAcquired(const Glib::RefPtr<Gio::DBus::Connection> &connectio
             exportObjectAux(iter.second);
         }
     } catch (const std::exception &err) {
-        logger->error("onBusAcquired: {}", err.what());
+        spdlog::error("onBusAcquired: {}", err.what());
     }
 }
 
@@ -166,7 +164,7 @@ void Service::onNameLost(const Glib::RefPtr<Gio::DBus::Connection> &connection,
             connection->unregister_object(id);
         }
     } catch (const std::exception &err) {
-        logger->error("onNameLost: {}", err.what());
+        spdlog::error("onNameLost: {}", err.what());
     }
 }
 

@@ -8,8 +8,6 @@
 
 #define SCAN_KEY "UOS-COOPERATION"
 
-extern std::shared_ptr<spdlog::logger> logger;
-
 namespace Message {
 
 inline void send_message_header(const Glib::RefPtr<Gio::Socket> &sock,
@@ -24,7 +22,7 @@ inline void send_message_header(const Glib::RefPtr<Gio::Socket> &sock,
     try {
         sock->send(buffer, base.ByteSizeLong());
     } catch (Gio::Error &e) {
-        logger->error("{}", e.what().c_str());
+        spdlog::error("{}", e.what().c_str());
     }
     delete[] buffer;
 }
@@ -39,7 +37,7 @@ inline void send_message(const Glib::RefPtr<Gio::Socket> &sock,
     try {
         sock->send(buffer, response.ByteSizeLong());
     } catch (Gio::Error &e) {
-        logger->error("{}", e.what().c_str());
+        spdlog::error("{}", e.what().c_str());
     }
     delete[] buffer;
 }
@@ -51,7 +49,7 @@ inline BaseMessage recv_message_header(const Glib::RefPtr<Gio::Socket> &sock) no
     try {
         sock->receive(buffer, base_msg_size);
     } catch (Gio::Error &e) {
-        logger->error("{}", e.what().c_str());
+        spdlog::error("{}", e.what().c_str());
     }
     base.ParseFromArray(buffer, base_msg_size);
     delete[] buffer;
@@ -66,7 +64,7 @@ inline T recv_message_body(const Glib::RefPtr<Gio::Socket> &sock,
     try {
         sock->receive(buffer, base.size());
     } catch (Gio::Error &e) {
-        logger->error("{}", e.what().c_str());
+        spdlog::error("{}", e.what().c_str());
     }
     T response;
     response.ParseFromArray(buffer, base.size());
@@ -83,7 +81,7 @@ inline T recv_message(const Glib::RefPtr<Gio::Socket> &sock) noexcept {
     try {
         sock->receive(buffer, base_msg_size);
     } catch (Gio::Error &e) {
-        logger->error("{}", e.what().c_str());
+        spdlog::error("{}", e.what().c_str());
     }
     base.ParseFromArray(buffer, base_msg_size);
     delete[] buffer;
@@ -92,7 +90,7 @@ inline T recv_message(const Glib::RefPtr<Gio::Socket> &sock) noexcept {
     try {
         sock->receive(buffer, base.size());
     } catch (Gio::Error &e) {
-        logger->error("{}", e.what().c_str());
+        spdlog::error("{}", e.what().c_str());
     }
     T response;
     response.ParseFromArray(buffer, base.size());

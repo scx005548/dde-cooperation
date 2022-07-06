@@ -11,8 +11,6 @@
 
 #include "utils/message.h"
 
-extern std::shared_ptr<spdlog::logger> logger;
-
 namespace fs = std::filesystem;
 
 const static fs::path inputDevicePath = "/dev/input";
@@ -92,7 +90,7 @@ Cooperation::Cooperation()
             m_socketListenPair,
             Glib::IO_IN);
     } catch (Gio::Error &e) {
-        logger->error("{} {}", e.code(), e.what().c_str());
+        spdlog::error("{} {}", e.code(), e.what().c_str());
     }
 }
 
@@ -158,7 +156,7 @@ void Cooperation::scan([[maybe_unused]] const Glib::VariantContainerBase &args,
             Glib::Variant<std::vector<Glib::DBusObjectPathString>>::create(getMachinePaths()));
         m_lastMachineIndex = 0;
     } catch (Gio::Error &e) {
-        logger->error("{} {}", e.code(), e.what().c_str());
+        spdlog::error("{} {}", e.code(), e.what().c_str());
     }
     invocation->return_value(Glib::VariantContainerBase{});
 }
@@ -221,10 +219,10 @@ bool Cooperation::handleReceivedScanRequest([[maybe_unused]] Glib::IOCondition c
     Glib::RefPtr<Gio::SocketAddress> addr;
     auto request = Message::recv_message_from<ScanRequest>(m_socketListenScan, addr);
     auto remote = Glib::RefPtr<Gio::InetSocketAddress>::cast_dynamic<Gio::SocketAddress>(addr);
-    logger->debug("scan request received: {}", std::string(addr->to_string()));
+    spdlog::debug("scan request received: {}", std::string(addr->to_string()));
 
     if (request.key() != SCAN_KEY) {
-        logger->error("key mismatch {}", SCAN_KEY);
+        spdlog::error("key mismatch {}", SCAN_KEY);
         return true;
     }
 
@@ -256,13 +254,13 @@ bool Cooperation::handleReceivedScanResponse([[maybe_unused]] Glib::IOCondition 
     auto remote = Glib::RefPtr<Gio::InetSocketAddress>::cast_dynamic<Gio::SocketAddress>(addr);
 
     if (response.key() != SCAN_KEY) {
-        logger->error("key mismatch {}", SCAN_KEY);
+        spdlog::error("key mismatch {}", SCAN_KEY);
         return true;
     }
 
     addMachine(remote->get_address()->to_string(), response.port(), response.deviceinfo());
 
-    logger->info("{} responsed", response.deviceinfo().name());
+    spdlog::info("{} responsed", response.deviceinfo().name());
     return true;
 }
 
@@ -272,7 +270,7 @@ bool Cooperation::handleReceivedPairRequest([[maybe_unused]] Glib::IOCondition c
         socketConnected->get_remote_address());
     auto request = Message::recv_message<PairRequest>(socketConnected);
     if (request.key() != SCAN_KEY) {
-        logger->error("key mismatch {}", SCAN_KEY);
+        spdlog::error("key mismatch {}", SCAN_KEY);
         socketConnected->close();
         return true;
     }
@@ -284,7 +282,7 @@ bool Cooperation::handleReceivedPairRequest([[maybe_unused]] Glib::IOCondition c
 
     i->second->onPair(socketConnected);
 
-    logger->info("connected by {}@{}:{}\n",
+    spdlog::info("connected by {}@{}:{}\n",
                  request.deviceinfo().name().c_str(),
                  remote->get_address()->to_string().c_str(),
                  remote->get_port());

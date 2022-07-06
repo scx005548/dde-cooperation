@@ -5,8 +5,6 @@
 
 #include <spdlog/spdlog.h>
 
-extern std::shared_ptr<spdlog::logger> logger;
-
 namespace DBus {
 
 Object::Object(const Glib::ustring &path) noexcept
@@ -41,7 +39,7 @@ Glib::ustring Object::XML() const noexcept {
  * ***************************************************************************/
 bool Object::exportInterface(const Glib::RefPtr<Interface> &interface) noexcept {
     if (interface->m_parent != nullptr) {
-        logger->error("{} already have a parent", std::string(interface->name()));
+        spdlog::error("{} already have a parent", std::string(interface->name()));
         return false;
     }
 

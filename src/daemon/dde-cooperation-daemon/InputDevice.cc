@@ -9,8 +9,6 @@
 #include <libevdev/libevdev.h>
 #include <spdlog/spdlog.h>
 
-extern std::shared_ptr<spdlog::logger> logger;
-
 namespace fs = std::filesystem;
 
 InputDevice::InputDevice(const fs::path &path)
@@ -19,7 +17,7 @@ InputDevice::InputDevice(const fs::path &path)
 
     int rc = libevdev_new_from_fd(m_fd, &m_dev);
     if (rc < 0) {
-        logger->error("failed to init libevdev {}", strerror(-rc));
+        spdlog::error("failed to init libevdev {}", strerror(-rc));
         exit(1);
     }
 
@@ -40,7 +38,7 @@ void InputDevice::start() {
     m_stop = false;
     int rc = libevdev_grab(m_dev, LIBEVDEV_GRAB);
     if (rc != 0) {
-        logger->error("failed to grab device {}", strerror(-rc));
+        spdlog::error("failed to grab device {}", strerror(-rc));
         return;
     }
 
@@ -51,7 +49,7 @@ void InputDevice::start() {
             input_event ev;
             rc = libevdev_next_event(m_dev, LIBEVDEV_READ_FLAG_NORMAL, &ev);
             if (rc == 0) {
-                logger->debug("event: {}, {}, {}",
+                spdlog::debug("event: {}, {}, {}",
                               libevdev_event_type_get_name(ev.type),
                               libevdev_event_code_get_name(ev.type, ev.code),
                               ev.value);

@@ -9,8 +9,6 @@
 #include "Property.h"
 #include "Signal.h"
 
-extern std::shared_ptr<spdlog::logger> logger;
-
 namespace DBus {
 
 Interface::Interface(const Glib::ustring &name) noexcept
@@ -70,7 +68,7 @@ bool Interface::exportMethod(const Glib::RefPtr<Method> &method) noexcept {
  * ***************************************************************************/
 bool Interface::exportProperty(const Glib::RefPtr<Property> &property) noexcept {
     if (property->m_parent != nullptr) {
-        logger->error("{} already have a parent", std::string(property->name()));
+        spdlog::error("{} already have a parent", std::string(property->name()));
         return false;
     }
 
@@ -93,7 +91,7 @@ bool Interface::exportProperty(const Glib::RefPtr<Property> &property) noexcept 
  * ***************************************************************************/
 bool Interface::exportSignal(const Glib::RefPtr<Signal> &signal) noexcept {
     if (signal->m_parent != nullptr) {
-        logger->error("{} already have a parent", std::string(signal->name()));
+        spdlog::error("{} already have a parent", std::string(signal->name()));
         return false;
     }
 
