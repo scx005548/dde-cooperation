@@ -9,6 +9,8 @@
 
 #include "protocol/input_event.pb.h"
 
+class Machine;
+
 class InputDevice {
 public:
     explicit InputDevice(const std::filesystem::path &path);
@@ -19,13 +21,12 @@ public:
 
     DeviceType type() { return m_type; };
 
-    using type_signal_inputEvent = sigc::signal<void(const InputEventRequest &)>;
-    type_signal_inputEvent inputEvent() { return m_signal_inputEvent; }
+    void setMachine(const std::weak_ptr<Machine> &machine) { m_machine = machine; }
 
 private:
-    int m_fd;
+    std::weak_ptr<Machine> m_machine;
 
-    type_signal_inputEvent m_signal_inputEvent;
+    int m_fd;
 
     const std::filesystem::path &m_path;
     libevdev *m_dev;

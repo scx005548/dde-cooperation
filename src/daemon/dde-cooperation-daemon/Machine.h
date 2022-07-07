@@ -10,7 +10,7 @@
 
 class Cooperation;
 
-class Machine {
+class Machine : public std::enable_shared_from_this<Machine> {
 public:
     Machine(Cooperation &cooperation,
             Glib::RefPtr<DBus::Service> service,
@@ -23,17 +23,6 @@ public:
     Glib::ustring path() const { return m_path; }
 
     void onPair(Glib::RefPtr<Gio::Socket> conn);
-
-    using type_signal_receivedCooperationRequest = sigc::signal<bool(Machine *)>;
-    type_signal_receivedCooperationRequest onReceivedCooperationRequest() {
-        return m_signal_receivedCooperationRequest;
-    }
-
-    using type_signal_receivedFlowRequest = sigc::signal<void()>;
-    type_signal_receivedFlowRequest onReceivedFlowRequest() { return m_signal_receivedFlowRequest; }
-
-    using type_signal_receivedInputEvent = sigc::signal<bool(const InputEventRequest &)>;
-    type_signal_receivedInputEvent onReceivedInputEvent() { return m_signal_receivedInputEvent; }
 
     void handleInputEvent(const InputEventRequest &event);
 
@@ -55,10 +44,6 @@ protected:
 
 private:
     Cooperation &m_cooperation;
-
-    type_signal_receivedCooperationRequest m_signal_receivedCooperationRequest;
-    type_signal_receivedFlowRequest m_signal_receivedFlowRequest;
-    type_signal_receivedInputEvent m_signal_receivedInputEvent;
 
     const Glib::ustring m_path;
 

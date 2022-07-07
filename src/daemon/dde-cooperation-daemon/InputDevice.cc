@@ -9,6 +9,8 @@
 #include <libevdev/libevdev.h>
 #include <spdlog/spdlog.h>
 
+#include "Machine.h"
+
 namespace fs = std::filesystem;
 
 InputDevice::InputDevice(const fs::path &path)
@@ -59,7 +61,11 @@ void InputDevice::start() {
                 event.set_type(ev.type);
                 event.set_code(ev.code);
                 event.set_value(ev.value);
-                m_signal_inputEvent.emit(event);
+                if (auto machine = m_machine.lock()) {
+                    machine->handleInputEvent(event);
+                } else {
+                    m_stop = true;
+                }
             }
         } while (m_stop == false || rc == 1 || rc == 0 || rc == -EAGAIN);
 

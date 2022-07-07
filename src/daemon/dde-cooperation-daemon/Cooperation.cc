@@ -9,6 +9,7 @@
 #include <fmt/core.h>
 #include <spdlog/spdlog.h>
 
+#include "Machine.h"
 #include "utils/message.h"
 
 namespace fs = std::filesystem;
@@ -199,13 +200,8 @@ void Cooperation::getMachines(Glib::VariantBase &property,
 }
 
 void Cooperation::addMachine(const Glib::ustring &ip, uint16_t port, const DeviceInfo &devInfo) {
-    auto m = std::make_unique<Machine>(*this, m_service, m_lastMachineIndex, ip, port, devInfo);
-    m->onReceivedCooperationRequest().connect(
-        sigc::mem_fun(this, &Cooperation::handleReceivedCooperateRequest));
-    m->onReceivedInputEvent().connect(
-        sigc::mem_fun(this, &Cooperation::handleReceivedInputEventRequest));
-    m_machines.insert(std::pair(devInfo.uuid(), std::move(m)));
-
+    auto m = std::make_shared<Machine>(*this, m_service, m_lastMachineIndex, ip, port, devInfo);
+    m_machines.insert(std::pair(devInfo.uuid(), m));
     m_lastMachineIndex++;
 
     m_propertyMachines->emitChanged(
@@ -287,13 +283,11 @@ bool Cooperation::handleReceivedPairRequest([[maybe_unused]] Glib::IOCondition c
     return true;
 }
 
-bool Cooperation::handleReceivedCooperateRequest(Machine *machine) {
+bool Cooperation::handleReceivedCooperateRequest(const std::weak_ptr<Machine> &machine) {
     // TODO: request accept
 
     for (auto &inputDevice : m_inputDevices) {
-        inputDevice.second->inputEvent().clear();
-        inputDevice.second->inputEvent().connect(
-            sigc::mem_fun(machine, &Machine::handleInputEvent));
+        inputDevice.second->setMachine(machine);
         inputDevice.second->start();
     }
 

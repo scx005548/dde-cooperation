@@ -181,7 +181,7 @@ bool Machine::dispatcher([[maybe_unused]] Glib::IOCondition cond) noexcept {
 
     case InputEventRequestType: {
         auto event = Message::recv_message_body<InputEventRequest>(m_sock, base);
-        m_signal_receivedInputEvent.emit(event);
+        m_cooperation.handleReceivedInputEventRequest(event);
 
         InputEventResponse response;
         response.set_serial(event.serial());
@@ -213,7 +213,7 @@ void Machine::handlePairResponse(const PairResponse &resp) {
 }
 
 void Machine::handleCooperateRequest() {
-    bool accept = m_signal_receivedCooperationRequest.emit(this);
+    bool accept = m_cooperation.handleReceivedCooperateRequest(shared_from_this());
 
     CooperateResponse resp;
     resp.set_accept(accept);

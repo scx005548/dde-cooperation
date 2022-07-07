@@ -9,7 +9,6 @@
 #include <giomm.h>
 #include <arpa/inet.h>
 
-#include "Machine.h"
 #include "KeyPair.h"
 #include "InputDevice.h"
 #include "InputEvent.h"
@@ -18,12 +17,16 @@
 
 #include "protocol/pair.pb.h"
 
+class Machine;
+
 class Cooperation {
 public:
     Cooperation();
 
     std::string uuid() const noexcept { return m_uuid; }
 
+    bool handleReceivedCooperateRequest(const std::weak_ptr<Machine> &machine);
+    bool handleReceivedInputEventRequest(const InputEventRequest &event);
 protected:
     // DBus method handlers
     void scan(const Glib::VariantContainerBase &args,
@@ -49,7 +52,7 @@ private:
 
     // DBus properties
     Glib::RefPtr<DBus::Property> m_propertyMachines;
-    std::map<std::string, std::unique_ptr<Machine>> m_machines;
+    std::map<std::string, std::shared_ptr<Machine>> m_machines;
     uint32_t m_lastMachineIndex;
 
     Glib::RefPtr<Gio::Socket> m_socketScan;
@@ -75,8 +78,6 @@ private:
     bool handleReceivedScanRequest(Glib::IOCondition cond) noexcept;
     bool handleReceivedScanResponse(Glib::IOCondition cond) noexcept;
     bool handleReceivedPairRequest(Glib::IOCondition cond) noexcept;
-    bool handleReceivedCooperateRequest(Machine *machine);
-    bool handleReceivedInputEventRequest(const InputEventRequest &event);
 };
 
 #endif // !DDE_COOPERATION_DAEMON_COOPERATION_H
