@@ -30,6 +30,32 @@ common_sources = files('''
   utils/ptr.h
 '''.split())
 
+uvxx_sources = files('''
+  uvxx/UvType.h
+  uvxx/Loop.h
+  uvxx/Loop.cc
+  uvxx/noncopyable.h
+  uvxx/Addr.h
+  uvxx/Addr.cc
+  uvxx/Handle.h
+  uvxx/Handle.cc
+  uvxx/Stream.h
+  uvxx/Stream.cc
+  uvxx/TCP.h
+  uvxx/TCP.cc
+  uvxx/UDP.h
+  uvxx/UDP.cc
+  uvxx/Poll.h
+  uvxx/Poll.cc
+  uvxx/Async.h
+  uvxx/Async.cc
+  uvxx/Request.h
+  uvxx/Request.cc
+  uvxx/Signal.h
+  uvxx/Signal.cc
+  uvxx/utils.h
+'''.split())
+
 includes = include_directories('./')
 
 subdir('dde-cooperation-daemon')

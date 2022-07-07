@@ -13,6 +13,7 @@ Build-Depends:
  libprotobuf-dev,
  libspdlog-dev,
  libssl-dev,
+ libuv1-dev,
  libx11-xcb-dev,
  libxcb-randr0-dev,
  libxcb-util-dev,
