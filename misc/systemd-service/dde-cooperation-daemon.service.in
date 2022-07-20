@@ -1,0 +1,12 @@
+[Unit]
+Description=DDE cooperation daemon
+After=network.target
+
+[Service]
+Type=dbus
+BusName=com.deepin.Cooperation
+ExecStart=@libexecdir@/dde-cooperation/dde-cooperation-daemon
+
+[Install]
+WantedBy=multi-user.target
+Alias=dbus-com.deepin.Cooperation.service

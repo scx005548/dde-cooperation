@@ -44,6 +44,7 @@ protoc = generator(protoc_exec,
 
 systemd = dependency('systemd')
 systemd_system_unit_dir = systemd.get_pkgconfig_variable('systemdsystemunitdir')
+systemd_user_unit_dir = systemd.get_pkgconfig_variable('systemduserunitdir')
 
 
 subdir('src')
@@ -57,8 +58,15 @@ data = configuration_data()
 data.set('libexecdir', libexecdir)
 
 configure_file(
-  input: 'misc/systemd-service/dde-cooperation.service.in',
-  output: 'dde-cooperation.service',
+  input: 'misc/systemd-service/dde-cooperation-daemon.service.in',
+  output: '@BASENAME@',
   configuration: data,
   install_dir: systemd_system_unit_dir,
+)
+
+configure_file(
+  input: 'misc/systemd-service/dde-cooperation.service.in',
+  output: '@BASENAME@',
+  configuration: data,
+  install_dir: systemd_user_unit_dir,
 )
