@@ -27,6 +27,7 @@ public:
 
     bool handleReceivedCooperateRequest(const std::weak_ptr<Machine> &machine);
     bool handleReceivedInputEventRequest(const InputEventRequest &event);
+
 protected:
     // DBus method handlers
     void scan(const Glib::VariantContainerBase &args,

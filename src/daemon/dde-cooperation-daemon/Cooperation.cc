@@ -10,7 +10,7 @@
 #include <spdlog/spdlog.h>
 
 #include "Machine.h"
-#include "utils/message.h"
+#include "utils/message_helper.h"
 
 namespace fs = std::filesystem;
 
@@ -138,17 +138,18 @@ void Cooperation::scan([[maybe_unused]] const Glib::VariantContainerBase &args,
                        const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
     try {
         m_socketScan->set_broadcast(true);
-        ScanRequest request;
-        request.set_key(SCAN_KEY);
-        request.mutable_deviceinfo()->set_uuid(m_uuid);
-        request.mutable_deviceinfo()->set_name(Net::getHostname());
-        request.mutable_deviceinfo()->set_os(DeviceOS::LINUX);
+        Message msg;
+        ScanRequest *request = msg.mutable_scanrequest();
+        request->set_key(SCAN_KEY);
+        request->mutable_deviceinfo()->set_uuid(m_uuid);
+        request->mutable_deviceinfo()->set_name(Net::getHostname());
+        request->mutable_deviceinfo()->set_os(DeviceOS::LINUX);
 
         auto local = Glib::RefPtr<Gio::InetSocketAddress>::cast_dynamic<Gio::SocketAddress>(
             m_socketListenPair->get_local_address());
-        request.set_port(local->get_port());
+        request->set_port(local->get_port());
 
-        Message::send_message_to(m_socketScan, MessageType::ScanRequestType, request, m_scanAddr);
+        MessageHelper::send_message_to(m_socketScan, msg, m_scanAddr);
         m_machines.clear();
         m_propertyMachines->emitChanged(
             Glib::Variant<std::vector<Glib::DBusObjectPathString>>::create(getMachinePaths()));
@@ -167,17 +168,19 @@ void Cooperation::knock(const Glib::VariantContainerBase &args,
     args.get_child(ip, 0);
     args.get_child(port, 1);
     auto addr = Net::makeSocketAddress(ip.get(), port.get());
-    ScanRequest request;
-    request.set_key(SCAN_KEY);
-    request.mutable_deviceinfo()->set_uuid(m_uuid);
-    request.mutable_deviceinfo()->set_name(Net::getHostname());
-    request.mutable_deviceinfo()->set_os(DeviceOS::LINUX);
+
+    Message msg;
+    ScanRequest *request = msg.mutable_scanrequest();
+    request->set_key(SCAN_KEY);
+    request->mutable_deviceinfo()->set_uuid(m_uuid);
+    request->mutable_deviceinfo()->set_name(Net::getHostname());
+    request->mutable_deviceinfo()->set_os(DeviceOS::LINUX);
 
     auto local = Glib::RefPtr<Gio::InetSocketAddress>::cast_dynamic<Gio::SocketAddress>(
         m_socketListenPair->get_local_address());
-    request.set_port(local->get_port());
+    request->set_port(local->get_port());
 
-    Message::send_message_to(m_socketScan, MessageType::ScanRequestType, request, addr);
+    MessageHelper::send_message_to(m_socketScan, msg, addr);
 
     invocation->return_value(Glib::VariantContainerBase{});
 }
@@ -210,7 +213,8 @@ void Cooperation::addMachine(const Glib::ustring &ip, uint16_t port, const Devic
 
 bool Cooperation::handleReceivedScanRequest([[maybe_unused]] Glib::IOCondition cond) noexcept {
     Glib::RefPtr<Gio::SocketAddress> addr;
-    auto request = Message::recv_message_from<ScanRequest>(m_socketListenScan, addr);
+    auto req = MessageHelper::recv_message_from(m_socketListenScan, addr);
+    const ScanRequest &request = req.scanrequest();
     auto remote = Glib::RefPtr<Gio::InetSocketAddress>::cast_dynamic<Gio::SocketAddress>(addr);
     spdlog::debug("scan request received: {}", std::string(addr->to_string()));
 
@@ -226,24 +230,26 @@ bool Cooperation::handleReceivedScanRequest([[maybe_unused]] Glib::IOCondition c
 
     addMachine(remote->get_address()->to_string(), request.port(), request.deviceinfo());
 
-    ScanResponse response;
-    response.set_key(SCAN_KEY);
-    response.mutable_deviceinfo()->set_uuid(m_uuid);
-    response.mutable_deviceinfo()->set_name(Net::getHostname());
-    response.mutable_deviceinfo()->set_os(DeviceOS::LINUX);
+    Message msg;
+    ScanResponse *response = req.mutable_scanresponse();
+    response->set_key(SCAN_KEY);
+    response->mutable_deviceinfo()->set_uuid(m_uuid);
+    response->mutable_deviceinfo()->set_name(Net::getHostname());
+    response->mutable_deviceinfo()->set_os(DeviceOS::LINUX);
 
     auto local = Glib::RefPtr<Gio::InetSocketAddress>::cast_dynamic<Gio::SocketAddress>(
         m_socketListenPair->get_local_address());
-    response.set_port(local->get_port());
+    response->set_port(local->get_port());
 
-    Message::send_message_to(m_socketListenScan, MessageType::ScanResponseType, response, addr);
+    MessageHelper::send_message_to(m_socketListenScan, msg, addr);
 
     return true;
 }
 
 bool Cooperation::handleReceivedScanResponse([[maybe_unused]] Glib::IOCondition cond) noexcept {
     Glib::RefPtr<Gio::SocketAddress> addr;
-    auto response = Message::recv_message_from<ScanResponse>(m_socketScan, addr);
+    auto resp = MessageHelper::recv_message_from(m_socketScan, addr);
+    const ScanResponse &response = resp.scanresponse();
     auto remote = Glib::RefPtr<Gio::InetSocketAddress>::cast_dynamic<Gio::SocketAddress>(addr);
 
     if (response.key() != SCAN_KEY) {
@@ -261,7 +267,8 @@ bool Cooperation::handleReceivedPairRequest([[maybe_unused]] Glib::IOCondition c
     auto socketConnected = m_socketListenPair->accept();
     auto remote = Glib::RefPtr<Gio::InetSocketAddress>::cast_dynamic<Gio::SocketAddress>(
         socketConnected->get_remote_address());
-    auto request = Message::recv_message<PairRequest>(socketConnected);
+    auto req = MessageHelper::recv_message(socketConnected);
+    const PairRequest &request = req.pairrequest();
     if (request.key() != SCAN_KEY) {
         spdlog::error("key mismatch {}", SCAN_KEY);
         socketConnected->close();

@@ -1,12 +1,11 @@
 protocol = protoc.process(
   [
+    'protocol/message.proto',
+    'protocol/pair.proto',
+    'protocol/cooperation.proto',
     'protocol/fs.proto',
     'protocol/clipboard.proto',
-    'protocol/base_message.proto',
-    'protocol/pair.proto',
     'protocol/remote_display.proto',
-    'protocol/input_event.proto',
-    'protocol/cooperation.proto',
   ],
   preserve_path_from: meson.current_source_dir(),
 )
@@ -25,7 +24,7 @@ common_sources = files('''
   dbus/Service.cc
   dbus/Object.h
   dbus/Object.cc
-  utils/message.h
+  utils/message_helper.h
   utils/net.h
   utils/ptr.h
 '''.split())

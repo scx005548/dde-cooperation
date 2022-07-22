@@ -2,7 +2,7 @@
 
 #include "Cooperation.h"
 #include "utils/net.h"
-#include "utils/message.h"
+#include "utils/message_helper.h"
 
 #include "protocol/pair.pb.h"
 #include "protocol/cooperation.pb.h"
@@ -71,13 +71,14 @@ void Machine::pair([[maybe_unused]] const Glib::VariantContainerBase &args,
     m_sock->connect(Net::makeSocketAddress(m_ip, m_port));
     Gio::signal_socket().connect(sigc::mem_fun(this, &Machine::dispatcher), m_sock, Glib::IO_IN);
 
-    PairRequest request;
-    request.set_key(SCAN_KEY);
-    request.mutable_deviceinfo()->set_uuid(m_cooperation.uuid());
-    request.mutable_deviceinfo()->set_name(Net::getHostname());
-    request.mutable_deviceinfo()->set_os(DeviceOS::LINUX);
-    request.mutable_deviceinfo()->set_compositor(Compositor::NONE);
-    Message::send_message(m_sock, MessageType::PairRequestType, request);
+    Message msg;
+    PairRequest *request = msg.mutable_pairrequest();
+    request->set_key(SCAN_KEY);
+    request->mutable_deviceinfo()->set_uuid(m_cooperation.uuid());
+    request->mutable_deviceinfo()->set_name(Net::getHostname());
+    request->mutable_deviceinfo()->set_os(DeviceOS::LINUX);
+    request->mutable_deviceinfo()->set_compositor(Compositor::NONE);
+    MessageHelper::send_message(m_sock, msg);
 
     invocation->return_value(Glib::VariantContainerBase{});
 }
@@ -89,14 +90,15 @@ void Machine::onPair(Glib::RefPtr<Gio::Socket> conn) {
     m_paired = true;
     m_propertyPaired->emitChanged(Glib::Variant<bool>::create(m_paired));
 
-    PairResponse response;
-    response.set_key(SCAN_KEY);
-    response.mutable_deviceinfo()->set_uuid(m_cooperation.uuid());
-    response.mutable_deviceinfo()->set_name(Net::getHostname());
-    response.mutable_deviceinfo()->set_os(DeviceOS::LINUX);
-    response.mutable_deviceinfo()->set_compositor(Compositor::NONE);
-    response.set_agree(true); // TODO: 询问用户是否同意
-    Message::send_message(m_sock, MessageType::PairResponseType, response);
+    Message msg;
+    PairResponse *response = msg.mutable_pairresponse();
+    response->set_key(SCAN_KEY);
+    response->mutable_deviceinfo()->set_uuid(m_cooperation.uuid());
+    response->mutable_deviceinfo()->set_name(Net::getHostname());
+    response->mutable_deviceinfo()->set_os(DeviceOS::LINUX);
+    response->mutable_deviceinfo()->set_compositor(Compositor::NONE);
+    response->set_agree(true); // TODO: 询问用户是否同意
+    MessageHelper::send_message(m_sock, msg);
 }
 
 void Machine::sendFile(const Glib::VariantContainerBase &args,
@@ -118,7 +120,10 @@ void Machine::requestCooperate(
         return;
     }
 
-    Message::send_message_header(m_sock, MessageType::CooperateRequestType);
+    Message msg;
+    msg.mutable_cooperaterequest();
+
+    MessageHelper::send_message(m_sock, msg);
 
     invocation->return_value(Glib::VariantContainerBase{});
 }
@@ -159,38 +164,40 @@ void Machine::getCompositor(Glib::VariantBase &property,
 }
 
 bool Machine::dispatcher([[maybe_unused]] Glib::IOCondition cond) noexcept {
-    auto base = Message::recv_message_header(m_sock);
-    switch (base.type()) {
-    case InvalidType: {
-        m_sock->close();
-        break;
-    }
-    case PairResponseType: {
-        handlePairResponse(Message::recv_message_body<PairResponse>(m_sock, base));
+    auto base = MessageHelper::recv_message(m_sock);
+    switch (base.payload_case()) {
+    case Message::PayloadCase::kPairResponse: {
+        handlePairResponse(base.pairresponse());
         break;
     }
 
-    case CooperateRequestType: {
+    case Message::PayloadCase::kCooperateRequest: {
         handleCooperateRequest();
         break;
     }
 
-    case CooperateResponseType: {
+    case Message::PayloadCase::kCooperateResponse: {
         break;
     }
 
-    case InputEventRequestType: {
-        auto event = Message::recv_message_body<InputEventRequest>(m_sock, base);
+    case Message::PayloadCase::kInputEventRequest: {
+        const InputEventRequest &event = base.inputeventrequest();
         m_cooperation.handleReceivedInputEventRequest(event);
 
-        InputEventResponse response;
-        response.set_serial(event.serial());
-        response.set_success(true);
-        Message::send_message(m_sock, InputEventResponseType, response);
+        Message msg;
+        InputEventResponse *response = msg.mutable_inputeventresponse();
+        response->set_serial(event.serial());
+        response->set_success(true);
+        MessageHelper::send_message(m_sock, msg);
         break;
     }
 
-    case InputEventResponseType: {
+    case Message::PayloadCase::kInputEventResponse: {
+        break;
+    }
+
+    case Message::PayloadCase::PAYLOAD_NOT_SET: {
+        m_sock->close();
         break;
     }
 
@@ -215,11 +222,14 @@ void Machine::handlePairResponse(const PairResponse &resp) {
 void Machine::handleCooperateRequest() {
     bool accept = m_cooperation.handleReceivedCooperateRequest(shared_from_this());
 
-    CooperateResponse resp;
-    resp.set_accept(accept);
-    Message::send_message(m_sock, CooperateResponseType, resp);
+    Message msg;
+    CooperateResponse *resp = msg.mutable_cooperateresponse();
+    resp->set_accept(accept);
+    MessageHelper::send_message(m_sock, msg);
 }
 
 void Machine::handleInputEvent(const InputEventRequest &event) {
-    Message::send_message(m_sock, InputEventRequestType, event);
+    Message msg;
+    msg.set_allocated_inputeventrequest(event.New());
+    MessageHelper::send_message(m_sock, msg);
 }

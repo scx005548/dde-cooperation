@@ -1,5 +1,55 @@
 syntax = "proto3";
 
+message CooperateRequest {
+}
+
 message CooperateResponse {
     bool accept = 1;
-};
+}
+
+message CooperateStopRequest {
+}
+
+message CooperateStopResponse {
+}
+
+enum DeviceType {
+    Unknown = 0;
+    Keyboard = 1;
+    Mouse = 2;
+    Touchpad = 3;
+}
+
+// 事件类型、事件码、事件值和 Linux input event 一致，
+// Linux 上直接写入设备即可，其他平台需要解析转换
+message InputEventRequest {
+    int64 serial = 1;   // 序号
+    DeviceType deviceType = 2;
+    int32 type = 3;     // 事件类型
+    int32 code = 4;     // 事件码
+    int32 value = 5;    // 事件值
+}
+
+message InputEventResponse {
+    int64 serial = 1; // 序号
+    bool success = 2; // 是否成功
+}
+
+enum FlowDirection {
+    Top = 0;
+    Right = 1;
+    Bottom = 2;
+    Left = 3;
+}
+
+message FlowRequest {
+    int64 serial = 1; // 序号
+    FlowDirection direction = 2;
+    uint32 x = 3;
+    uint32 y = 4;
+}
+
+message FlowResponse {
+    int64 serial = 1; // 序号
+    bool success = 2; // 是否成功
+}

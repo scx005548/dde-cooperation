@@ -3,7 +3,7 @@
 
 #include <libevdev/libevdev-uinput.h>
 
-#include "protocol/input_event.pb.h"
+#include "protocol/cooperation.pb.h"
 
 class InputEvent {
 public:

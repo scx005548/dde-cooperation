@@ -6,7 +6,7 @@
 #include "dbus/dbus.h"
 
 #include "protocol/pair.pb.h"
-#include "protocol/input_event.pb.h"
+#include "protocol/cooperation.pb.h"
 
 class Cooperation;
 
