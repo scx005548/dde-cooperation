@@ -12,8 +12,8 @@ namespace DBus {
  * ***************************************************************************/
 Method::Method(const Glib::ustring &name,
                const Callback &fn,
-               const std::map<Glib::ustring, Glib::ustring> &inArgs,
-               const std::map<Glib::ustring, Glib::ustring> &outArgs) noexcept
+               const std::vector<std::pair<Glib::ustring, Glib::ustring>> &inArgs,
+               const std::vector<std::pair<Glib::ustring, Glib::ustring>> &outArgs) noexcept
     : m_name(name)
     , m_callback(fn)
     , m_inArgs(inArgs)

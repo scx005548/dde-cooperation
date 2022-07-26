@@ -59,8 +59,8 @@ public:
      * ***************************************************************************/
     explicit Method(const Glib::ustring &name,
                     const Callback &fn,
-                    const std::map<Glib::ustring, Glib::ustring> &inArgs = {},
-                    const std::map<Glib::ustring, Glib::ustring> &outArgs = {}) noexcept;
+                    const std::vector<std::pair<Glib::ustring, Glib::ustring>> &inArgs = {},
+                    const std::vector<std::pair<Glib::ustring, Glib::ustring>> &outArgs = {}) noexcept;
 
     /*****************************************************************************
      * @brief 返回方法名
@@ -166,8 +166,8 @@ private:
     Callback m_callback;  // 回调函数
 
     // 参数名 => 类型字符串
-    std::map<Glib::ustring, Glib::ustring> m_inArgs;
-    std::map<Glib::ustring, Glib::ustring> m_outArgs;
+    std::vector<std::pair<Glib::ustring, Glib::ustring>> m_inArgs;
+    std::vector<std::pair<Glib::ustring, Glib::ustring>> m_outArgs;
 };
 
 } // namespace DBus
