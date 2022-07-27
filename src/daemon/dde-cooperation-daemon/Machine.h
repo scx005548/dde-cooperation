@@ -33,6 +33,7 @@ public:
 
     void onPair(const std::shared_ptr<uvxx::TCP> &sock);
     void setCooperationRequest(const std::shared_ptr<Request> &req);
+    void setSendFileRequest(const std::shared_ptr<Request> &req);
     void setFilesystemRequest(const std::shared_ptr<Request> &req);
 
     const Glib::ustring &ip() const { return m_ip; };
@@ -114,7 +115,10 @@ private:
     std::shared_ptr<uvxx::TCP> m_conn;
 
     std::shared_ptr<Request> m_cooperationRequest;
+    std::shared_ptr<Request> m_sendFileRequest;
     std::shared_ptr<Request> m_filesystemRequest;
+
+    bool m_mounted;
 
     void handleDisconnected();
     void dispatcher(std::shared_ptr<char[]> buffer, ssize_t size) noexcept;
@@ -126,6 +130,9 @@ private:
     void handleAcceptCooperation(bool accepted,
                                  const std::map<Glib::ustring, Glib::VariantBase> &hint,
                                  uint32_t serial);
+    void handleAcceptSendFile(bool accepted,
+                              const std::map<Glib::ustring, Glib::VariantBase> &hint,
+                              uint32_t serial);
     void handleAcceptFilesystem(bool accepted,
                                 const std::map<Glib::ustring, Glib::VariantBase> &hint,
                                 uint32_t serial);

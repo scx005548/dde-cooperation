@@ -71,7 +71,8 @@ Machine::Machine(Cooperation *cooperation,
     , m_propertyDirection(
           new DBus::Property("Direction", "q", DBus::Property::warp(this, &Machine::getDirection)))
     , m_uvLoop(loop)
-    , m_async(std::make_shared<uvxx::Async>(m_uvLoop)) {
+    , m_async(std::make_shared<uvxx::Async>(m_uvLoop))
+    , m_mounted(false) {
 
     m_interface->exportMethod(m_methodPair);
     m_interface->exportMethod(m_methodDisconnect);
@@ -167,7 +168,12 @@ void Machine::sendFile(const Glib::VariantContainerBase &args,
     Glib::Variant<Glib::ustring> filepath;
     args.get_child(filepath, 0);
 
-    // TODO: impl
+    m_async->wake([this, path = std::string(filepath.get())]() {
+        Message msg;
+        FsSendFileRequest *send = msg.mutable_fssendfilerequest();
+        send->set_path(path);
+        m_conn->write(MessageHelper::genMessage(msg));
+    });
 
     invocation->return_value(Glib::VariantContainerBase{});
 }
@@ -393,6 +399,17 @@ void Machine::dispatcher(std::shared_ptr<char[]> buffer, ssize_t size) noexcept 
             break;
         }
 
+        case Message::PayloadCase::kFsSendFileRequest: {
+            const auto &req = msg.fssendfilerequest();
+
+            m_cooperation->handleReceivedSendFileRequest(this, req);
+            break;
+        }
+
+        case Message::PayloadCase::kFsSendFileResponse: {
+            break;
+        }
+
         case Message::PayloadCase::kFsRequest: {
             const auto &req = msg.fsrequest();
 
@@ -402,6 +419,9 @@ void Machine::dispatcher(std::shared_ptr<char[]> buffer, ssize_t size) noexcept 
 
         case Message::PayloadCase::kFsResponse: {
             const auto &resp = msg.fsresponse();
+            if (resp.accepted()) {
+                m_mounted = true;
+            }
 
             m_cooperation->handleReceivedFsResponse(this, resp);
             break;
@@ -460,6 +480,12 @@ void Machine::setCooperationRequest(const std::shared_ptr<Request> &req) {
         sigc::mem_fun(this, &Machine::handleAcceptCooperation));
 }
 
+void Machine::setSendFileRequest(const std::shared_ptr<Request> &req) {
+    m_sendFileRequest = req;
+
+    m_sendFileRequest->onAccept().connect(sigc::mem_fun(this, &Machine::handleAcceptSendFile));
+}
+
 void Machine::setFilesystemRequest(const std::shared_ptr<Request> &req) {
     m_filesystemRequest = req;
 
@@ -485,6 +511,27 @@ void Machine::handleAcceptCooperation(
         if (accepted) {
             auto wptr = weak_from_this();
             m_cooperation->handleStartCooperation(wptr);
+        }
+    });
+}
+
+void Machine::handleAcceptSendFile(
+    bool accepted,
+    [[maybe_unused]] const std::map<Glib::ustring, Glib::VariantBase> &hint,
+    [[maybe_unused]] uint32_t serial) {
+
+    m_async->wake([this, accepted, hint, serial]() {
+        Message msg;
+
+        FsSendFileResponse *resp = msg.mutable_fssendfileresponse();
+        resp->set_accepted(accepted);
+        resp->set_serial(serial);
+        m_conn->write(MessageHelper::genMessage(msg));
+
+        if (!m_mounted) {
+            FsRequest *req = msg.mutable_fsrequest();
+            req->set_path("/");
+            m_conn->write(MessageHelper::genMessage(msg));
         }
     });
 }

@@ -51,7 +51,15 @@ private:
 
     std::thread m_displayServerThread;
 
+    // TODO: youhua
+    std::thread m_copyThread;
+
+    std::vector<std::string> m_incommingSendFiles;
+
+    std::filesystem::path getMountpoint(std::string uuid);
+
     void newCooperationReq(Glib::RefPtr<Gio::DBus::Proxy> req);
+    void newSendFileReq(Glib::RefPtr<Gio::DBus::Proxy> req);
     void newFilesystemServer(Glib::RefPtr<Gio::DBus::Proxy> req);
 };
 

@@ -8,16 +8,25 @@ Request::Request(const Glib::RefPtr<DBus::Service> &service,
     , m_service(service)
     , m_object(new DBus::Object(Glib::ustring::compose("/com/deepin/Cooperation/Request/%1", id)))
     , m_interface(new DBus::Interface("com.deepin.Cooperation.Request"))
+    , m_sendFileInterface(new DBus::Interface("com.deepin.Cooperation.Request.SendFile"))
     , m_methodAccept(new DBus::Method("Accept",
                                       DBus::Method::warp(this, &Request::accept),
                                       {{"accept", "b"}, {"hint", "a{sv}"}}))
     , m_type(type)
     , m_propertyType(new DBus::Property("Type", "q", DBus::Property::warp(this, &Request::getType)))
     , m_propertyMachine(
-          new DBus::Property("Machine", "o", DBus::Property::warp(this, &Request::getMachine))) {
+          new DBus::Property("Machine", "o", DBus::Property::warp(this, &Request::getMachine)))
+    , m_sendFilePropertyPath(
+          new DBus::Property("Path", "s", DBus::Property::warp(this, &Request::getSendFilePath))) {
     m_interface->exportMethod(m_methodAccept);
     m_interface->exportProperty(m_propertyType);
     m_object->exportInterface(m_interface);
+
+    if (type == Type::SendFile) {
+        m_sendFileInterface->exportProperty(m_sendFilePropertyPath);
+        m_object->exportInterface(m_sendFileInterface);
+    }
+
     m_service->exportObject(m_object);
 }
 
@@ -49,4 +58,9 @@ void Request::getType(Glib::VariantBase &property,
 void Request::getMachine(Glib::VariantBase &property,
                          [[maybe_unused]] const Glib::ustring &propertyName) const noexcept {
     property = Glib::Variant<Glib::DBusObjectPathString>::create(m_machinePath);
+}
+
+void Request::getSendFilePath(Glib::VariantBase &property,
+                              [[maybe_unused]] const Glib::ustring &propertyName) const noexcept {
+    property = Glib::Variant<Glib::ustring>::create(m_sendFilePath);
 }

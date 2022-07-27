@@ -461,6 +461,26 @@ void Cooperation::handleFlowOut(std::weak_ptr<Machine> machine) {
     }
 }
 
+void Cooperation::handleReceivedSendFileRequest(Machine *machine, const FsSendFileRequest &req) {
+    if (!m_userServiceProxy) {
+        spdlog::warn("no user service proxy");
+        return;
+    }
+
+    m_lastRequestId++;
+    auto r = std::make_shared<Request>(m_service,
+                                       m_lastRequestId,
+                                       Request::Type::SendFile,
+                                       req.serial());
+    r->setSendFilePath(req.path());
+    machine->setSendFileRequest(r);
+
+    auto params = Glib::Variant<std::vector<Glib::VariantBase>>::create_tuple({
+        Glib::Variant<Glib::DBusObjectPathString>::create(r->path()),
+    });
+    m_userServiceProxy->call_sync("NewRequest", params);
+}
+
 void Cooperation::handleReceivedFsRequest(Machine *machine, const FsRequest &req) {
     // TODO: request accept
     if (!m_userServiceProxy) {

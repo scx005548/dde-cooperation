@@ -149,7 +149,22 @@ void Manager::newRequest(const Glib::VariantContainerBase &args,
         newFilesystemServer(req);
         break;
     }
+    case 2: {
+        newSendFileReq(req);
+        break;
     }
+    }
+}
+
+static void copyToDesktop(fs::path file) {
+    fs::path home = getenv("HOME");
+    fs::path desktop = home / "Desktop";
+    fs::path dst = desktop / file.filename();
+
+    // bool res = fs::copy_file(file, dst);
+    auto command = fmt::format("cp {} {}", file.string(), dst.string());
+    int res = system(command.c_str());
+    spdlog::info("command {}: {}", command, res);
 }
 
 void Manager::mountFuse(const Glib::VariantContainerBase &args,
@@ -170,16 +185,59 @@ void Manager::mountFuse(const Glib::VariantContainerBase &args,
     Glib::Variant<Glib::ustring> uuidV;
     machine->get_cached_property(uuidV, "UUID");
 
-    std::string dir = std::string(uuidV.get());
-    dir.resize(8);
-    spdlog::info("dir: {}", dir);
+    std::string uuid = std::string(uuidV.get());
 
-    fs::path mountpoint = m_mountpoint / dir;
+    fs::path mountpoint = getMountpoint(uuid);
     auto client = std::make_unique<FuseClient>(std::string(ip.get()), port.get(), mountpoint);
-    m_fuseClients.emplace(std::pair{mountpoint.string(), std::move(client)});
+    m_fuseClients.emplace(std::pair{uuid, std::move(client)});
+
+    spdlog::info("mountpoint: {}", mountpoint.string());
+
+    m_copyThread = std::thread([this, mountpoint]() {
+        using namespace std::chrono_literals;
+        std::this_thread::sleep_for(3s);
+
+        // TODO: youhua
+        for (const std::string &file : m_incommingSendFiles) {
+            auto path = mountpoint.string();
+            path += file;
+            spdlog::info("mp==={}, path======{}", mountpoint.string(), path);
+            copyToDesktop(fs::path(path));
+        }
+
+        m_incommingSendFiles.clear();
+    });
+}
+
+std::filesystem::path Manager::getMountpoint(std::string uuid) {
+    uuid.resize(8);
+    return m_mountpoint / uuid;
 }
 
 void Manager::newCooperationReq(Glib::RefPtr<Gio::DBus::Proxy> req) {
+    auto accept = Glib::Variant<bool>::create(true);
+    auto hint = Glib::Variant<std::map<Glib::ustring, Glib::VariantBase>>::create({});
+    auto params = Glib::Variant<std::vector<Glib::VariantBase>>::create_tuple({accept, hint});
+    req->call_sync("Accept", params);
+}
+
+void Manager::newSendFileReq(Glib::RefPtr<Gio::DBus::Proxy> req) {
+    auto sendfile = Gio::DBus::Proxy::Proxy::create_sync(m_service->conn(),
+                                                         "com.deepin.Cooperation",
+                                                         req->get_object_path(),
+                                                         "com.deepin.Cooperation.Request.SendFile");
+    Glib::Variant<Glib::ustring> pathV;
+    sendfile->get_cached_property(pathV, "Path");
+    std::string path = std::string(pathV.get());
+    if (m_fuseClients.empty()) {
+        m_incommingSendFiles.push_back(path);
+    } else {
+        auto mp = getMountpoint(m_fuseClients.begin()->first);
+        auto file = std::string(mp);
+        file += path;
+        copyToDesktop(fs::path(file));
+    }
+
     auto accept = Glib::Variant<bool>::create(true);
     auto hint = Glib::Variant<std::map<Glib::ustring, Glib::VariantBase>>::create({});
     auto params = Glib::Variant<std::vector<Glib::VariantBase>>::create_tuple({accept, hint});
