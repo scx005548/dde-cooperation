@@ -7,33 +7,29 @@
 
 #include <xcb/xcb.h>
 #include <xcb/randr.h>
-#include <xcb/xcb_aux.h>
 #include <xcb/xproto.h>
 #include <xcb/xfixes.h>
-#include <X11/extensions/XInput2.h>
+#include <xcb/xinput.h>
 
 #include <fmt/core.h>
 #include <spdlog/spdlog.h>
 
 #include "utils/ptr.h"
 
+#define XCB_REPLY_CONNECTION_ARG(connection, ...) connection
+#define XCB_REPLY(call, ...)                                                                       \
+    std::unique_ptr<call##_reply_t>(                                                               \
+        call##_reply(XCB_REPLY_CONNECTION_ARG(__VA_ARGS__), call(__VA_ARGS__), nullptr))
+
 X11::X11(Manager *manager)
-    : DisplayServer(manager)
-    , m_dpy(make_handle(XOpenDisplay(nullptr), &XCloseDisplay))
-    , m_conn(XGetXCBConnection(m_dpy.get())) {
+    : DisplayServer(manager) {
+    m_conn = xcb_connect(nullptr, &m_screenDefaultNbr);
+
     if (int err = xcb_connection_has_error(m_conn)) {
         throw std::runtime_error(fmt::format("failed to connect to X11: {}", err));
     }
 
-    m_screen = xcb_aux_get_screen(m_conn, DefaultScreen(m_dpy.get()));
-    if (m_screen == nullptr) {
-        throw std::runtime_error("failed to get screen");
-    }
-
-    const xcb_query_extension_reply_t *reply = xcb_get_extension_data(m_conn, &xcb_randr_id);
-    if (!reply->present) {
-        throw std::runtime_error("randr extension not found");
-    }
+    m_screen = screenOfDisplay(m_screenDefaultNbr);
 
     initXinputExtension();
     initXfixesExtension();
@@ -44,28 +40,56 @@ X11::X11(Manager *manager)
     handleScreenSizeChange(m_screen->width_in_pixels, m_screen->height_in_pixels);
 }
 
-void X11::initXinputExtension() {
-    int xiEventBase;
-    int xiErrorBase;
-    if (!XQueryExtension(m_dpy.get(),
-                         "XInputExtension",
-                         &m_xinput2OPCode,
-                         &xiEventBase,
-                         &xiErrorBase)) {
-        throw std::runtime_error("XInput extension is not avaliable");
-    }
-
-    int xiMajor = 2;
-    int xiMinor = 2;
-    int res = XIQueryVersion(m_dpy.get(), &xiMajor, &xiMinor);
-    if (res != Success) {
-        if (res == BadRequest) {
-            spdlog::error("X server does not support XInput 2");
+xcb_screen_t *X11::screenOfDisplay(int screen) {
+    xcb_screen_iterator_t iter = xcb_setup_roots_iterator(xcb_get_setup(m_conn));
+    for (; iter.rem; --screen, xcb_screen_next(&iter)) {
+        if (screen == 0) {
+            return iter.data;
         }
-        spdlog::error("internal error");
     }
 
-    spdlog::debug("XInput version {}.{}", xiMajor, xiMinor);
+    return nullptr;
+}
+
+void X11::initRandrExtension() {
+    const xcb_query_extension_reply_t *reply = xcb_get_extension_data(m_conn, &xcb_randr_id);
+    if (!reply->present) {
+        throw std::runtime_error("randr extension not found");
+    }
+}
+
+void X11::initXinputExtension() {
+    {
+        const char *extname = "XInputExtension";
+        auto reply = XCB_REPLY(xcb_query_extension, m_conn, strlen(extname), extname);
+        if (!reply->present) {
+            throw std::runtime_error("XInput extension is not avaliable");
+        }
+        m_xinput2OPCode = reply->major_opcode;
+    }
+
+    {
+        auto reply = XCB_REPLY(xcb_input_xi_query_version, m_conn, 2, 0);
+        if (!reply || reply->major_version != 2) {
+            throw std::runtime_error("X server does not support XInput 2");
+        }
+
+        spdlog::debug("XInput version {}.{}", reply->major_version, reply->minor_version);
+    }
+
+    struct {
+        xcb_input_event_mask_t head;
+        xcb_input_xi_event_mask_t mask;
+    } mask;
+    mask.head.deviceid = XCB_INPUT_DEVICE_ALL;
+    mask.head.mask_len = sizeof(mask.mask) / sizeof(uint32_t);
+    mask.mask = static_cast<xcb_input_xi_event_mask_t>(XCB_INPUT_XI_EVENT_MASK_HIERARCHY |
+                                                       XCB_INPUT_XI_EVENT_MASK_MOTION);
+    auto cookie = xcb_input_xi_select_events(m_conn, m_screen->root, 1, &mask.head);
+    auto err = xcb_request_check(m_conn, cookie);
+    if (err) {
+        throw std::runtime_error(fmt::format("xcb_input_xi_select_events: {}", err->error_code));
+    }
 }
 
 void X11::initXfixesExtension() {
@@ -81,18 +105,6 @@ void X11::initXfixesExtension() {
 }
 
 void X11::start() {
-    XIEventMask mask;
-    mask.deviceid = XIAllDevices;
-    mask.mask_len = XIMaskLen(XI_LASTEVENT);
-    unsigned char maskM[XIMaskLen(XI_LASTEVENT)] = {0};
-    mask.mask = maskM;
-
-    XISetMask(mask.mask, XI_HierarchyChanged);
-    XISetMask(mask.mask, XI_Motion);
-
-    XISelectEvents(m_dpy.get(), DefaultRootWindow(m_dpy.get()), &mask, 1);
-    XSync(m_dpy.get(), false);
-
     xcb_generic_event_t *event;
     while ((event = xcb_wait_for_event(m_conn))) {
         switch (event->response_type) {
@@ -106,35 +118,36 @@ void X11::start() {
             xcb_ge_generic_event_t *ge = reinterpret_cast<xcb_ge_generic_event_t *>(event);
 
             if (edgeDetectionStarted() && ge->extension == m_xinput2OPCode &&
-                ge->event_type == XI_Motion) {
-                xcb_generic_error_t *err = nullptr;
-                auto cookie = xcb_query_pointer(m_conn, m_screen->root);
-                auto rep = std::unique_ptr<xcb_query_pointer_reply_t>(
-                    xcb_query_pointer_reply(m_conn, cookie, &err));
-                if (err != nullptr) {
-                    spdlog::warn("failed to query pointer: {}", err->error_code);
+                ge->event_type == XCB_INPUT_MOTION) {
+                auto reply = XCB_REPLY(xcb_query_pointer, m_conn, m_screen->root);
+                if (!reply) {
+                    spdlog::warn("failed to query pointer");
                     break;
                 }
 
-                handleMotion(rep->root_x, rep->root_y);
+                handleMotion(reply->root_x, reply->root_y);
             }
             break;
         }
         }
+
+        free(event);
     }
 }
 
 void X11::hideMouse(bool hide) {
-    xcb_void_cookie_t cookie;
     if (hide) {
-        cookie = xcb_xfixes_hide_cursor_checked(m_conn, m_screen->root);
+        xcb_void_cookie_t cookie = xcb_xfixes_hide_cursor_checked(m_conn, m_screen->root);
+        xcb_generic_error_t *err = xcb_request_check(m_conn, cookie);
+        if (err != nullptr) {
+            spdlog::error("failed to hide cursor: {}", err->error_code);
+        }
     } else {
-        cookie = xcb_xfixes_show_cursor_checked(m_conn, m_screen->root);
-    }
-
-    xcb_generic_error_t *err = xcb_request_check(m_conn, cookie);
-    if (err != nullptr) {
-        spdlog::error("failed to show/hide cursor: {}", err->error_code);
+        xcb_void_cookie_t cookie = xcb_xfixes_show_cursor_checked(m_conn, m_screen->root);
+        xcb_generic_error_t *err = xcb_request_check(m_conn, cookie);
+        if (err != nullptr) {
+            spdlog::error("failed to show cursor: {}", err->error_code);
+        }
     }
 }
 
@@ -143,6 +156,6 @@ void X11::moveMouse(uint16_t x, uint16_t y) {
         cookie = xcb_warp_pointer_checked(m_conn, XCB_NONE, m_screen->root, 0, 0, 0, 0, x, y);
     xcb_generic_error_t *err = xcb_request_check(m_conn, cookie);
     if (err != nullptr) {
-        spdlog::error("failed to show/hide cursor: {}", err->error_code);
+        spdlog::error("failed to move cursor: {}", err->error_code);
     }
 }

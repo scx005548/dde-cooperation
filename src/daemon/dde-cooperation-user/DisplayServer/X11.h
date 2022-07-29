@@ -5,7 +5,7 @@
 
 #include "../DisplayServer.h"
 
-#include <X11/Xlib-xcb.h>
+#include <xcb/xcb.h>
 
 class X11 : public DisplayServer {
 public:
@@ -18,12 +18,15 @@ protected:
     virtual void moveMouse(uint16_t x, uint16_t y) override;
 
 private:
-    std::unique_ptr<Display, decltype(&XCloseDisplay)> m_dpy;
     xcb_connection_t *m_conn;
+    int m_screenDefaultNbr;
     xcb_screen_t *m_screen;
 
-    int m_xinput2OPCode;
+    uint8_t m_xinput2OPCode;
 
+    xcb_screen_t *screenOfDisplay(int screen);
+
+    void initRandrExtension();
     void initXinputExtension();
     void initXfixesExtension();
 };
