@@ -1,0 +1,7 @@
+#ifndef DDE_COOPERATION_DAEMON_CONFIG_H
+#define DDE_COOPERATION_DAEMON_CONFIG_H
+
+#define INPUT_EMITTOR_PATH "@libexecdir@/dde-cooperation/input-emittor"
+#define INPUT_GRABBER_PATH "@libexecdir@/dde-cooperation/input-grabber"
+
+#endif // !DDE_COOPERATION_DAEMON_CONFIG_H

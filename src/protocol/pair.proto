@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+enum DeviceOS
+{
+    OTHER = 0;
+    UOS = 1;
+    LINUX = 2;
+    WINDOWS = 3;
+    MACOS = 4;
+    ANDROID = 5;
+}
+
+enum Compositor
+{
+    CPST_NONE = 0;
+    CPST_X11 = 1;
+    CPST_WAYLAND = 2;
+}
+
+message DeviceInfo
+{
+    string uuid = 1;
+    string name = 2;            // 扫描发起者的设备名
+    DeviceOS os = 3;            // 扫描发起者的操作系统
+    Compositor compositor = 4;  // 扫描发起者的显示服务器类型
+}
+
+// UDP广播，端口号为 51595
+message ScanRequest
+{
+    string key = 1;             // 固定值 "UOS-COOPERATION"
+    DeviceInfo deviceInfo = 2;
+    int32 port = 3;             // TCP 端口
+}
+
+// UDP，向 ScanRequest 来源的 IP:PORT 返回
+message ScanResponse
+{
+    string key = 1;             // 固定值 "UOS-COOPERATION"
+    DeviceInfo deviceInfo = 2;
+    int32 port = 3;             // TCP 端口
+}
+
+// TCP，连接 ScanResponse 返回的端口
+message PairRequest
+{
+    string key = 1;             // 固定值 "UOS-COOPERATION"
+    DeviceInfo deviceInfo = 2;
+}
+
+// 仅在同意配对时返回
+message PairResponse
+{
+    string key = 1;             // 固定值 "UOS-COOPERATION"
+    DeviceInfo deviceInfo = 2;
+    bool agree = 3;             // 是否同意配对
+}
+
+// 从带外数据发送
+message StopPairRequest
+{
+    bool immediately = 1;   // 是否立即断开,立即断开时不返回 response
+}
+
+message StopPairResponse
+{
+    string bye = 1; // 固定值 "UOS-BYE"
+}

@@ -4,4 +4,8 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=@libexecdir@/dde-cooperation/dde-cooperation-user
+ExecStart=@libexecdir@/dde-cooperation/dde-cooperation-daemon
+
+[Install]
+WantedBy=multi-user.target
+Alias=dbus-com.deepin.Cooperation.service

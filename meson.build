@@ -55,26 +55,16 @@ protoc = generator(protoc_exec,
 )
 
 systemd = dependency('systemd')
-systemd_system_unit_dir = systemd.get_pkgconfig_variable('systemdsystemunitdir')
 systemd_user_unit_dir = systemd.get_pkgconfig_variable('systemduserunitdir')
 
 
 subdir('src')
 
-install_data('misc/dbus/system.d/com.deepin.Cooperation.conf',
-             install_dir: join_paths(datadir, 'dbus-1', 'system.d'))
-install_data('misc/dbus/system-services/com.deepin.Cooperation.service',
-             install_dir: join_paths(datadir, 'dbus-1', 'system-services'))
+install_data('misc/dbus/services/com.deepin.Cooperation.service',
+             install_dir: join_paths(datadir, 'dbus-1', 'services'))
 
 data = configuration_data()
 data.set('libexecdir', libexecdir)
-
-configure_file(
-  input: 'misc/systemd-service/dde-cooperation-daemon.service.in',
-  output: '@BASENAME@',
-  configuration: data,
-  install_dir: systemd_system_unit_dir,
-)
 
 configure_file(
   input: 'misc/systemd-service/dde-cooperation.service.in',
