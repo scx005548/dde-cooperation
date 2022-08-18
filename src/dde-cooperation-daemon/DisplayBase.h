@@ -1,20 +1,16 @@
-#ifndef DDE_COOPERATION_DAEMON_DISPLAYSERVER_H
-#define DDE_COOPERATION_DAEMON_DISPLAYSERVER_H
+#ifndef DDE_COOPERATION_DEAMON_DISPLAYBASE_H
+#define DDE_COOPERATION_DEAMON_DISPLAYBASE_H
 
 #include <vector>
 
 #include <cstdint>
 
-#include <giomm.h>
-
 class Manager;
 
-class DisplayServer {
+class DisplayBase {
 public:
-    explicit DisplayServer(Manager *manager);
-    virtual ~DisplayServer() = default;
-
-    virtual void start() = 0;
+    explicit DisplayBase(Manager *manager);
+    virtual ~DisplayBase() = default;
 
     void startEdgeDetection() { m_startEdgeDetection = true; };
     void stopEdgeDetection() { m_startEdgeDetection = false; };
@@ -43,4 +39,4 @@ private:
     void flowOut(uint16_t direction, uint16_t x, uint16_t y);
 };
 
-#endif // !DDE_COOPERATION_DAEMON_DISPLAYSERVER_H
+#endif // !DDE_COOPERATION_DEAMON_DISPLAYBASE_H

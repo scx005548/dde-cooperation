@@ -1,9 +1,6 @@
-#include "X11.h"
+#include "Display.h"
 
 #include <stdexcept>
-
-#include <cstdlib>
-#include <cstdio>
 
 #include <xcb/xcb.h>
 #include <xcb/randr.h>
@@ -14,22 +11,11 @@
 #include <fmt/core.h>
 #include <spdlog/spdlog.h>
 
-#include "utils/ptr.h"
+using namespace X11;
 
-#define XCB_REPLY_CONNECTION_ARG(connection, ...) connection
-#define XCB_REPLY(call, ...)                                                                       \
-    std::unique_ptr<call##_reply_t>(                                                               \
-        call##_reply(XCB_REPLY_CONNECTION_ARG(__VA_ARGS__), call(__VA_ARGS__), nullptr))
-
-X11::X11(Manager *manager)
-    : DisplayServer(manager) {
-    m_conn = xcb_connect(nullptr, &m_screenDefaultNbr);
-
-    if (int err = xcb_connection_has_error(m_conn)) {
-        throw std::runtime_error(fmt::format("failed to connect to X11: {}", err));
-    }
-
-    m_screen = screenOfDisplay(m_screenDefaultNbr);
+Display::Display(const std::shared_ptr<uvxx::Loop> &uvLoop, Manager *manager)
+    : X11(uvLoop)
+    , DisplayBase(manager) {
 
     initXinputExtension();
     initXfixesExtension();
@@ -40,36 +26,31 @@ X11::X11(Manager *manager)
     handleScreenSizeChange(m_screen->width_in_pixels, m_screen->height_in_pixels);
 }
 
-xcb_screen_t *X11::screenOfDisplay(int screen) {
-    xcb_screen_iterator_t iter = xcb_setup_roots_iterator(xcb_get_setup(m_conn));
-    for (; iter.rem; --screen, xcb_screen_next(&iter)) {
-        if (screen == 0) {
-            return iter.data;
-        }
-    }
-
-    return nullptr;
+Display::~Display() {
 }
 
-void X11::initRandrExtension() {
+void Display::initRandrExtension() {
     const xcb_query_extension_reply_t *reply = xcb_get_extension_data(m_conn, &xcb_randr_id);
     if (!reply->present) {
         throw std::runtime_error("randr extension not found");
     }
 }
 
-void X11::initXinputExtension() {
+void Display::initXinputExtension() {
     {
         const char *extname = "XInputExtension";
         auto reply = XCB_REPLY(xcb_query_extension, m_conn, strlen(extname), extname);
         if (!reply->present) {
-            throw std::runtime_error("XInput extension is not avaliable");
+            throw std::runtime_error("XInput extension is not available");
         }
         m_xinput2OPCode = reply->major_opcode;
     }
 
     {
-        auto reply = XCB_REPLY(xcb_input_xi_query_version, m_conn, 2, 0);
+        auto reply = XCB_REPLY(xcb_input_xi_query_version,
+                               m_conn,
+                               XCB_INPUT_MAJOR_VERSION,
+                               XCB_INPUT_MINOR_VERSION);
         if (!reply || reply->major_version != 2) {
             throw std::runtime_error("X server does not support XInput 2");
         }
@@ -92,10 +73,18 @@ void X11::initXinputExtension() {
     }
 }
 
-void X11::initXfixesExtension() {
-    xcb_xfixes_query_version_cookie_t cookie = xcb_xfixes_query_version(m_conn, 4, 0);
+void Display::initXfixesExtension() {
+    m_xfixes = xcb_get_extension_data(m_conn, &xcb_xfixes_id);
+    if (!m_xfixes->present) {
+        spdlog::warn("xfixes is not present");
+        return;
+    }
+
     xcb_generic_error_t *err = nullptr;
-    xcb_xfixes_query_version_reply_t *reply = xcb_xfixes_query_version_reply(m_conn, cookie, &err);
+    auto reply = XCB_REPLY(xcb_xfixes_query_version,
+                           m_conn,
+                           XCB_XFIXES_MAJOR_VERSION,
+                           XCB_XFIXES_MINOR_VERSION);
     if (err != nullptr) {
         spdlog::warn("xcb_xfixes_query_version: {}", err->error_code);
         return;
@@ -104,38 +93,35 @@ void X11::initXfixesExtension() {
     spdlog::debug("Xfixes version {}.{}", reply->major_version, reply->minor_version);
 }
 
-void X11::start() {
-    xcb_generic_event_t *event;
-    while ((event = xcb_wait_for_event(m_conn))) {
-        switch (event->response_type) {
-        case XCB_CONFIGURE_NOTIFY: {
-            xcb_configure_notify_event_t *cne = reinterpret_cast<xcb_configure_notify_event_t *>(
-                event);
-            handleScreenSizeChange(cne->width, cne->height);
-            break;
-        }
-        case XCB_GE_GENERIC: {
-            xcb_ge_generic_event_t *ge = reinterpret_cast<xcb_ge_generic_event_t *>(event);
+void Display::handleEvent(std::shared_ptr<xcb_generic_event_t> event) {
+    auto response_type = event->response_type & ~0x80;
+    switch (response_type) {
+    case XCB_CONFIGURE_NOTIFY: {
+        auto *cne = reinterpret_cast<xcb_configure_notify_event_t *>(event.get());
+        handleScreenSizeChange(cne->width, cne->height);
 
-            if (edgeDetectionStarted() && ge->extension == m_xinput2OPCode &&
-                ge->event_type == XCB_INPUT_MOTION) {
-                auto reply = XCB_REPLY(xcb_query_pointer, m_conn, m_screen->root);
-                if (!reply) {
-                    spdlog::warn("failed to query pointer");
-                    break;
-                }
+        break;
+    }
+    case XCB_GE_GENERIC: {
+        auto *ge = reinterpret_cast<xcb_ge_generic_event_t *>(event.get());
 
-                handleMotion(reply->root_x, reply->root_y);
+        if (edgeDetectionStarted() && ge->extension == m_xinput2OPCode &&
+            ge->event_type == XCB_INPUT_MOTION) {
+            auto reply = XCB_REPLY(xcb_query_pointer, m_conn, m_screen->root);
+            if (!reply) {
+                spdlog::warn("failed to query pointer");
+                break;
             }
-            break;
-        }
+
+            handleMotion(reply->root_x, reply->root_y);
         }
 
-        free(event);
+        break;
+    }
     }
 }
 
-void X11::hideMouse(bool hide) {
+void Display::hideMouse(bool hide) {
     if (hide) {
         xcb_void_cookie_t cookie = xcb_xfixes_hide_cursor_checked(m_conn, m_screen->root);
         xcb_generic_error_t *err = xcb_request_check(m_conn, cookie);
@@ -151,7 +137,7 @@ void X11::hideMouse(bool hide) {
     }
 }
 
-void X11::moveMouse(uint16_t x, uint16_t y) {
+void Display::moveMouse(uint16_t x, uint16_t y) {
     xcb_void_cookie_t
         cookie = xcb_warp_pointer_checked(m_conn, XCB_NONE, m_screen->root, 0, 0, 0, 0, x, y);
     xcb_generic_error_t *err = xcb_request_check(m_conn, cookie);

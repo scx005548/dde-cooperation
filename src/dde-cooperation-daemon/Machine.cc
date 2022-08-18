@@ -3,6 +3,7 @@
 #include <condition_variable>
 
 #include "Manager.h"
+#include "ClipboardBase.h"
 #include "Request.h"
 #include "InputEmittorWrapper.h"
 #include "FuseServer.h"
@@ -20,15 +21,19 @@
 
 namespace fs = std::filesystem;
 
-Machine::Machine(Manager *cooperation,
-                 const std::shared_ptr<uvxx::Loop> &loop,
+static const std::string fileSchema{"file://"};
+
+Machine::Machine(Manager *manager,
+                 ClipboardBase *clipboard,
+                 const std::shared_ptr<uvxx::Loop> &uvLoop,
                  Glib::RefPtr<DBus::Service> service,
                  uint32_t id,
                  const fs::path &dataDir,
                  const Glib::ustring &ip,
                  uint16_t port,
                  const DeviceInfo &sp)
-    : m_manager(cooperation)
+    : m_manager(manager)
+    , m_clipboard(clipboard)
     , m_dataDir(dataDir)
     , m_mountpoint(m_dataDir / "mp")
     , m_path(Glib::ustring::compose("/com/deepin/Cooperation/Machine/%1", id))
@@ -73,7 +78,7 @@ Machine::Machine(Manager *cooperation,
     , m_direction(FlowDirection::Right)
     , m_propertyDirection(
           new DBus::Property("Direction", "q", DBus::Property::warp(this, &Machine::getDirection)))
-    , m_uvLoop(loop)
+    , m_uvLoop(uvLoop)
     , m_async(std::make_shared<uvxx::Async>(m_uvLoop))
     , m_mounted(false) {
 
@@ -386,6 +391,21 @@ void Machine::dispatcher(uvxx::Buffer &buff) noexcept {
             break;
         }
 
+        case Message::PayloadCase::kClipboardNotify: {
+            handleClipboardNotify(msg.clipboardnotify());
+            break;
+        }
+
+        case Message::PayloadCase::kClipboardGetContent: {
+            handleClipboardGetContent(msg.clipboardgetcontent());
+            break;
+        }
+
+        case Message::PayloadCase::kClipboardGetContentReply: {
+            handleClipboardGetContentReply(msg.clipboardgetcontentreply());
+            break;
+        }
+
         default: {
             spdlog::warn("invalid message type: {}", msg.payload_case());
             m_conn->close();
@@ -417,7 +437,7 @@ void Machine::handleCooperateRequest() {
 
         if (accepted) {
             auto wptr = weak_from_this();
-            m_manager->handleFlowOut(wptr);
+            m_manager->onFlowOut(wptr);
 
             m_cooperating = true;
             m_propertyCooperating->emitChanged(Glib::Variant<bool>::create(m_cooperating));
@@ -439,7 +459,7 @@ void Machine::handleCooperateResponse(const CooperateResponse &resp) {
     m_direction = FlowDirection::Right;
     m_propertyDirection->emitChanged(Glib::Variant<uint16_t>::create(m_direction));
 
-    m_manager->handleRemoteAcceptedCooperation();
+    m_manager->onStartCooperation();
 }
 
 void Machine::handleStopCooperationRequest() {
@@ -447,18 +467,28 @@ void Machine::handleStopCooperationRequest() {
 }
 
 void Machine::handleInputEventRequest(const InputEventRequest &req) {
-    // TODO: !!!!
+    bool success = true;
+
+    auto deviceType = static_cast<InputDeviceType>(req.devicetype());
+    auto it = m_inputEmittors.find(deviceType);
+    if (it == m_inputEmittors.end()) {
+        success = false;
+        spdlog::error("no deviceType {} found", static_cast<uint8_t>(deviceType));
+    } else {
+        auto &inputEmittor = it->second;
+        success = inputEmittor->emitEvent(req.type(), req.code(), req.value());
+    }
 
     Message resp;
     InputEventResponse *response = resp.mutable_inputeventresponse();
     response->set_serial(req.serial());
-    response->set_success(true);
+    response->set_success(success);
 
     m_conn->write(MessageHelper::genMessage(resp));
 }
 
 void Machine::handleFlowRequest(const FlowRequest &req) {
-    m_manager->handleFlowBack(req.direction(), req.x(), req.y());
+    m_manager->onFlowBack(req.direction(), req.x(), req.y());
 }
 
 void Machine::handleFsRequest([[maybe_unused]] const FsRequest &req) {
@@ -478,7 +508,62 @@ void Machine::handleFsResponse(const FsResponse &resp) {
         return;
     }
 
-    m_fuseClient = std::make_unique<FuseClient>(m_uvLoop, m_ip, m_port, m_mountpoint);
+    m_fuseClient = std::make_unique<FuseClient>(m_uvLoop, m_ip, resp.port(), m_mountpoint);
+}
+
+void Machine::handleClipboardNotify(const ClipboardNotify &notify) {
+    auto &targetsp = notify.targets();
+    std::vector<std::string> targets{targetsp.cbegin(), targetsp.cend()};
+    m_manager->onMachineOwnClipboard(weak_from_this(), targets);
+}
+
+void Machine::handleClipboardGetContent(const ClipboardGetContent &req) {
+    auto target = req.target();
+    auto cb = [this, target](const std::vector<char> &content) {
+        Message msg;
+        auto *reply = msg.mutable_clipboardgetcontentreply();
+        reply->set_target(target);
+        reply->set_content(std::string(content.begin(), content.end()));
+        m_conn->write(MessageHelper::genMessage(msg));
+    };
+    m_clipboard->readTargetContent(target, cb);
+}
+
+void Machine::handleClipboardGetContentReply(const ClipboardGetContentReply &resp) {
+    auto target = resp.target();
+    auto content = resp.content();
+    if (target == "x-special/gnome-copied-files") {
+        spdlog::warn("ori x-special/gnome-copied-files: {}", content);
+    }
+    if (m_clipboard->isFiles()) {
+        std::stringstream ss(content);
+        std::string out;
+        std::string line;
+        while (!ss.eof()) {
+            std::getline(ss, line, '\n');
+            if (line[0] == '/') { // starts with '/'
+                out.reserve(out.length() + m_mountpoint.string().length() + line.length() + 1);
+                out.append(m_mountpoint.string());
+                out.append(line);
+            } else if (line.rfind(fileSchema, 0) == 0) { // starts with 'file://'
+                out.reserve(out.length() + m_mountpoint.string().length() + line.length() + 1);
+                out.append(fileSchema);
+                out.append(m_mountpoint.string());
+                out.append(line.begin() + fileSchema.length(), line.end());
+            } else {
+                out.reserve(out.length() + line.length() + 1);
+                out.append(line);
+            }
+            out.push_back('\n');
+        }
+        out.resize(out.length() - 1);
+        content.swap(out);
+        // spdlog::info("content[{}]: {}", content.length(), content);
+    }
+    if (target == "x-special/gnome-copied-files") {
+        spdlog::warn("x-special/gnome-copied-files: {}", content);
+    }
+    m_clipboard->updateTargetContent(target, std::vector<char>(content.begin(), content.end()));
 }
 
 void Machine::onInputGrabberEvent(uint8_t deviceType,
@@ -494,12 +579,26 @@ void Machine::onInputGrabberEvent(uint8_t deviceType,
     m_conn->write(MessageHelper::genMessage(msg));
 }
 
+void Machine::onClipboardTargetsChanged(const std::vector<std::string> &targets) {
+    Message msg;
+    auto *clipboardNotify = msg.mutable_clipboardnotify();
+    *(clipboardNotify->mutable_targets()) = {targets.cbegin(), targets.cend()};
+    m_conn->write(MessageHelper::genMessage(msg));
+}
+
 void Machine::flowTo(uint16_t direction, uint16_t x, uint16_t y) noexcept {
     Message msg;
     FlowRequest *flow = msg.mutable_flowrequest();
     flow->set_direction(FlowDirection(direction));
     flow->set_x(x);
     flow->set_y(y);
+    m_conn->write(MessageHelper::genMessage(msg));
+}
+
+void Machine::readTarget(const std::string &target) {
+    Message msg;
+    auto *clipboardGetContent = msg.mutable_clipboardgetcontent();
+    clipboardGetContent->set_target(target);
     m_conn->write(MessageHelper::genMessage(msg));
 }
 
@@ -541,7 +640,7 @@ void Machine::handleAcceptFilesystem(bool accepted,
 }
 
 void Machine::stopCooperationAux() {
-    m_manager->handleStopCooperation();
+    m_manager->onStopCooperation();
 
     m_cooperating = false;
     m_propertyCooperating->emitChanged(Glib::Variant<bool>::create(m_cooperating));

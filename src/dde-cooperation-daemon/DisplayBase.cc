@@ -1,20 +1,21 @@
-#include "DisplayServer.h"
+#include "DisplayBase.h"
 
 #include <spdlog/spdlog.h>
 
 #include "Manager.h"
+#include "protocol/cooperation.pb.h"
 
-DisplayServer::DisplayServer(Manager *manager)
+DisplayBase::DisplayBase(Manager *manager)
     : m_manager(manager)
     , m_startEdgeDetection(false) {
 }
 
-void DisplayServer::handleScreenSizeChange(int16_t w, int16_t h) {
+void DisplayBase::handleScreenSizeChange(int16_t w, int16_t h) {
     m_screenWidth = w;
     m_screenHeight = h;
 }
 
-void DisplayServer::handleMotion(int16_t x, int16_t y) {
+void DisplayBase::handleMotion(int16_t x, int16_t y) {
     do {
         if (m_lastX == x) {
             if (x == 0) {
@@ -53,7 +54,7 @@ void DisplayServer::handleMotion(int16_t x, int16_t y) {
     m_lastY = y;
 }
 
-void DisplayServer::flowBack(uint16_t direction, uint16_t x, uint16_t y) {
+void DisplayBase::flowBack(uint16_t direction, uint16_t x, uint16_t y) {
     switch (direction) {
     case 3: {
         // left
@@ -67,7 +68,7 @@ void DisplayServer::flowBack(uint16_t direction, uint16_t x, uint16_t y) {
     startEdgeDetection();
 }
 
-void DisplayServer::flowOut(uint16_t direction, uint16_t x, uint16_t y) {
+void DisplayBase::flowOut(uint16_t direction, uint16_t x, uint16_t y) {
     bool r = m_manager->tryFlowOut(direction, x, y);
     if (r) {
         stopEdgeDetection();

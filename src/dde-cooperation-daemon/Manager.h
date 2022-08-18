@@ -1,7 +1,7 @@
 #ifndef DDE_COOPERATION_DAEMON_MANAGER_H
 #define DDE_COOPERATION_DAEMON_MANAGER_H
 
-#include <map>
+#include <unordered_map>
 #include <filesystem>
 #include <memory>
 #include <thread>
@@ -34,7 +34,8 @@ class FsSendFileRequest;
 class FsRequest;
 class FsResponse;
 class Machine;
-class DisplayServer;
+class DisplayBase;
+class ClipboardBase;
 
 class Manager : public noncopyable {
 public:
@@ -45,10 +46,14 @@ public:
     bool tryFlowOut(uint16_t direction, uint16_t x, uint16_t y);
     void removeInputGrabber(const std::filesystem::path &path);
 
-    void handleRemoteAcceptedCooperation();
-    void handleStopCooperation();
-    void handleFlowBack(uint16_t direction, uint16_t x, uint16_t y);
-    void handleFlowOut(std::weak_ptr<Machine> machine);
+    void onStartCooperation();
+    void onStopCooperation();
+    void onFlowBack(uint16_t direction, uint16_t x, uint16_t y);
+    void onFlowOut(std::weak_ptr<Machine> machine);
+    void onClipboardTargetsChanged(const std::vector<std::string> &targets);
+    void onMachineOwnClipboard(const std::weak_ptr<Machine> &machine,
+                               const std::vector<std::string> &targets);
+    void onInputEvent();
 
 protected:
     // DBus method handlers
@@ -69,9 +74,10 @@ private:
     const std::filesystem::path m_mountRoot;
 
     uint32_t m_lastMachineIndex;
-    std::map<std::string, std::shared_ptr<Machine>> m_machines;
+    std::unordered_map<std::string, std::shared_ptr<Machine>> m_machines;
     bool m_enableCooperation;
-    std::unique_ptr<DisplayServer> m_displayServer;
+    std::unique_ptr<DisplayBase> m_displayServer;
+    std::unique_ptr<ClipboardBase> m_clipboard;
     uint32_t m_lastRequestId;
     std::unordered_map<std::string, std::shared_ptr<InputGrabberWrapper>> m_inputGrabbers;
 

@@ -20,7 +20,8 @@
 
 #include "Machine.h"
 #include "Request.h"
-#include "DisplayServer/X11.h"
+#include "X11/Display.h"
+#include "X11/Clipboard.h"
 #include "utils/message_helper.h"
 #include "protocol/message.pb.h"
 #include "protocol/ipc_message.pb.h"
@@ -81,7 +82,8 @@ Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesyste
     std::string ip = Net::getIpAddress();
     m_scanAddr = uvxx::IPv4Addr::create(Net::getBroadcastAddress(ip), m_scanPort);
 
-    m_displayServer = std::make_unique<X11>(this);
+    m_displayServer = std::make_unique<X11::Display>(m_uvLoop, this);
+    m_clipboard = std::make_unique<X11::Clipboard>(m_uvLoop, this);
 
     // TODO: inotify
     for (const auto &entry : fs::directory_iterator(inputDevicePath)) {
@@ -223,7 +225,7 @@ bool Manager::tryFlowOut(uint16_t direction, uint16_t x, uint16_t y) {
         const std::shared_ptr<Machine> &machine = v.second;
         if (machine->m_direction == direction) {
             machine->flowTo(direction, x, y);
-            handleFlowOut(machine);
+            onFlowOut(machine);
             return true;
         }
     }
@@ -236,6 +238,7 @@ void Manager::addMachine(const std::string &ip, uint16_t port, const DeviceInfo 
     shortUUID.resize(8);
     fs::path dataPath = m_dataDir / shortUUID;
     auto m = std::make_shared<Machine>(this,
+                                       m_clipboard.get(),
                                        m_uvLoop,
                                        m_service,
                                        m_lastMachineIndex,
@@ -307,7 +310,7 @@ void Manager::handleReceivedSocketScan(std::shared_ptr<uvxx::Addr> addr,
 
         addMachine(addr->ipv4()->ip(), resp.port(), resp.deviceinfo());
 
-        spdlog::info("{} responsed", resp.deviceinfo().name());
+        spdlog::info("{} responded", resp.deviceinfo().name());
         break;
     }
     default: {
@@ -349,11 +352,11 @@ void Manager::handleNewConnection(bool) noexcept {
     socketConnected->startRead();
 }
 
-void Manager::handleRemoteAcceptedCooperation() {
+void Manager::onStartCooperation() {
     m_displayServer->startEdgeDetection();
 }
 
-void Manager::handleStopCooperation() {
+void Manager::onStopCooperation() {
     for (auto &inputGrabber : m_inputGrabbers) {
         inputGrabber.second->stop();
     }
@@ -361,7 +364,7 @@ void Manager::handleStopCooperation() {
     m_displayServer->stopEdgeDetection();
 }
 
-void Manager::handleFlowBack(uint16_t direction, uint16_t x, uint16_t y) {
+void Manager::onFlowBack(uint16_t direction, uint16_t x, uint16_t y) {
     for (auto &inputGrabber : m_inputGrabbers) {
         inputGrabber.second->stop();
     }
@@ -369,9 +372,24 @@ void Manager::handleFlowBack(uint16_t direction, uint16_t x, uint16_t y) {
     m_displayServer->flowBack(direction, x, y);
 }
 
-void Manager::handleFlowOut(std::weak_ptr<Machine> machine) {
+void Manager::onFlowOut(std::weak_ptr<Machine> machine) {
     for (auto &inputGrabbers : m_inputGrabbers) {
         inputGrabbers.second->setMachine(machine);
         inputGrabbers.second->start();
     }
+}
+
+void Manager::onClipboardTargetsChanged(const std::vector<std::string> &targets) {
+    for (auto &[uuid, machine] : m_machines) {
+        if (!machine->m_cooperating) {
+            continue;
+        }
+
+        machine->onClipboardTargetsChanged(targets);
+    }
+}
+
+void Manager::onMachineOwnClipboard(const std::weak_ptr<Machine> &machine,
+                                    const std::vector<std::string> &targets) {
+    m_clipboard->newClipboardOwnerTargets(machine, targets);
 }

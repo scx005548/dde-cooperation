@@ -16,10 +16,16 @@ dde_cooperation_daemon_sources = files('''
   FuseClient.cc
   FuseServer.h
   FuseServer.cc
-  DisplayServer.h
-  DisplayServer.cc
-  DisplayServer/X11.h
-  DisplayServer/X11.cc
+  DisplayBase.h
+  DisplayBase.cc
+  ClipboardBase.h
+  ClipboardBase.cc
+  X11/X11.h
+  X11/X11.cc
+  X11/Display.h
+  X11/Display.cc
+  X11/Clipboard.h
+  X11/Clipboard.cc
 '''.split())
 
 dde_cooperation_daemon_sources += common_sources + uvxx_sources + protocol + ipc_protocol

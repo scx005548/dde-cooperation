@@ -1,22 +1,14 @@
 syntax = "proto3";
 
-enum ClipboardDataType
-{
-    Text = 0;   // 无格式的文本
-    MIME = 1;   // 带格式的文本
-    Pixmap = 2; // 位图数据
-    File = 3;   // 文件
+message ClipboardNotify {
+    repeated string targets = 1;
 }
 
-message SyncClipboardRequest
-{
-    int64 serial = 1;           // 序号
-    ClipboardDataType type = 2; // 数据的类型
-    bytes data = 3;             // 剪切板数据
+message ClipboardGetContent {
+    string target = 1;
 }
 
-message SyncClipboardResponse
-{
-    int64 serial = 1; // 序号
-    bool success = 2; // 是否成功
+message ClipboardGetContentReply {
+    string target = 1;
+    bytes content = 2;
 }

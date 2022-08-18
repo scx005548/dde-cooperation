@@ -19,7 +19,7 @@ class Buffer;
 } // namespace uvxx
 
 class Manager;
-class InputEventRequest;
+class ClipboardBase;
 class Request;
 class InputEmittorWrapper;
 class FuseServer;
@@ -29,8 +29,9 @@ class Machine : public std::enable_shared_from_this<Machine> {
     friend Manager;
 
 public:
-    Machine(Manager *cooperation,
-            const std::shared_ptr<uvxx::Loop> &loop,
+    Machine(Manager *manager,
+            ClipboardBase *clipboard,
+            const std::shared_ptr<uvxx::Loop> &uvLoop,
             Glib::RefPtr<DBus::Service> service,
             uint32_t id,
             const std::filesystem::path &dataDir,
@@ -47,6 +48,7 @@ public:
     void onClipboardTargetsChanged(const std::vector<std::string> &targets);
 
     void flowTo(uint16_t direction, uint16_t x, uint16_t y) noexcept;
+    void readTarget(const std::string &target);
 
 protected:
     void pair(const Glib::VariantContainerBase &args,
@@ -74,6 +76,7 @@ protected:
 
 private:
     Manager *m_manager;
+    ClipboardBase *m_clipboard;
     const std::filesystem::path m_dataDir;
     const std::filesystem::path m_mountpoint;
 
@@ -138,6 +141,9 @@ private:
     void handleFlowRequest(const FlowRequest &req);
     void handleFsRequest(const FsRequest &req);
     void handleFsResponse(const FsResponse &resp);
+    void handleClipboardNotify(const ClipboardNotify &notify);
+    void handleClipboardGetContent(const ClipboardGetContent &req);
+    void handleClipboardGetContentReply(const ClipboardGetContentReply &resp);
 
     void handleAcceptSendFile(bool accepted,
                               const std::map<Glib::ustring, Glib::VariantBase> &hint,
