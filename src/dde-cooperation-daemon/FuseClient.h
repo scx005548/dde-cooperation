@@ -19,6 +19,7 @@ namespace uvxx {
 class Loop;
 class Async;
 class TCP;
+class Buffer;
 } // namespace uvxx
 
 class FuseClient {
@@ -60,7 +61,7 @@ private:
                 struct fuse_file_info *fi,
                 enum fuse_readdir_flags flags);
 
-    void handleResponse(std::shared_ptr<char[]> buffer, ssize_t size) noexcept;
+    void handleResponse(uvxx::Buffer &buff) noexcept;
     std::shared_ptr<google::protobuf::Message> waitForServerReply();
 };
 

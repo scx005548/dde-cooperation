@@ -53,6 +53,8 @@ uvxx_sources = files('''
   uvxx/TCP.cc
   uvxx/UDP.h
   uvxx/UDP.cc
+  uvxx/Buffer.h
+  uvxx/Buffer.cc
   uvxx/Poll.h
   uvxx/Poll.cc
   uvxx/Async.h

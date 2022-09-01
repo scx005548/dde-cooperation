@@ -203,13 +203,13 @@ int FuseClient::readdir(const char *path,
     return resp->result();
 }
 
-void FuseClient::handleResponse(std::shared_ptr<char[]> buffer,
-                                [[maybe_unused]] ssize_t size) noexcept {
-    auto buff = buffer.get();
-    auto header = MessageHelper::parseMessageHeader(buff);
-    buff += header_size;
-    size -= header_size;
-    Message msg = MessageHelper::parseMessageBody<Message>(buff, header.size);
+void FuseClient::handleResponse(uvxx::Buffer &buff) noexcept {
+    auto res = MessageHelper::parseMessage<Message>(buff);
+    if (!res.has_value()) {
+        return;
+    }
+
+    Message &msg = res.value();
 
     switch (msg.payload_case()) {
     case Message::PayloadCase::kFsMethodGetAttrResponse: {
@@ -254,7 +254,7 @@ std::shared_ptr<google::protobuf::Message> FuseClient::waitForServerReply() {
     std::unique_lock lk(m_mut);
     m_cv.wait(lk);
 
-    spdlog::info("responsed");
+    spdlog::info("responded");
 
     return m_buff;
 }

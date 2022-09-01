@@ -12,6 +12,7 @@
 namespace uvxx {
 class Loop;
 class TCP;
+class Buffer;
 } // namespace uvxx
 
 class Machine;
@@ -32,7 +33,7 @@ private:
 
     void handleNewConnection(bool) noexcept;
     void handleDisconnected() noexcept;
-    void handleRequest(std::shared_ptr<char[]> buffer, ssize_t size) noexcept;
+    void handleRequest(uvxx::Buffer &buff) noexcept;
 
     void methodGetattr(const FsMethodGetAttrRequest &req, FsMethodGetAttrResponse *resp);
     void methodOpen(const FsMethodOpenRequest &req, FsMethodOpenResponse *resp);

@@ -2,8 +2,11 @@
 #define UTILS_MESSAGE_H
 
 #include <memory>
+#include <optional>
 
 #include <google/protobuf/message.h>
+
+#include "uvxx/Buffer.h"
 
 #define SCAN_KEY "UOS-COOPERATION"
 
@@ -37,6 +40,20 @@ template <typename T>
 inline T parseMessageBody(const char *buffer, size_t size) noexcept {
     T msg;
     msg.ParseFromArray(buffer, size);
+
+    return msg;
+}
+
+template <typename T>
+inline std::optional<T> parseMessage(uvxx::Buffer &buff) {
+    auto header = buff.peak<MessageHeader>();
+    if (buff.size() < header_size + header.size) {
+        return std::nullopt;
+    }
+
+    T msg;
+    msg.ParseFromArray(buff.data() + header_size, header.size);
+    buff.retrieve(header_size + header.size);
 
     return msg;
 }

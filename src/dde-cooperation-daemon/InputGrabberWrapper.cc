@@ -47,34 +47,36 @@ void InputGrabberWrapper::stop() {
     m_pipe->write(MessageHelper::genMessage(msg));
 }
 
-void InputGrabberWrapper::onReceived(std::unique_ptr<char[]> buffer,
-                                     [[maybe_unused]] ssize_t size) noexcept {
+void InputGrabberWrapper::onReceived(uvxx::Buffer &buff) noexcept {
     spdlog::info("onReceived");
 
-    auto buff = buffer.get();
-    auto header = MessageHelper::parseMessageHeader(buff);
-    buff += header_size;
-    // size -= header_size;
-
-    auto base = MessageHelper::parseMessageBody<InputGrabberChild>(buff, header.size);
-    switch (base.payload_case()) {
-    case InputGrabberChild::PayloadCase::kDeviceType: {
-        m_type = base.devicetype();
-        break;
-    }
-    case InputGrabberChild::PayloadCase::kInputEvent: {
-        auto machine = m_machine.lock();
-        if (machine) {
-            auto inputEvent = base.inputevent();
-            machine->onInputGrabberEvent(m_type,
-                                         inputEvent.type(),
-                                         inputEvent.code(),
-                                         inputEvent.value());
+    while (buff.size() >= header_size) {
+        auto res = MessageHelper::parseMessage<InputGrabberChild>(buff);
+        if (!res.has_value()) {
+            return;
         }
-        break;
-    }
-    case InputGrabberChild::PAYLOAD_NOT_SET: {
-        break;
-    }
+
+        InputGrabberChild &base = res.value();
+
+        switch (base.payload_case()) {
+        case InputGrabberChild::PayloadCase::kDeviceType: {
+            m_type = base.devicetype();
+            break;
+        }
+        case InputGrabberChild::PayloadCase::kInputEvent: {
+            auto machine = m_machine.lock();
+            if (machine) {
+                auto inputEvent = base.inputevent();
+                machine->onInputGrabberEvent(m_type,
+                                             inputEvent.type(),
+                                             inputEvent.code(),
+                                             inputEvent.value());
+            }
+            break;
+        }
+        case InputGrabberChild::PAYLOAD_NOT_SET: {
+            break;
+        }
+        }
     }
 }

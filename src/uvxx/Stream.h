@@ -2,6 +2,7 @@
 #define UVXX_STREAM_H
 
 #include "Handle.h"
+#include "Buffer.h"
 
 namespace uvxx {
 
@@ -17,9 +18,7 @@ public:
     bool write(std::vector<char> &&data);
 
     void onNewConnection(const std::function<void(bool)> &cb) { newConnectionCb_ = cb; }
-    void onReceived(const std::function<void(std::unique_ptr<char[]> buffer, ssize_t size)> &cb) {
-        receivedCb_ = cb;
-    }
+    void onReceived(const std::function<void(Buffer &buff)> &cb) { receivedCb_ = cb; }
 
 protected:
     using HandleT::HandleT;
@@ -28,8 +27,10 @@ protected:
     void readCb(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf);
 
 private:
+    Buffer buff_;
+
     std::function<void(bool)> newConnectionCb_{nullFunc{}};
-    std::function<void(std::unique_ptr<char[]> buffer, ssize_t size)> receivedCb_{nullFunc{}};
+    std::function<void(Buffer &buff)> receivedCb_{nullFunc{}};
 
     void newConnectionCb(uv_stream_t *req, int status);
     void bufferedReadCb(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf);

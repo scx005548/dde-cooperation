@@ -7,6 +7,7 @@ namespace uvxx {
 class Loop;
 class Pipe;
 class Process;
+class Buffer;
 }
 
 class Manager;
@@ -30,7 +31,7 @@ private:
     uint8_t m_type;
     std::weak_ptr<Machine> m_machine;
 
-    void onReceived(std::unique_ptr<char[]> buffer, ssize_t size) noexcept;
+    void onReceived(uvxx::Buffer &buff) noexcept;
 };
 
 #endif // !DDE_COOPERATION_DAEMON_INPUTGRABBERWRAPPER_H

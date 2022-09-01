@@ -37,14 +37,20 @@ void Stream::newConnectionCb([[maybe_unused]] uv_stream_t *req, int status) {
 }
 
 void Stream::allocCb([[maybe_unused]] uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
-    *buf = uv_buf_init(new char[suggested_size], suggested_size);
+    buff_.expand(suggested_size);
+
+    buf->base = buff_.writable();
+    buf->len = buff_.writableSize();
 }
 
-void Stream::readCb([[maybe_unused]] uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
+void Stream::readCb([[maybe_unused]] uv_stream_t *stream,
+                    ssize_t nread,
+                    [[maybe_unused]] const uv_buf_t *buf) {
     if (nread == UV_EOF) {
         close();
         return;
     }
 
-    receivedCb_(std::unique_ptr<char[]>{buf->base}, nread);
+    buff_.writed(nread);
+    receivedCb_(buff_);
 }

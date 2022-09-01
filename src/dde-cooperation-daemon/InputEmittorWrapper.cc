@@ -38,6 +38,6 @@ bool InputEmittorWrapper::emitEvent(unsigned int type, unsigned int code, int va
     return m_pipe->write(MessageHelper::genMessage(msg));
 }
 
-void InputEmittorWrapper::onReceived(std::unique_ptr<char[]> buffer, ssize_t size) noexcept {
+void InputEmittorWrapper::onReceived([[maybe_unused]] uvxx::Buffer &buff) noexcept {
     spdlog::info("onReceived");
 }

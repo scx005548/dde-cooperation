@@ -305,28 +305,19 @@ void Machine::handleDisconnected() {
     m_conn.reset();
 }
 
-void Machine::dispatcher(std::shared_ptr<char[]> buffer, ssize_t size) noexcept {
+void Machine::dispatcher(uvxx::Buffer &buff) noexcept {
     spdlog::info("received packet from name: {}, UUID: {}, size: {}",
                  std::string(m_name),
                  std::string(m_uuid),
-                 size);
-    char *buff = buffer.get();
+                 buff.size());
 
-    while (size >= header_size) {
-        const auto header = MessageHelper::parseMessageHeader(buff);
-        buff += header_size;
-        size -= header_size;
-
-        if (size < 0 || static_cast<size_t>(size) < header.size) {
-            spdlog::error("wrong size: {}", size);
-            break;
+    while (buff.size() >= header_size) {
+        auto res = MessageHelper::parseMessage<Message>(buff);
+        if (!res.has_value()) {
+            return;
         }
 
-        auto msg = MessageHelper::parseMessageBody<Message>(buff, header.size);
-        spdlog::info("received packet, type: {}", msg.payload_case());
-
-        buff += header.size;
-        size -= header.size;
+        Message &msg = res.value();
 
         switch (msg.payload_case()) {
         case Message::PayloadCase::kPairResponse: {

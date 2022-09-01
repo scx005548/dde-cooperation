@@ -52,6 +52,10 @@ bool UDP::send(const std::shared_ptr<Addr> &addr, const std::vector<char> &data)
     return req->send(get(), bufs, 1, addr->get());
 }
 
+void UDP::allocCb([[maybe_unused]] uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
+    *buf = uv_buf_init(new char[suggested_size], suggested_size);
+}
+
 void UDP::recvCb([[maybe_unused]] uv_udp_t *handle,
                  ssize_t nread,
                  const uv_buf_t *buf,

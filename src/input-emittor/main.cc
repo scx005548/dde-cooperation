@@ -28,23 +28,28 @@ int main(int argc, const char *argv[]) {
 
     auto pipe = std::make_shared<uvxx::Pipe>(loop, false);
     pipe->open(fd);
-    pipe->startRead();
-    pipe->onReceived([&emittor](std::unique_ptr<char[]> data, [[maybe_unused]] ssize_t size) {
-        auto buff = data.get();
-        auto header = MessageHelper::parseMessageHeader(buff);
-        buff += header_size;
-        size -= header_size;
+    pipe->onReceived([&emittor](uvxx::Buffer &buff) {
+        spdlog::debug("onReceived");
 
-        auto base = MessageHelper::parseMessageBody<InputEmittorParent>(buff, header.size);
-        switch (base.payload_case()) {
-        case InputEmittorParent::PayloadCase::kInputEvent: {
-            auto &inputEvent = base.inputevent();
-            emittor.emitEvent(inputEvent.type(), inputEvent.code(), inputEvent.value());
-        } break;
-        case InputEmittorParent::PayloadCase::PAYLOAD_NOT_SET: {
-        } break;
+        while (buff.size() >= header_size) {
+            auto res = MessageHelper::parseMessage<InputEmittorParent>(buff);
+            if (!res.has_value()) {
+                return;
+            }
+
+            InputEmittorParent &base = res.value();
+
+            switch (base.payload_case()) {
+            case InputEmittorParent::PayloadCase::kInputEvent: {
+                auto &inputEvent = base.inputevent();
+                emittor.emitEvent(inputEvent.type(), inputEvent.code(), inputEvent.value());
+            } break;
+            case InputEmittorParent::PayloadCase::PAYLOAD_NOT_SET: {
+            } break;
+            }
         }
     });
+    pipe->startRead();
 
     loop->run();
 }

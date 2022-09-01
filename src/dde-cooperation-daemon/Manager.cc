@@ -321,16 +321,13 @@ void Manager::handleReceivedSocketScan(std::shared_ptr<uvxx::Addr> addr,
 
 void Manager::handleNewConnection(bool) noexcept {
     auto socketConnected = m_listenPair->accept();
-    socketConnected->onReceived([this, socketConnected](std::unique_ptr<char[]> buffer,
-                                                        size_t size) {
-        char *buff = buffer.get();
-        auto header = MessageHelper::parseMessageHeader(buff);
-        buff += header_size;
-        size -= header_size;
+    socketConnected->onReceived([this, socketConnected](uvxx::Buffer &buff) {
+        auto res = MessageHelper::parseMessage<Message>(buff);
+        if (!res.has_value()) {
+            return;
+        }
 
-        Message msg = MessageHelper::parseMessageBody<Message>(buff, size);
-        buff += header.size;
-        size -= header.size;
+        Message &msg = res.value();
 
         const auto &request = msg.pairrequest();
         if (request.key() != SCAN_KEY) {

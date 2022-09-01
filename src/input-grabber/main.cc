@@ -32,25 +32,28 @@ int main(int argc, const char *argv[]) {
 
     auto pipe = std::make_shared<uvxx::Pipe>(loop, false);
     pipe->open(fd);
-    pipe->startRead();
-    pipe->onReceived([&grabber](std::unique_ptr<char[]> data, [[maybe_unused]] ssize_t size) {
-        auto buff = data.get();
-        auto header = MessageHelper::parseMessageHeader(buff);
-        buff += header_size;
-        // size -= header_size;
+    pipe->onReceived([&grabber](uvxx::Buffer &buff) {
+        while (buff.size() >= header_size) {
+            auto res = MessageHelper::parseMessage<InputGrabberParent>(buff);
+            if (!res.has_value()) {
+                return;
+            }
 
-        auto base = MessageHelper::parseMessageBody<InputGrabberParent>(buff, header.size);
-        switch (base.payload_case()) {
-        case InputGrabberParent::PayloadCase::kStart: {
-            grabber.start();
-        } break;
-        case InputGrabberParent::PayloadCase::kStop: {
-            grabber.stop();
-        } break;
-        case InputGrabberParent::PayloadCase::PAYLOAD_NOT_SET: {
-        } break;
+            InputGrabberParent &base = res.value();
+
+            switch (base.payload_case()) {
+            case InputGrabberParent::PayloadCase::kStart: {
+                grabber.start();
+            } break;
+            case InputGrabberParent::PayloadCase::kStop: {
+                grabber.stop();
+            } break;
+            case InputGrabberParent::PayloadCase::PAYLOAD_NOT_SET: {
+            } break;
+            }
         }
     });
+    pipe->startRead();
 
     grabber.onEvent([pipe](unsigned int type, unsigned int code, int value) {
         InputGrabberChild msg;

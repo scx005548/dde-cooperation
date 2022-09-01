@@ -15,6 +15,7 @@ namespace uvxx {
 class Loop;
 class Async;
 class TCP;
+class Buffer;
 } // namespace uvxx
 
 class Manager;
@@ -128,7 +129,7 @@ private:
     bool m_mounted;
 
     void handleDisconnected();
-    void dispatcher(std::shared_ptr<char[]> buffer, ssize_t size) noexcept;
+    void dispatcher(uvxx::Buffer &buff) noexcept;
     void handlePairResponse(const PairResponse &resp);
     void handleCooperateRequest();
     void handleCooperateResponse(const CooperateResponse &resp);

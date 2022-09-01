@@ -9,6 +9,7 @@ namespace uvxx {
 class Loop;
 class Pipe;
 class Process;
+class Buffer;
 } // namespace uvxx
 
 class Manager;
@@ -22,6 +23,7 @@ public:
     void setMachine(const std::weak_ptr<Machine> &machine);
     void start();
     void stop();
+    bool emitEvent(unsigned int type, unsigned int code, int value) noexcept;
 
 private:
     std::weak_ptr<Machine> m_machine;
@@ -31,8 +33,7 @@ private:
 
     InputDeviceType m_type;
 
-    bool emitEvent(unsigned int type, unsigned int code, int value) noexcept;
-    void onReceived(std::unique_ptr<char[]> buffer, ssize_t size) noexcept;
+    void onReceived(uvxx::Buffer &buff) noexcept;
 };
 
 #endif // !DDE_COOPERATION_DAEMON_INPUTEMITTORWRAPPER_H

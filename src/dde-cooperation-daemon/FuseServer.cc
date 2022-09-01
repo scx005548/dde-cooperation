@@ -23,6 +23,8 @@
 
 namespace fs = std::filesystem;
 
+static constexpr size_t maxRead = 128 * 1024;
+
 FuseServer::FuseServer(const std::weak_ptr<Machine> &machine,
                        const std::shared_ptr<uvxx::Loop> &uvLoop)
     : m_machine(machine)
@@ -53,13 +55,13 @@ void FuseServer::handleNewConnection(bool) noexcept {
 void FuseServer::handleDisconnected() noexcept {
 }
 
-void FuseServer::handleRequest(std::shared_ptr<char[]> buffer,
-                               [[maybe_unused]] ssize_t size) noexcept {
-    auto buff = buffer.get();
-    auto header = MessageHelper::parseMessageHeader(buff);
-    buff += header_size;
-    size -= header_size;
-    Message msg = MessageHelper::parseMessageBody<Message>(buff, header.size);
+void FuseServer::handleRequest(uvxx::Buffer &buff) noexcept {
+    auto res = MessageHelper::parseMessage<Message>(buff);
+    if (!res.has_value()) {
+        return;
+    }
+
+    Message &msg = res.value();
 
     switch (msg.payload_case()) {
     case Message::PayloadCase::kFsMethodGetAttrRequest: {
@@ -175,8 +177,13 @@ void FuseServer::methodRead(const FsMethodReadRequest &req, FsMethodReadResponse
         return;
     }
 
-    resp->mutable_data()->resize(req.size());
-    size_t size = read(req.fi().fh(), resp->mutable_data()->data(), req.size());
+    size_t size = req.size();
+    if (size > maxRead) {
+        size = maxRead;
+    }
+
+    resp->mutable_data()->resize(size);
+    size = read(req.fi().fh(), resp->mutable_data()->data(), size);
     resp->mutable_data()->resize(size);
     resp->set_result(size);
 }
