@@ -1,12 +1,26 @@
 project(
-    'dde-cooperation',
-    'cpp',
-    version: '0.0.1',
-    default_options: [
-        'cpp_std=c++17',
-        'warning_level=3',
-    ]
+  'dde-cooperation',
+  'cpp',
+  version: '0.0.1',
+  default_options: [
+    'cpp_std=c++17',
+    'warning_level=3',
+  ],
 )
+
+cpp_compiler = meson.get_compiler('cpp')
+if cpp_compiler.get_argument_syntax() == 'clang'
+  compiler_args = cpp_compiler.get_supported_arguments([
+  ])
+else
+  compiler_args = cpp_compiler.get_supported_arguments([
+    '-Wno-c++20-extensions',
+  ])
+endif
+compiler_args += cpp_compiler.get_supported_arguments([
+  '-Wno-vla',
+])
+add_project_arguments(compiler_args, language: 'cpp')
 
 prefixdir = get_option('prefix')
 datadir = prefixdir / get_option('datadir')
