@@ -31,6 +31,7 @@ public:
     ~FuseClient();
 
     bool mount();
+    void unmount();
     void exit();
 
 private:

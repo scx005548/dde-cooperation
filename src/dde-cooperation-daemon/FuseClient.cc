@@ -78,7 +78,7 @@ bool FuseClient::mount() {
     }
 
     ret = fuse_loop(m_fuse.get());
-    fuse_unmount(m_fuse.get());
+    unmount();
     if (ret != 0) {
         return false;
     }
@@ -86,9 +86,14 @@ bool FuseClient::mount() {
     return true;
 }
 
+void FuseClient::unmount() {
+    fuse_unmount(m_fuse.get());
+};
+
 void FuseClient::exit() {
     if (m_fuse) {
         fuse_exit(m_fuse.get());
+        unmount();
     }
 }
 

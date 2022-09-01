@@ -38,7 +38,7 @@ class DisplayServer;
 
 class Manager : public noncopyable {
 public:
-    explicit Manager(const std::filesystem::path &dataDir);
+    Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesystem::path &dataDir);
     ~Manager();
 
     std::string uuid() const noexcept { return m_uuid; }
@@ -75,7 +75,6 @@ private:
     uint32_t m_lastRequestId;
     std::unordered_map<std::string, std::shared_ptr<InputGrabberWrapper>> m_inputGrabbers;
 
-    std::thread m_uvThread;
     std::shared_ptr<uvxx::Loop> m_uvLoop;
     std::shared_ptr<uvxx::Async> m_async;
     std::shared_ptr<uvxx::UDP> m_socketScan;

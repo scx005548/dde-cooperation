@@ -29,13 +29,13 @@ namespace fs = std::filesystem;
 
 const static fs::path inputDevicePath = "/dev/input";
 
-Manager::Manager(const std::filesystem::path &dataDir)
+Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesystem::path &dataDir)
     : m_dataDir(dataDir)
     , m_mountRoot(m_dataDir / "mr")
     , m_lastMachineIndex(0)
     , m_enableCooperation(true)
     , m_lastRequestId(0)
-    , m_uvLoop(uvxx::Loop::defaultLoop())
+    , m_uvLoop(uvLoop)
     , m_async(std::make_shared<uvxx::Async>(m_uvLoop))
     , m_socketScan(std::make_shared<uvxx::UDP>(m_uvLoop))
     , m_listenPair(std::make_shared<uvxx::TCP>(m_uvLoop))
@@ -59,8 +59,6 @@ Manager::Manager(const std::filesystem::path &dataDir)
     initUUID();
 
     m_keypair.load();
-
-    m_uvThread = std::thread([this]() { m_uvLoop->run(); });
 
     m_service->registerService();
     m_interface->exportMethod(m_methodScan);
