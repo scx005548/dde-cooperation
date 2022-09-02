@@ -14,10 +14,10 @@
 namespace fs = std::filesystem;
 
 InputGrabber::InputGrabber(const std::shared_ptr<uvxx::Loop> &uvLoop, const fs::path &path)
-    : m_uvLoop(uvLoop)
-    , m_uvPoll(std::make_shared<uvxx::Poll>(m_uvLoop, m_fd))
-    , m_path(path)
-    , m_fd(open(m_path.c_str(), O_RDONLY | O_NONBLOCK)) {
+    : m_path(path)
+    , m_fd(open(m_path.c_str(), O_RDONLY | O_NONBLOCK))
+    , m_uvLoop(uvLoop)
+    , m_uvPoll(std::make_shared<uvxx::Poll>(m_uvLoop, m_fd)) {
 
     int rc = libevdev_new_from_fd(m_fd, &m_dev);
     if (rc < 0) {
@@ -52,7 +52,8 @@ bool InputGrabber::shouldIgnore() {
     }
 
     // TODO: allow touchpad devices
-    if (m_type == InputDeviceType::MOUSE || m_type == InputDeviceType::KEYBOARD) {
+    if (m_type == InputDeviceType::KEYBOARD || m_type == InputDeviceType::MOUSE ||
+        m_type == InputDeviceType::TOUCHPAD) {
         return false;
     }
 
@@ -87,16 +88,7 @@ void InputGrabber::handlePollEvent([[maybe_unused]] int events) {
                           libevdev_event_code_get_name(ev.type, ev.code),
                           ev.value);
 
-            // InputEventRequest event;
-            // event.set_devicetype(m_type);
-            // event.set_type(ev.type);
-            // event.set_code(ev.code);
-            // event.set_value(ev.value);
-            // if (auto machine = m_machine.lock()) {
-            //     machine->handleInputEvent(event);
-            // } else {
-            //     spdlog::warn("no machine");
-            // }
+            m_onEvent(ev.type, ev.code, ev.value);
         }
     } while (rc != -EAGAIN);
 }

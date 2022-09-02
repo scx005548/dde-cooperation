@@ -9,6 +9,14 @@
 
 #include "utils/ptr.h"
 
+#define AXIS_X_MIN 0
+#define AXIS_Y_MIN 0
+#define AXIS_X_MAX 1000
+#define AXIS_Y_MAX 400
+#define MAX_TOUCHES 10
+
+#define MAX_TRACKING_ID 65535
+
 InputEmittor::InputEmittor(const std::shared_ptr<uvxx::Loop> &uvLoop, InputDeviceType type)
     : m_uvLoop(uvLoop)
     , m_pipe(std::make_shared<uvxx::Pipe>(m_uvLoop, false))
@@ -60,14 +68,37 @@ InputEmittor::InputEmittor(const std::shared_ptr<uvxx::Loop> &uvLoop, InputDevic
         enableEventCode(EV_KEY, BTN_TOOL_TRIPLETAP);
         enableEventCode(EV_KEY, BTN_TOOL_QUADTAP);
 
+        int resolution = 5;
+
+        input_absinfo absInfoX = {}, absInfoY = {}, mtAbsInfo = {}, mtTrackingIdInfo = {};
+
+        absInfoX.minimum = AXIS_X_MIN;
+        absInfoX.maximum = AXIS_X_MAX;
+        absInfoX.resolution = resolution;
+
+        absInfoY.minimum = AXIS_Y_MIN;
+        absInfoY.maximum = AXIS_Y_MAX;
+        absInfoY.resolution = resolution;
+
+        mtAbsInfo.maximum = MAX_TOUCHES;
+        mtAbsInfo.value = 0;
+
+        mtTrackingIdInfo.minimum = 0;
+        mtTrackingIdInfo.maximum = MAX_TRACKING_ID;
+        mtTrackingIdInfo.value = 0;
+
         enableEventType(EV_ABS);
-        enableEventCode(EV_ABS, ABS_X, nullptr);
-        enableEventCode(EV_ABS, ABS_Y, nullptr);
-        enableEventCode(EV_ABS, ABS_MT_SLOT, nullptr);
-        enableEventCode(EV_ABS, ABS_MT_POSITION_X, nullptr);
-        enableEventCode(EV_ABS, ABS_MT_POSITION_Y, nullptr);
-        enableEventCode(EV_ABS, ABS_MT_TOOL_TYPE, nullptr);
-        enableEventCode(EV_ABS, ABS_MT_TRACKING_ID, nullptr);
+        enableEventCode(EV_ABS, ABS_X, &absInfoX);
+        enableEventCode(EV_ABS, ABS_Y, &absInfoY);
+        enableEventCode(EV_ABS, ABS_MT_SLOT, &mtAbsInfo);
+        enableEventCode(EV_ABS, ABS_MT_TRACKING_ID, &mtTrackingIdInfo);
+        enableEventCode(EV_ABS, ABS_MT_POSITION_X, &absInfoX);
+        enableEventCode(EV_ABS, ABS_MT_POSITION_Y, &absInfoY);
+
+        int rc = libevdev_enable_property(m_dev.get(), INPUT_PROP_POINTER);
+        if (rc != 0) {
+            spdlog::warn("failed to enable property: INPUT_PROP_POINTER");
+        }
     } break;
     }
 

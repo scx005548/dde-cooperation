@@ -30,8 +30,6 @@ int main(int argc, const char *argv[]) {
     auto pipe = std::make_shared<uvxx::Pipe>(loop, true);
     pipe->open(fd);
     pipe->onReceived([&emittor](uvxx::Buffer &buff) {
-        spdlog::debug("onReceived");
-
         while (buff.size() >= header_size) {
             auto res = MessageHelper::parseMessage<InputEmittorParent>(buff);
             if (!res.has_value()) {

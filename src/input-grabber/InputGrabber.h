@@ -34,12 +34,11 @@ public:
     InputDeviceType type() { return m_type; };
 
 private:
+    const std::filesystem::path &m_path;
+    int m_fd;
+
     std::shared_ptr<uvxx::Loop> m_uvLoop;
     std::shared_ptr<uvxx::Poll> m_uvPoll;
-
-    const std::filesystem::path &m_path;
-
-    int m_fd;
 
     libevdev *m_dev;
 

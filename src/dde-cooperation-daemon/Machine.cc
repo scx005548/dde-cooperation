@@ -473,6 +473,8 @@ void Machine::handleStopCooperationRequest() {
 }
 
 void Machine::handleInputEventRequest(const InputEventRequest &req) {
+    spdlog::debug("received input event");
+
     bool success = true;
 
     auto deviceType = static_cast<InputDeviceType>(req.devicetype());
