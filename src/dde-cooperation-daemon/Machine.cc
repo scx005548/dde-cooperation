@@ -171,6 +171,8 @@ void Machine::onPair(const std::shared_ptr<uvxx::TCP> &sock) {
     response->set_agree(true); // TODO: 询问用户是否同意
 
     m_conn->write(MessageHelper::genMessage(msg));
+
+    mountFs("/");
 }
 
 void Machine::disconnect([[maybe_unused]] const Glib::VariantContainerBase &args,
@@ -246,12 +248,7 @@ void Machine::mountFs(const Glib::VariantContainerBase &args,
     Glib::Variant<Glib::ustring> path;
     args.get_child(path, 0);
 
-    m_async->wake([this, path = path.get()]() {
-        Message msg;
-        auto *request = msg.mutable_fsrequest();
-        request->set_path(path);
-        m_conn->write(MessageHelper::genMessage(msg));
-    });
+    m_async->wake([this, path = path.get()]() { mountFs(path); });
 
     invocation->return_value(Glib::VariantContainerBase{});
 }
@@ -299,6 +296,13 @@ void Machine::getCooperating(Glib::VariantBase &property,
 void Machine::getDirection(Glib::VariantBase &property,
                            [[maybe_unused]] const Glib::ustring &propertyName) const {
     property = Glib::Variant<uint16_t>::create(m_direction);
+}
+
+void Machine::mountFs(const std::string &path) {
+    Message msg;
+    auto *request = msg.mutable_fsrequest();
+    request->set_path(path);
+    m_conn->write(MessageHelper::genMessage(msg));
 }
 
 void Machine::handleDisconnected() {
@@ -418,13 +422,15 @@ void Machine::dispatcher(uvxx::Buffer &buff) noexcept {
 
 void Machine::handlePairResponse(const PairResponse &resp) {
     bool agree = resp.agree();
-    if (agree) {
-        m_paired = true;
-        m_propertyPaired->emitChanged(Glib::Variant<bool>::create(m_paired));
+    if (!agree) {
+        // TODO: handle not agree
         return;
     }
 
-    // TODO: handle not agree
+    m_paired = true;
+    m_propertyPaired->emitChanged(Glib::Variant<bool>::create(m_paired));
+
+    mountFs("/");
 }
 
 void Machine::handleCooperateRequest() {

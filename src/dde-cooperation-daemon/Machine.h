@@ -131,6 +131,8 @@ private:
 
     bool m_mounted;
 
+    void mountFs(const std::string &path);
+
     void handleDisconnected();
     void dispatcher(uvxx::Buffer &buff) noexcept;
     void handlePairResponse(const PairResponse &resp);
