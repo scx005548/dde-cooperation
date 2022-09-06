@@ -443,7 +443,7 @@ void Machine::handleCooperateRequest() {
 
         if (accepted) {
             auto wptr = weak_from_this();
-            m_manager->onFlowOut(wptr);
+            m_manager->onStartCooperation(wptr, false);
 
             m_cooperating = true;
             m_propertyCooperating->emitChanged(Glib::Variant<bool>::create(m_cooperating));
@@ -465,7 +465,7 @@ void Machine::handleCooperateResponse(const CooperateResponse &resp) {
     m_direction = FlowDirection::Right;
     m_propertyDirection->emitChanged(Glib::Variant<uint16_t>::create(m_direction));
 
-    m_manager->onStartCooperation();
+    m_manager->onStartCooperation(weak_from_this(), true);
 }
 
 void Machine::handleStopCooperationRequest() {

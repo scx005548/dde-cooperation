@@ -12,12 +12,12 @@ public:
     explicit DisplayBase(Manager *manager);
     virtual ~DisplayBase() = default;
 
+    void flowBack(uint16_t direction, uint16_t x, uint16_t y);
     void startEdgeDetection() { m_startEdgeDetection = true; };
     void stopEdgeDetection() { m_startEdgeDetection = false; };
-    void flowBack(uint16_t direction, uint16_t x, uint16_t y);
+    virtual void hideMouse(bool hide) = 0;
 
 protected:
-    virtual void hideMouse(bool hide) = 0;
     virtual void moveMouse(uint16_t x, uint16_t y) = 0;
 
     bool edgeDetectionStarted() { return m_startEdgeDetection; }

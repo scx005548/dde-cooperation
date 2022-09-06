@@ -46,10 +46,10 @@ public:
     bool tryFlowOut(uint16_t direction, uint16_t x, uint16_t y);
     void removeInputGrabber(const std::filesystem::path &path);
 
-    void onStartCooperation();
+    void onStartCooperation(const std::weak_ptr<Machine> &machine, bool proactively);
     void onStopCooperation();
     void onFlowBack(uint16_t direction, uint16_t x, uint16_t y);
-    void onFlowOut(std::weak_ptr<Machine> machine);
+    void onFlowOut(const std::weak_ptr<Machine> &machine);
     void onClipboardTargetsChanged(const std::vector<std::string> &targets);
     void onMachineOwnClipboard(const std::weak_ptr<Machine> &machine,
                                const std::vector<std::string> &targets);

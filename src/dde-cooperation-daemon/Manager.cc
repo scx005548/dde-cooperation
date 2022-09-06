@@ -352,8 +352,13 @@ void Manager::handleNewConnection(bool) noexcept {
     socketConnected->startRead();
 }
 
-void Manager::onStartCooperation() {
-    m_displayServer->startEdgeDetection();
+void Manager::onStartCooperation(const std::weak_ptr<Machine> &machine,bool proactively) {
+    if (proactively) {
+        m_displayServer->startEdgeDetection();
+    } else {
+        m_displayServer->hideMouse(true);
+        onFlowOut(machine);
+    }
 }
 
 void Manager::onStopCooperation() {
@@ -372,7 +377,7 @@ void Manager::onFlowBack(uint16_t direction, uint16_t x, uint16_t y) {
     m_displayServer->flowBack(direction, x, y);
 }
 
-void Manager::onFlowOut(std::weak_ptr<Machine> machine) {
+void Manager::onFlowOut(const std::weak_ptr<Machine> &machine) {
     for (auto &inputGrabbers : m_inputGrabbers) {
         inputGrabbers.second->setMachine(machine);
         inputGrabbers.second->start();
