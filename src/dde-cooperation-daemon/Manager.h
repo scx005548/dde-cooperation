@@ -104,6 +104,10 @@ private:
     Glib::RefPtr<DBus::Property> m_propertyMachines;
     Glib::RefPtr<DBus::Property> m_propertyEnableCooperation;
 
+    Glib::RefPtr<Gio::DBus::Proxy> m_powersaverProxy;
+    int m_cooperatingCnt;
+    uint32_t m_inhibitCookie;
+
     KeyPair m_keypair;
 
     void ensureDataDirExists();
@@ -111,6 +115,8 @@ private:
 
     void addMachine(const std::string &ip, uint16_t port, const DeviceInfo &devInfo);
     std::vector<Glib::DBusObjectPathString> getMachinePaths() const noexcept;
+    void inhibitScreensaver();
+    void unInhibitScreensaver();
 
     void handleSocketError(const std::string &title, const std::string &msg);
     void handleReceivedSocketScan(std::shared_ptr<uvxx::Addr> addr,

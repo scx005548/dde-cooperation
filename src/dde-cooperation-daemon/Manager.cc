@@ -55,6 +55,10 @@ Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesyste
                              "b",
                              DBus::Property::warp(this, &Manager::getEnableCooperation),
                              DBus::Property::warp(this, &Manager::setEnableCooperation)))
+    , m_powersaverProxy(Gio::DBus::Proxy::Proxy::create_sync(m_bus,
+                                                             "org.freedesktop.ScreenSaver",
+                                                             "/org/freedesktop/ScreenSaver",
+                                                             "org.freedesktop.ScreenSaver"))
     , m_keypair(m_dataDir, KeyPair::KeyType::ED25519) {
     ensureDataDirExists();
     initUUID();
@@ -352,13 +356,16 @@ void Manager::handleNewConnection(bool) noexcept {
     socketConnected->startRead();
 }
 
-void Manager::onStartCooperation(const std::weak_ptr<Machine> &machine,bool proactively) {
+void Manager::onStartCooperation(const std::weak_ptr<Machine> &machine, bool proactively) {
     if (proactively) {
         m_displayServer->startEdgeDetection();
     } else {
         m_displayServer->hideMouse(true);
         onFlowOut(machine);
     }
+
+    m_cooperatingCnt++;
+    inhibitScreensaver();
 }
 
 void Manager::onStopCooperation() {
@@ -367,6 +374,9 @@ void Manager::onStopCooperation() {
     }
 
     m_displayServer->stopEdgeDetection();
+
+    m_cooperatingCnt--;
+    unInhibitScreensaver();
 }
 
 void Manager::onFlowBack(uint16_t direction, uint16_t x, uint16_t y) {
@@ -397,4 +407,50 @@ void Manager::onClipboardTargetsChanged(const std::vector<std::string> &targets)
 void Manager::onMachineOwnClipboard(const std::weak_ptr<Machine> &machine,
                                     const std::vector<std::string> &targets) {
     m_clipboard->newClipboardOwnerTargets(machine, targets);
+}
+
+static const std::string applicationName = "DDE Cooperation";
+static const std::string inhibitReason = "cooperating";
+
+void Manager::inhibitScreensaver() {
+    if (m_cooperatingCnt == 0) {
+        return;
+    }
+
+    if (m_inhibitCookie) {
+        return;
+    }
+
+    try {
+        auto params = Glib::Variant<std::vector<Glib::VariantBase>>::create_tuple({
+            Glib::Variant<Glib::ustring>::create(applicationName),
+            Glib::Variant<Glib::ustring>::create(inhibitReason),
+        });
+        auto res = m_powersaverProxy->call_sync("Inhibit", params);
+        Glib::Variant<uint32_t> cookie;
+        res.get_child(cookie);
+        m_inhibitCookie = cookie.get();
+    } catch (Glib::Error &e) {
+        spdlog::error("failed to inhibit screensaver: {}", std::string(e.what()));
+    }
+}
+
+void Manager::unInhibitScreensaver() {
+    if (m_cooperatingCnt != 0) {
+        return;
+    }
+
+    if (!m_inhibitCookie) {
+        return;
+    }
+
+    try {
+        auto params = Glib::Variant<std::vector<Glib::VariantBase>>::create_tuple({
+            Glib::Variant<uint32_t>::create(m_inhibitCookie),
+        });
+        m_powersaverProxy->call_sync("UnInhibit", params);
+        m_inhibitCookie = 0;
+    } catch (Glib::Error &e) {
+        spdlog::error("failed to uninhibit screensaver: {}", std::string(e.what()));
+    }
 }
