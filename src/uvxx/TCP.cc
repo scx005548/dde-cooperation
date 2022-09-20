@@ -11,6 +11,10 @@ TCP::TCP(const std::shared_ptr<Loop> &loop)
     initialize(&uv_tcp_init);
 }
 
+bool TCP::tcpNoDelay(bool enable) {
+    return invoke(&uv_tcp_nodelay, get(), enable);
+}
+
 bool TCP::bind(const std::shared_ptr<Addr> &addr) {
     return invoke(uv_tcp_bind, get(), const_cast<const sockaddr *>(addr->get()), 0u);
 }
