@@ -57,6 +57,8 @@ uvxx_sources = files('''
   uvxx/Buffer.cc
   uvxx/Poll.h
   uvxx/Poll.cc
+  uvxx/Timer.h
+  uvxx/Timer.cc
   uvxx/Async.h
   uvxx/Async.cc
   uvxx/Process.h
