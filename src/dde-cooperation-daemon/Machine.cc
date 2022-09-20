@@ -15,6 +15,7 @@
 
 #include "uvxx/TCP.h"
 #include "uvxx/Loop.h"
+#include "uvxx/Timer.h"
 #include "uvxx/Addr.h"
 #include "uvxx/Async.h"
 #include "uvxx/Signal.h"
@@ -22,6 +23,9 @@
 namespace fs = std::filesystem;
 
 static const std::string fileSchema{"file://"};
+
+static const uint64_t U10s = 10 * 1000;
+static const uint64_t U15s = 15 * 1000;
 
 Machine::Machine(Manager *manager,
                  ClipboardBase *clipboard,
@@ -79,6 +83,9 @@ Machine::Machine(Manager *manager,
     , m_propertyDirection(
           new DBus::Property("Direction", "q", DBus::Property::warp(this, &Machine::getDirection)))
     , m_uvLoop(uvLoop)
+    , m_pingTimer(std::make_shared<uvxx::Timer>(m_uvLoop, uvxx::memFunc(this, &Machine::ping)))
+    , m_offlineTimer(
+          std::make_shared<uvxx::Timer>(m_uvLoop, uvxx::memFunc(this, &Machine::onOffline)))
     , m_async(std::make_shared<uvxx::Async>(m_uvLoop))
     , m_mounted(false) {
 
@@ -113,6 +120,9 @@ Machine::Machine(Manager *manager,
                        std::make_unique<InputEmittorWrapper>(weak_from_this(),
                                                              m_uvLoop,
                                                              InputDeviceType::TOUCHPAD)));
+
+    m_pingTimer->start(U10s);
+    m_offlineTimer->oneshot(U15s);
 }
 
 Machine::~Machine() {
@@ -149,6 +159,10 @@ void Machine::pair([[maybe_unused]] const Glib::VariantContainerBase &args,
             });
         m_conn->connect(uvxx::IPv4Addr::create(m_ip, m_port));
     });
+}
+
+void Machine::receivedPing() {
+    m_offlineTimer->reset();
 }
 
 void Machine::onPair(const std::shared_ptr<uvxx::TCP> &sock) {
@@ -233,6 +247,14 @@ void Machine::stopCooperation(
     });
 
     stopCooperationAux();
+}
+
+void Machine::ping() {
+    m_manager->ping(m_ip);
+}
+
+void Machine::onOffline() {
+    m_manager->onMachineOffline(m_uuid);
 }
 
 void Machine::initConnection() {

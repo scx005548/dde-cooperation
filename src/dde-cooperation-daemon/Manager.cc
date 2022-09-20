@@ -166,17 +166,7 @@ void Manager::knock(const Glib::VariantContainerBase &args,
     args.get_child(ip, 0);
     args.get_child(port, 1);
 
-    Message msg;
-    ScanRequest *request = msg.mutable_scanrequest();
-    request->set_key(SCAN_KEY);
-    request->mutable_deviceinfo()->set_uuid(m_uuid);
-    request->mutable_deviceinfo()->set_name(Net::getHostname());
-    request->mutable_deviceinfo()->set_os(DeviceOS::LINUX);
-    request->set_port(m_port);
-
-    m_async->wake([this, msg, ip = std::string(ip.get()), port = port.get()]() {
-        m_socketScan->send(uvxx::IPv4Addr::create(ip, port), MessageHelper::genMessage(msg));
-    });
+    m_async->wake([this, ip = std::string(ip.get()), port = port.get()]() { ping(ip, port); });
 
     invocation->return_value(Glib::VariantContainerBase{});
 }
@@ -289,21 +279,27 @@ void Manager::handleReceivedSocketScan(std::shared_ptr<uvxx::Addr> addr,
         }
 
         // 自己扫描到自己，忽略
-        if (request.deviceinfo().uuid() == m_uuid) {
+        auto uuid = request.deviceinfo().uuid();
+        if (uuid == m_uuid) {
             return;
         }
 
-        addMachine(ipv4->ip(), request.port(), request.deviceinfo());
+        auto iter = m_machines.find(uuid);
+        if (iter == m_machines.end()) {
+            addMachine(ipv4->ip(), request.port(), request.deviceinfo());
 
-        Message msg;
-        ScanResponse *response = msg.mutable_scanresponse();
-        response->set_key(SCAN_KEY);
-        response->mutable_deviceinfo()->set_uuid(m_uuid);
-        response->mutable_deviceinfo()->set_name(Net::getHostname());
-        response->mutable_deviceinfo()->set_os(DeviceOS::LINUX);
-        response->set_port(m_port);
+            Message msg;
+            ScanResponse *response = msg.mutable_scanresponse();
+            response->set_key(SCAN_KEY);
+            response->mutable_deviceinfo()->set_uuid(m_uuid);
+            response->mutable_deviceinfo()->set_name(Net::getHostname());
+            response->mutable_deviceinfo()->set_os(DeviceOS::LINUX);
+            response->set_port(m_port);
 
-        m_socketScan->send(addr, MessageHelper::genMessage(msg));
+            m_socketScan->send(addr, MessageHelper::genMessage(msg));
+        } else {
+            iter->second->receivedPing();
+        }
 
         break;
     }
@@ -356,6 +352,22 @@ void Manager::handleNewConnection(bool) noexcept {
         i->second->onPair(socketConnected);
     });
     socketConnected->startRead();
+}
+
+void Manager::ping(const std::string &ip, uint16_t port) {
+    Message msg;
+    ScanRequest *request = msg.mutable_scanrequest();
+    request->set_key(SCAN_KEY);
+    request->mutable_deviceinfo()->set_uuid(m_uuid);
+    request->mutable_deviceinfo()->set_name(Net::getHostname());
+    request->mutable_deviceinfo()->set_os(DeviceOS::LINUX);
+    request->set_port(m_port);
+
+    m_socketScan->send(uvxx::IPv4Addr::create(ip, port), MessageHelper::genMessage(msg));
+}
+
+void Manager::onMachineOffline(const std::string &uuid) {
+    m_machines.erase(m_machines.find(uuid));
 }
 
 void Manager::onStartCooperation(const std::weak_ptr<Machine> &machine, bool proactively) {

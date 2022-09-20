@@ -46,6 +46,8 @@ public:
     bool tryFlowOut(uint16_t direction, uint16_t x, uint16_t y);
     void removeInputGrabber(const std::filesystem::path &path);
 
+    void ping(const std::string &ip, uint16_t port = m_scanPort);
+    void onMachineOffline(const std::string &uuid);
     void onStartCooperation(const std::weak_ptr<Machine> &machine, bool proactively);
     void onStopCooperation();
     void onFlowBack(uint16_t direction, uint16_t x, uint16_t y);
@@ -86,7 +88,7 @@ private:
     std::shared_ptr<uvxx::UDP> m_socketScan;
     uint16_t m_port;
     std::shared_ptr<uvxx::TCP> m_listenPair;
-    const uint16_t m_scanPort = 51595;
+    static const uint16_t m_scanPort = 51595;
     std::shared_ptr<uvxx::Addr> m_scanAddr;
 
     std::string m_uuid;

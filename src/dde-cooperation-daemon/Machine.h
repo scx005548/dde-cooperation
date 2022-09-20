@@ -13,8 +13,10 @@
 
 namespace uvxx {
 class Loop;
+class Timer;
 class Async;
 class TCP;
+class UDP;
 class Buffer;
 } // namespace uvxx
 
@@ -43,6 +45,7 @@ public:
     Glib::ustring path() const { return m_path; }
     const Glib::ustring &ip() const { return m_ip; };
 
+    void receivedPing();
     void onPair(const std::shared_ptr<uvxx::TCP> &sock);
     void onInputGrabberEvent(uint8_t deviceType, unsigned int type, unsigned int code, int value);
     void onClipboardTargetsChanged(const std::vector<std::string> &targets);
@@ -121,6 +124,8 @@ private:
     Glib::RefPtr<DBus::Property> m_propertyDirection;
 
     std::shared_ptr<uvxx::Loop> m_uvLoop;
+    std::shared_ptr<uvxx::Timer> m_pingTimer;
+    std::shared_ptr<uvxx::Timer> m_offlineTimer;
     std::shared_ptr<uvxx::Async> m_async;
     std::shared_ptr<uvxx::TCP> m_conn;
 
@@ -130,6 +135,9 @@ private:
     std::unique_ptr<FuseClient> m_fuseClient;
 
     bool m_mounted;
+
+    void ping();
+    void onOffline();
 
     void initConnection();
     void mountFs(const std::string &path);
