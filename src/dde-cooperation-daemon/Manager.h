@@ -110,6 +110,8 @@ private:
 
     KeyPair m_keypair;
 
+    void scanAux() noexcept;
+
     void ensureDataDirExists();
     void initUUID();
 

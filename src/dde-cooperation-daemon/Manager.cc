@@ -102,6 +102,8 @@ Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesyste
             std::make_pair(entry.path().string(),
                            std::make_shared<InputGrabberWrapper>(this, m_uvLoop, entry.path())));
     }
+
+    scanAux();
 }
 
 Manager::~Manager() {
@@ -151,20 +153,7 @@ void Manager::initUUID() {
 
 void Manager::scan([[maybe_unused]] const Glib::VariantContainerBase &args,
                    const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
-    Message base;
-    ScanRequest *request = base.mutable_scanrequest();
-    request->set_key(SCAN_KEY);
-    request->mutable_deviceinfo()->set_uuid(m_uuid);
-    request->mutable_deviceinfo()->set_name(Net::getHostname());
-    request->mutable_deviceinfo()->set_os(DeviceOS::LINUX);
-    request->set_port(m_port);
-
-    m_socketScan->send(m_scanAddr, MessageHelper::genMessage(base));
-
-    m_machines.clear();
-    m_propertyMachines->emitChanged(
-        Glib::Variant<std::vector<Glib::DBusObjectPathString>>::create(getMachinePaths()));
-    m_lastMachineIndex = 0;
+    m_async->wake([this]() { scanAux(); });
 
     invocation->return_value(Glib::VariantContainerBase{});
 }
@@ -185,8 +174,9 @@ void Manager::knock(const Glib::VariantContainerBase &args,
     request->mutable_deviceinfo()->set_os(DeviceOS::LINUX);
     request->set_port(m_port);
 
-    m_socketScan->send(uvxx::IPv4Addr::create(std::string(ip.get()), port.get()),
-                       MessageHelper::genMessage(msg));
+    m_async->wake([this, msg, ip = std::string(ip.get()), port = port.get()]() {
+        m_socketScan->send(uvxx::IPv4Addr::create(ip, port), MessageHelper::genMessage(msg));
+    });
 
     invocation->return_value(Glib::VariantContainerBase{});
 }
@@ -218,6 +208,18 @@ bool Manager::setEnableCooperation([[maybe_unused]] const Glib::ustring &propert
     Glib::Variant<bool> v = Glib::VariantBase::cast_dynamic<Glib::Variant<bool>>(value);
     m_enableCooperation = v.get();
     return true;
+}
+
+void Manager::scanAux() noexcept {
+    Message base;
+    ScanRequest *request = base.mutable_scanrequest();
+    request->set_key(SCAN_KEY);
+    request->mutable_deviceinfo()->set_uuid(m_uuid);
+    request->mutable_deviceinfo()->set_name(Net::getHostname());
+    request->mutable_deviceinfo()->set_os(DeviceOS::LINUX);
+    request->set_port(m_port);
+
+    m_socketScan->send(m_scanAddr, MessageHelper::genMessage(base));
 }
 
 void Manager::removeInputGrabber(const std::filesystem::path &path) {

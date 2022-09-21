@@ -127,9 +127,7 @@ void Machine::pair([[maybe_unused]] const Glib::VariantContainerBase &args,
         m_conn->onConnected([this, invocation]() {
             spdlog::info("connected");
 
-            m_conn->onClosed(uvxx::memFunc(this, &Machine::handleDisconnected));
-            m_conn->onReceived(uvxx::memFunc(this, &Machine::dispatcher));
-            m_conn->tcpNoDelay();
+            initConnection();
             m_conn->startRead();
 
             Message msg;
@@ -156,9 +154,7 @@ void Machine::pair([[maybe_unused]] const Glib::VariantContainerBase &args,
 void Machine::onPair(const std::shared_ptr<uvxx::TCP> &sock) {
     spdlog::info("onPair");
     m_conn = sock;
-    m_conn->onClosed(uvxx::memFunc(this, &Machine::handleDisconnected));
-    m_conn->onReceived(uvxx::memFunc(this, &Machine::dispatcher));
-    m_conn->tcpNoDelay();
+    initConnection();
 
     m_paired = true;
     m_propertyPaired->emitChanged(Glib::Variant<bool>::create(m_paired));
@@ -237,6 +233,13 @@ void Machine::stopCooperation(
     });
 
     stopCooperationAux();
+}
+
+void Machine::initConnection() {
+    m_conn->onClosed(uvxx::memFunc(this, &Machine::handleDisconnected));
+    m_conn->onReceived(uvxx::memFunc(this, &Machine::dispatcher));
+    m_conn->tcpNoDelay();
+    m_conn->keepalive(true, 20);
 }
 
 void Machine::mountFs(const Glib::VariantContainerBase &args,

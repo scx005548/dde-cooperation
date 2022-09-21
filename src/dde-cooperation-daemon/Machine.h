@@ -131,6 +131,7 @@ private:
 
     bool m_mounted;
 
+    void initConnection();
     void mountFs(const std::string &path);
 
     void handleDisconnected();
