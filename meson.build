@@ -46,8 +46,13 @@ xcb_xinput = dependency('xcb-xinput', required: true)
 xcb_xfixes = dependency('xcb-xfixes', required: true)
 
 qt5 = import('qt5')
-qt5dep = dependency('qt5', modules: ['Core', 'Gui', 'DBus', 'Widgets'])
+qt5dep = dependency('qt5', modules: ['Core', 'Gui', 'Widgets', 'Network', 'DBus'])
 dtk_widget = dependency('dtkwidget', required: true)
+
+libavcodec = dependency('libavcodec', required: true)
+libavformat = dependency('libavformat', required: true)
+libavutil = dependency('libavutil', required: true)
+libswscale = dependency('libswscale', required: true)
 
 protobuf = dependency('protobuf', required: true)
 protoc_exec = find_program('protoc')
