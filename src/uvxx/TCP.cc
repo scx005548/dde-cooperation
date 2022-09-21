@@ -15,6 +15,10 @@ bool TCP::tcpNoDelay(bool enable) {
     return invoke(&uv_tcp_nodelay, get(), enable);
 }
 
+bool TCP::keepalive(bool enable, unsigned int delay) {
+    return invoke(&uv_tcp_keepalive, get(), enable, delay);
+}
+
 bool TCP::bind(const std::shared_ptr<Addr> &addr) {
     return invoke(uv_tcp_bind, get(), const_cast<const sockaddr *>(addr->get()), 0u);
 }

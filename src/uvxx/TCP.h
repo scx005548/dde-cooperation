@@ -10,6 +10,7 @@ public:
     explicit TCP(const std::shared_ptr<Loop> &loop);
 
     bool tcpNoDelay(bool enable = true);
+    bool keepalive(bool enable, unsigned int delay);
 
     bool bind(const std::shared_ptr<Addr> &addr);
     bool bind(const std::string &ip, uint16_t port = 0);
