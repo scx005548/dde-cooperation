@@ -6,9 +6,6 @@
 
 #include "AdbProcessImpl.h"
 
-QString AdbProcessImpl::s_adbPath = "";
-extern QString g_adbPath;
-
 AdbProcessImpl::AdbProcessImpl(QObject *parent)
     : QProcess(parent) {
     initSignals();
@@ -18,22 +15,6 @@ AdbProcessImpl::~AdbProcessImpl() {
     if (isRuning()) {
         close();
     }
-}
-
-const QString &AdbProcessImpl::getAdbPath() {
-    if (s_adbPath.isEmpty()) {
-        s_adbPath = QString::fromLocal8Bit(qgetenv("QTSCRCPY_ADB_PATH"));
-        QFileInfo fileInfo(s_adbPath);
-        if (s_adbPath.isEmpty() || !fileInfo.isFile()) {
-            s_adbPath = g_adbPath;
-        }
-        fileInfo = s_adbPath;
-        if (s_adbPath.isEmpty() || !fileInfo.isFile()) {
-            s_adbPath = QCoreApplication::applicationDirPath() + "/adb";
-        }
-        qInfo("adb path: %s", QDir(s_adbPath).absolutePath().toUtf8().data());
-    }
-    return s_adbPath;
 }
 
 void AdbProcessImpl::initSignals() {
@@ -91,8 +72,8 @@ void AdbProcessImpl::execute(const QString &serial, const QStringList &args) {
         adbArgs << "-s" << serial;
     }
     adbArgs << args;
-    qDebug() << getAdbPath() << adbArgs.join(" ");
-    start(getAdbPath(), adbArgs);
+    qDebug() << "adb" << adbArgs.join(" ");
+    start("adb", adbArgs);
 }
 
 bool AdbProcessImpl::isRuning() {

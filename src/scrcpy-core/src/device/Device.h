@@ -6,7 +6,7 @@
 #include <QPointer>
 #include <QTime>
 
-#include "../../include/QtScrcpyCore.h"
+#include "QtScrcpyCore.h"
 
 #include "ControlMsg.h"
 
@@ -37,7 +37,8 @@ public:
     void registerDeviceObserver(DeviceObserver *observer) override;
     void deRegisterDeviceObserver(DeviceObserver *observer) override;
 
-    bool connectDevice() override;
+    bool startListen() override;
+    uint16_t getPort() override;
     void disconnectDevice() override;
 
     // key map
@@ -72,7 +73,6 @@ public:
     void screenshot() override;
     void showTouch(bool show) override;
 
-    bool isReversePort(quint16 port) override;
     const QString &getSerial() override;
 
     void updateScript(QString script) override;

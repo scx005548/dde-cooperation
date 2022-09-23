@@ -11,6 +11,7 @@ scrcpy_public_headers += qt5.preprocess(
 )
 
 scrcpy_core_sources = files('''
+  src/devicemanage/DeviceManage.cc
   src/device/Device.cc
   src/device/compat.h
   src/device/android/input.h
@@ -40,6 +41,7 @@ scrcpy_core_sources = files('''
 '''.split())
 
 scrcpy_core_headers = files('''
+  src/devicemanage/DeviceManage.h
   src/device/Device.h
   src/device/controller/Controller.h
   src/device/controller/inputconvert/InputConvertBase.h
@@ -82,7 +84,7 @@ scrcpy_common_sources = files('''
   src/common/QScrcpyEvent.h
 '''.split())
 
-static_library('scrcpy_core',
+scrcpy_core_lib = static_library('scrcpy_core',
   sources: [
     scrcpy_public_headers,
     scrcpy_core_sources,
@@ -110,5 +112,12 @@ static_library('scrcpy_core',
     'src/device/server',
     'src/device/filehandler',
     'src/device/recorder',
+  ]
+)
+
+scrcpy_core_dep = declare_dependency(
+  link_with: scrcpy_core_lib,
+  include_directories: [
+    'include',
   ]
 )

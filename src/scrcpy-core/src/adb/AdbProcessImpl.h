@@ -26,8 +26,6 @@ public:
     QString getStdOut();
     QString getErrorOut();
 
-    static const QString &getAdbPath();
-
 signals:
     void adbProcessImplResult(qsc::AdbProcess::ADB_EXEC_RESULT processResult);
 

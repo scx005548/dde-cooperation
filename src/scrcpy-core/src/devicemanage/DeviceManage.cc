@@ -3,7 +3,7 @@
 #include <QMouseEvent>
 #include <QWheelEvent>
 
-#include "devicemanage.h"
+#include "DeviceManage.h"
 #include "Device.h"
 #include "Stream.h"
 
@@ -42,27 +42,13 @@ bool DeviceManage::connectDevice(qsc::DeviceParams params) {
         qInfo("over the maximum number of connections");
         return false;
     }
-    /*
-    // 没有必要分配端口，都用27183即可，连接建立以后server会释放监听的
-    quint16 port = 0;
-    if (params.useReverse) {
-         port = getFreePort();
-        if (0 == port) {
-            qInfo("no port available, automatically switch to forward");
-            params.useReverse = false;
-        } else {
-            params.localPort = port;
-            qInfo("free port %d", port);
-        }
-    }
-    */
     IDevice *device = new Device(params);
     connect(device, &Device::deviceConnected, this, &DeviceManage::onDeviceConnected);
     connect(device, &Device::deviceDisconnected, this, &DeviceManage::onDeviceDisconnected);
-    if (!device->connectDevice()) {
-        delete device;
-        return false;
-    }
+    // if (!device->connectDevice()) {
+    //     delete device;
+    //     return false;
+    // }
     m_devices[params.serial] = device;
     return true;
 }
@@ -102,27 +88,6 @@ void DeviceManage::onDeviceConnected(bool success,
 void DeviceManage::onDeviceDisconnected(QString serial) {
     emit deviceDisconnected(serial);
     removeDevice(serial);
-}
-
-quint16 DeviceManage::getFreePort() {
-    quint16 port = m_localPortStart;
-    while (port < m_localPortStart + DM_MAX_DEVICES_NUM) {
-        bool used = false;
-        QMapIterator<QString, QPointer<IDevice>> i(m_devices);
-        while (i.hasNext()) {
-            i.next();
-            auto device = i.value();
-            if (device && device->isReversePort(port)) {
-                used = true;
-                break;
-            }
-        }
-        if (!used) {
-            return port;
-        }
-        port++;
-    }
-    return 0;
 }
 
 void DeviceManage::removeDevice(const QString &serial) {

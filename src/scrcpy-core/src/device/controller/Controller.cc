@@ -5,7 +5,6 @@
 #include "ControlMsg.h"
 #include "InputConvertGame.h"
 #include "Receiver.h"
-#include "VideoSocket.h"
 
 Controller::Controller(std::function<qint64(const QByteArray &)> sendData,
                        QString gameScript,

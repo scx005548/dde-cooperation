@@ -4,7 +4,7 @@
 #include <QMap>
 #include <QPointer>
 
-#include "../../include/QtScrcpyCore.h"
+#include "QtScrcpyCore.h"
 
 namespace qsc {
 
@@ -28,7 +28,6 @@ protected slots:
     void onDeviceDisconnected(QString serial);
 
 private:
-    quint16 getFreePort();
     void removeDevice(const QString &serial);
 
 private:
@@ -38,4 +37,5 @@ private:
 };
 
 } // namespace qsc
+
 #endif // DEVICEMANAGE_H
