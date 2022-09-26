@@ -388,6 +388,7 @@ void Manager::onStopCooperation() {
     }
 
     m_displayServer->stopEdgeDetection();
+    m_displayServer->hideMouse(false);
 
     m_cooperatingCnt--;
     unInhibitScreensaver();
