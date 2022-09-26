@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 import "protocol/pair.proto";
-import "protocol/cooperation.proto";
+import "protocol/device_sharing.proto";
 import "protocol/clipboard.proto";
 import "protocol/fs.proto";
 
@@ -14,10 +14,10 @@ message Message {
     StopPairRequest stopPairRequest = 1004;
     StopPairResponse stopPairResponse = 1005;
 
-    CooperateRequest cooperateRequest = 2000;
-    CooperateResponse cooperateResponse = 2001;
-    CooperateStopRequest cooperateStopRequest = 2002;
-    CooperateStopResponse cooperateStopResponse = 2003;
+    DeviceSharingStartRequest deviceSharingStartRequest = 2000;
+    DeviceSharingStartResponse deviceSharingStartResponse = 2001;
+    DeviceSharingStopRequest deviceSharingStopRequest = 2002;
+    DeviceSharingStopResponse deviceSharingStopResponse = 2003;
     FlowRequest flowRequest = 2100;
     FlowResponse flowResponse = 2101;
 

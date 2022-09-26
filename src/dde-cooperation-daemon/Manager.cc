@@ -370,7 +370,7 @@ void Manager::onMachineOffline(const std::string &uuid) {
     m_machines.erase(m_machines.find(uuid));
 }
 
-void Manager::onStartCooperation(const std::weak_ptr<Machine> &machine, bool proactively) {
+void Manager::onStartDeviceSharing(const std::weak_ptr<Machine> &machine, bool proactively) {
     if (proactively) {
         m_displayServer->startEdgeDetection();
     } else {
@@ -378,11 +378,11 @@ void Manager::onStartCooperation(const std::weak_ptr<Machine> &machine, bool pro
         onFlowOut(machine);
     }
 
-    m_cooperatingCnt++;
+    m_deviceSharingCnt++;
     inhibitScreensaver();
 }
 
-void Manager::onStopCooperation() {
+void Manager::onStopDeviceSharing() {
     for (auto &inputGrabber : m_inputGrabbers) {
         inputGrabber.second->stop();
     }
@@ -390,7 +390,7 @@ void Manager::onStopCooperation() {
     m_displayServer->stopEdgeDetection();
     m_displayServer->hideMouse(false);
 
-    m_cooperatingCnt--;
+    m_deviceSharingCnt--;
     unInhibitScreensaver();
 }
 
@@ -411,7 +411,7 @@ void Manager::onFlowOut(const std::weak_ptr<Machine> &machine) {
 
 void Manager::onClipboardTargetsChanged(const std::vector<std::string> &targets) {
     for (auto &[uuid, machine] : m_machines) {
-        if (!machine->m_cooperating) {
+        if (!machine->m_deviceSharing) {
             continue;
         }
 
@@ -428,7 +428,7 @@ static const std::string applicationName = "DDE Cooperation";
 static const std::string inhibitReason = "cooperating";
 
 void Manager::inhibitScreensaver() {
-    if (m_cooperatingCnt == 0) {
+    if (m_deviceSharingCnt == 0) {
         return;
     }
 
@@ -451,7 +451,7 @@ void Manager::inhibitScreensaver() {
 }
 
 void Manager::unInhibitScreensaver() {
-    if (m_cooperatingCnt != 0) {
+    if (m_deviceSharingCnt != 0) {
         return;
     }
 

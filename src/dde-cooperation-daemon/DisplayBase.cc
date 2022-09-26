@@ -3,7 +3,7 @@
 #include <spdlog/spdlog.h>
 
 #include "Manager.h"
-#include "protocol/cooperation.pb.h"
+#include "protocol/device_sharing.pb.h"
 
 DisplayBase::DisplayBase(Manager *manager)
     : m_manager(manager)

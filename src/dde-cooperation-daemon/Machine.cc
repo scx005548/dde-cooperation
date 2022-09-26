@@ -74,7 +74,7 @@ Machine::Machine(Manager *manager,
     , m_propertyCompositor(new DBus::Property("Compositor",
                                               "u",
                                               DBus::Property::warp(this, &Machine::getCompositor)))
-    , m_cooperating(false)
+    , m_deviceSharing(false)
     , m_propertyCooperating(
           new DBus::Property("Cooperating",
                              "b",
@@ -224,7 +224,7 @@ void Machine::requestCooperate(
 
     m_async->wake([this]() {
         Message msg;
-        msg.mutable_cooperaterequest();
+        msg.mutable_devicesharingstartrequest();
         m_conn->write(MessageHelper::genMessage(msg));
     });
 
@@ -236,17 +236,17 @@ void Machine::stopCooperation(
     const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
     invocation->return_value(Glib::VariantContainerBase{});
 
-    if (!m_cooperating) {
+    if (!m_deviceSharing) {
         return;
     }
 
     m_async->wake([this]() {
         Message msg;
-        msg.mutable_cooperatestoprequest();
+        msg.mutable_devicesharingstoprequest();
         m_conn->write(MessageHelper::genMessage(msg));
     });
 
-    stopCooperationAux();
+    stopDeviceSharingAux();
 }
 
 void Machine::ping() {
@@ -317,7 +317,7 @@ void Machine::getCompositor(Glib::VariantBase &property,
 
 void Machine::getCooperating(Glib::VariantBase &property,
                              [[maybe_unused]] const Glib::ustring &propertyName) const {
-    property = Glib::Variant<bool>::create(m_cooperating);
+    property = Glib::Variant<bool>::create(m_deviceSharing);
 }
 
 void Machine::getDirection(Glib::VariantBase &property,
@@ -333,8 +333,8 @@ void Machine::mountFs(const std::string &path) {
 }
 
 void Machine::handleDisconnected() {
-    m_cooperating = false;
-    m_propertyCooperating->emitChanged(Glib::Variant<bool>::create(m_cooperating));
+    m_deviceSharing = false;
+    m_propertyCooperating->emitChanged(Glib::Variant<bool>::create(m_deviceSharing));
     m_paired = false;
     m_propertyPaired->emitChanged(Glib::Variant<bool>::create(m_paired));
 
@@ -361,22 +361,22 @@ void Machine::dispatcher(uvxx::Buffer &buff) noexcept {
             break;
         }
 
-        case Message::PayloadCase::kCooperateRequest: {
-            handleCooperateRequest();
+        case Message::PayloadCase::kDeviceSharingStartRequest: {
+            handleDeviceSharingStartRequest();
             break;
         }
 
-        case Message::PayloadCase::kCooperateResponse: {
-            handleCooperateResponse(msg.cooperateresponse());
+        case Message::PayloadCase::kDeviceSharingStartResponse: {
+            handleDeviceSharingStartResponse(msg.devicesharingstartresponse());
             break;
         }
 
-        case Message::PayloadCase::kCooperateStopRequest: {
-            handleStopCooperationRequest();
+        case Message::PayloadCase::kDeviceSharingStopRequest: {
+            handleDeviceSharingStopRequest();
             break;
         }
 
-        case Message::PayloadCase::kCooperateStopResponse: {
+        case Message::PayloadCase::kDeviceSharingStopResponse: {
             break;
         }
 
@@ -460,20 +460,20 @@ void Machine::handlePairResponse(const PairResponse &resp) {
     mountFs("/");
 }
 
-void Machine::handleCooperateRequest() {
+void Machine::handleDeviceSharingStartRequest() {
     bool accepted = true;
     m_async->wake([this, accepted]() {
         Message msg;
-        CooperateResponse *resp = msg.mutable_cooperateresponse();
+        DeviceSharingStartResponse *resp = msg.mutable_devicesharingstartresponse();
         resp->set_accept(accepted);
         m_conn->write(MessageHelper::genMessage(msg));
 
         if (accepted) {
             auto wptr = weak_from_this();
-            m_manager->onStartCooperation(wptr, false);
+            m_manager->onStartDeviceSharing(wptr, false);
 
-            m_cooperating = true;
-            m_propertyCooperating->emitChanged(Glib::Variant<bool>::create(m_cooperating));
+            m_deviceSharing = true;
+            m_propertyCooperating->emitChanged(Glib::Variant<bool>::create(m_deviceSharing));
 
             m_direction = FlowDirection::Left;
             m_propertyDirection->emitChanged(Glib::Variant<uint16_t>::create(m_direction));
@@ -481,22 +481,22 @@ void Machine::handleCooperateRequest() {
     });
 }
 
-void Machine::handleCooperateResponse(const CooperateResponse &resp) {
+void Machine::handleDeviceSharingStartResponse(const DeviceSharingStartResponse &resp) {
     if (!resp.accept()) {
         return;
     }
 
-    m_cooperating = true;
-    m_propertyCooperating->emitChanged(Glib::Variant<bool>::create(m_cooperating));
+    m_deviceSharing = true;
+    m_propertyCooperating->emitChanged(Glib::Variant<bool>::create(m_deviceSharing));
 
     m_direction = FlowDirection::Right;
     m_propertyDirection->emitChanged(Glib::Variant<uint16_t>::create(m_direction));
 
-    m_manager->onStartCooperation(weak_from_this(), true);
+    m_manager->onStartDeviceSharing(weak_from_this(), true);
 }
 
-void Machine::handleStopCooperationRequest() {
-    stopCooperationAux();
+void Machine::handleDeviceSharingStopRequest() {
+    stopDeviceSharingAux();
 }
 
 void Machine::handleInputEventRequest(const InputEventRequest &req) {
@@ -674,9 +674,9 @@ void Machine::handleAcceptFilesystem(bool accepted,
     });
 }
 
-void Machine::stopCooperationAux() {
-    m_manager->onStopCooperation();
+void Machine::stopDeviceSharingAux() {
+    m_manager->onStopDeviceSharing();
 
-    m_cooperating = false;
-    m_propertyCooperating->emitChanged(Glib::Variant<bool>::create(m_cooperating));
+    m_deviceSharing = false;
+    m_propertyCooperating->emitChanged(Glib::Variant<bool>::create(m_deviceSharing));
 }

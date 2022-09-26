@@ -16,7 +16,7 @@
 #include "utils/net.h"
 
 #include "protocol/pair.pb.h"
-#include "protocol/cooperation.pb.h"
+#include "protocol/device_sharing.pb.h"
 
 #include "uvxx/noncopyable.h"
 
@@ -48,8 +48,8 @@ public:
 
     void ping(const std::string &ip, uint16_t port = m_scanPort);
     void onMachineOffline(const std::string &uuid);
-    void onStartCooperation(const std::weak_ptr<Machine> &machine, bool proactively);
-    void onStopCooperation();
+    void onStartDeviceSharing(const std::weak_ptr<Machine> &machine, bool proactively);
+    void onStopDeviceSharing();
     void onFlowBack(uint16_t direction, uint16_t x, uint16_t y);
     void onFlowOut(const std::weak_ptr<Machine> &machine);
     void onClipboardTargetsChanged(const std::vector<std::string> &targets);
@@ -107,7 +107,7 @@ private:
     Glib::RefPtr<DBus::Property> m_propertyEnableCooperation;
 
     Glib::RefPtr<Gio::DBus::Proxy> m_powersaverProxy;
-    int m_cooperatingCnt;
+    int m_deviceSharingCnt;
     uint32_t m_inhibitCookie;
 
     KeyPair m_keypair;

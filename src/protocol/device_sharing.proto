@@ -1,16 +1,16 @@
 syntax = "proto3";
 
-message CooperateRequest {
+message DeviceSharingStartRequest {
 }
 
-message CooperateResponse {
+message DeviceSharingStartResponse {
     bool accept = 1;
 }
 
-message CooperateStopRequest {
+message DeviceSharingStopRequest {
 }
 
-message CooperateStopResponse {
+message DeviceSharingStopResponse {
 }
 
 enum DeviceType {

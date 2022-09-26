@@ -2,7 +2,7 @@ protocol = protoc.process(
   [
     'protocol/message.proto',
     'protocol/pair.proto',
-    'protocol/cooperation.proto',
+    'protocol/device_sharing.proto',
     'protocol/fs.proto',
     'protocol/clipboard.proto',
     'protocol/remote_display.proto',

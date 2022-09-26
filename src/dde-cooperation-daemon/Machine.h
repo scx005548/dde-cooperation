@@ -117,7 +117,7 @@ private:
     Compositor m_compositor;
     Glib::RefPtr<DBus::Property> m_propertyCompositor;
 
-    bool m_cooperating;
+    bool m_deviceSharing;
     Glib::RefPtr<DBus::Property> m_propertyCooperating;
 
     uint16_t m_direction;
@@ -145,9 +145,9 @@ private:
     void handleDisconnected();
     void dispatcher(uvxx::Buffer &buff) noexcept;
     void handlePairResponse(const PairResponse &resp);
-    void handleCooperateRequest();
-    void handleCooperateResponse(const CooperateResponse &resp);
-    void handleStopCooperationRequest();
+    void handleDeviceSharingStartRequest();
+    void handleDeviceSharingStartResponse(const DeviceSharingStartResponse &resp);
+    void handleDeviceSharingStopRequest();
     void handleInputEventRequest(const InputEventRequest &req);
     void handleFlowRequest(const FlowRequest &req);
     void handleFsRequest(const FsRequest &req);
@@ -163,7 +163,7 @@ private:
                                 const std::map<Glib::ustring, Glib::VariantBase> &hint,
                                 uint32_t serial);
 
-    void stopCooperationAux();
+    void stopDeviceSharingAux();
 };
 
 #endif // !DDE_COOPERATION_DAEMON_DEVICE_H
