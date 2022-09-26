@@ -25,7 +25,7 @@ namespace fs = std::filesystem;
 static const std::string fileSchema{"file://"};
 
 static const uint64_t U10s = 10 * 1000;
-static const uint64_t U15s = 15 * 1000;
+static const uint64_t U15s = 25 * 1000;
 
 Machine::Machine(Manager *manager,
                  ClipboardBase *clipboard,
@@ -140,6 +140,9 @@ void Machine::pair([[maybe_unused]] const Glib::VariantContainerBase &args,
             initConnection();
             m_conn->startRead();
 
+            m_pingTimer->stop();
+            m_offlineTimer->stop();
+
             Message msg;
             auto *request = msg.mutable_pairrequest();
             request->set_key(SCAN_KEY);
@@ -169,6 +172,9 @@ void Machine::onPair(const std::shared_ptr<uvxx::TCP> &sock) {
     spdlog::info("onPair");
     m_conn = sock;
     initConnection();
+
+    m_pingTimer->stop();
+    m_offlineTimer->stop();
 
     m_paired = true;
     m_propertyPaired->emitChanged(Glib::Variant<bool>::create(m_paired));
@@ -339,6 +345,8 @@ void Machine::handleDisconnected() {
     m_propertyPaired->emitChanged(Glib::Variant<bool>::create(m_paired));
 
     m_conn.reset();
+
+    m_pingTimer->reset();
 }
 
 void Machine::dispatcher(uvxx::Buffer &buff) noexcept {
