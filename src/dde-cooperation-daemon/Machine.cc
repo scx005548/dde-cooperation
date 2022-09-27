@@ -18,6 +18,7 @@
 #include "uvxx/Timer.h"
 #include "uvxx/Addr.h"
 #include "uvxx/Async.h"
+#include "uvxx/Process.h"
 #include "uvxx/Signal.h"
 
 namespace fs = std::filesystem;
@@ -362,6 +363,7 @@ void Machine::dispatcher(uvxx::Buffer &buff) noexcept {
         }
 
         Message &msg = res.value();
+        spdlog::debug("message type: {}", msg.payload_case());
 
         switch (msg.payload_case()) {
         case Message::PayloadCase::kPairResponse: {
@@ -406,10 +408,18 @@ void Machine::dispatcher(uvxx::Buffer &buff) noexcept {
             break;
         }
 
-        case Message::PayloadCase::kFsSendFileRequest: {
-            // const auto &req = msg.fssendfilerequest();
+        case Message::PayloadCase::kFsRequest: {
+            handleFsRequest(msg.fsrequest());
+            break;
+        }
 
-            // m_manager->handleReceivedSendFileRequest(this, req);
+        case Message::PayloadCase::kFsResponse: {
+            handleFsResponse(msg.fsresponse());
+            break;
+        }
+
+        case Message::PayloadCase::kFsSendFileRequest: {
+            handleFsSendFileRequest(msg.fssendfilerequest());
             break;
         }
 
@@ -417,16 +427,7 @@ void Machine::dispatcher(uvxx::Buffer &buff) noexcept {
             break;
         }
 
-        case Message::PayloadCase::kFsRequest: {
-            handleFsRequest(msg.fsrequest());
-
-            // TODO:
-            // m_manager->handleReceivedFsRequest(this, req);
-            break;
-        }
-
-        case Message::PayloadCase::kFsResponse: {
-            handleFsResponse(msg.fsresponse());
+        case Message::PayloadCase::kFsSendFileResult: {
             break;
         }
 
@@ -552,6 +553,44 @@ void Machine::handleFsResponse(const FsResponse &resp) {
     }
 
     m_fuseClient = std::make_unique<FuseClient>(m_uvLoop, m_ip, resp.port(), m_mountpoint);
+}
+
+void Machine::handleFsSendFileRequest(const FsSendFileRequest &req) {
+    Message msg;
+    auto *fssendfileresponse = msg.mutable_fssendfileresponse();
+    fssendfileresponse->set_serial(req.serial());
+
+    if (!m_fuseClient) {
+        fssendfileresponse->set_accepted(false);
+        m_conn->write(MessageHelper::genMessage(msg));
+        return;
+    }
+
+    fssendfileresponse->set_accepted(true);
+    m_conn->write(MessageHelper::genMessage(msg));
+
+    std::string home = getenv("HOME");
+    fs::path file = m_mountpoint / req.path();
+    auto process = std::make_shared<uvxx::Process>(m_uvLoop, "/bin/cp");
+    process->args = {"-r", file.string(), home};
+    process->onExit([this,
+                     serial = req.serial(),
+                     path = req.path()](int64_t exit_status, [[maybe_unused]] int term_signal) {
+        Message msg;
+        auto *fssendfileresult = msg.mutable_fssendfileresult();
+        fssendfileresult->set_serial(serial);
+        fssendfileresult->set_path(path);
+
+        if (exit_status != 0) {
+            spdlog::info("copy files failed");
+        } else {
+            spdlog::info("copy files success");
+        }
+
+        fssendfileresult->set_result(exit_status == 0);
+        m_conn->write(MessageHelper::genMessage(msg));
+    });
+    process->spawn();
 }
 
 void Machine::handleClipboardNotify(const ClipboardNotify &notify) {

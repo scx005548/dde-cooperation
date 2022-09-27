@@ -25,6 +25,7 @@ message Message {
     FsResponse fsResponse = 3001;
     FsSendFileRequest fsSendFileRequest = 3002;
     FsSendFileResponse fsSendFileResponse = 3003;
+    FsSendFileResult fsSendFileResult = 3004;
     FsMethodGetAttrRequest fsMethodGetAttrRequest = 3100;
     FsMethodGetAttrResponse fsMethodGetAttrResponse = 3101;
     FsMethodReadRequest fsMethodReadRequest = 3102;

@@ -152,6 +152,7 @@ private:
     void handleFlowRequest(const FlowRequest &req);
     void handleFsRequest(const FsRequest &req);
     void handleFsResponse(const FsResponse &resp);
+    void handleFsSendFileRequest(const FsSendFileRequest &req);
     void handleClipboardNotify(const ClipboardNotify &notify);
     void handleClipboardGetContent(const ClipboardGetContent &req);
     void handleClipboardGetContentReply(const ClipboardGetContentReply &resp);

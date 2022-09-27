@@ -12,6 +12,12 @@ message FsSendFileResponse {
     bool accepted = 2;
 }
 
+message FsSendFileResult {
+    int64 serial = 1;
+    string path = 2;
+    bool result = 3;
+}
+
 message FsRequest {
     int64 serial = 1;   // 序号
     optional string path = 2;
