@@ -10,7 +10,13 @@ Handle::Handle(const std::shared_ptr<Loop> &loop)
 }
 
 Handle::~Handle() {
-    close();
+    if (!uv_is_closing(get())) {
+        if (closedCb_) {
+            spdlog::error("closed callback is setted, close manual!");
+        }
+
+        uv_close(get(), nullptr);
+    }
 }
 
 uv_loop_t *Handle::getLoop() {
@@ -24,4 +30,5 @@ void Handle::close() {
 }
 
 void Handle::closeCb([[maybe_unused]] uv_handle_t *handle) {
+    closedCb_();
 }

@@ -11,6 +11,8 @@ public:
     operator std::function<F>() {
         return [](auto &&...) {};
     }
+
+    operator bool() { return false; }
 };
 
 template <class C, typename R, typename... Args>
