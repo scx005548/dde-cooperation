@@ -202,7 +202,11 @@ void Machine::disconnect([[maybe_unused]] const Glib::VariantContainerBase &args
         return;
     }
 
-    m_conn->close();
+    m_async->wake([this, &invocation]() {
+        m_conn->close();
+
+        invocation->return_value(Glib::VariantContainerBase{});
+    });
 }
 
 void Machine::sendFile(const Glib::VariantContainerBase &args,
@@ -340,6 +344,8 @@ void Machine::mountFs(const std::string &path) {
 }
 
 void Machine::handleDisconnected() {
+    spdlog::info("disconnected");
+
     m_deviceSharing = false;
     m_propertyCooperating->emitChanged(Glib::Variant<bool>::create(m_deviceSharing));
     m_paired = false;
