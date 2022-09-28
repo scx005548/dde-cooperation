@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 
 #include <google/protobuf/message.h>
+#include <tl/expected.hpp>
 
 #include "uvxx/Buffer.h"
 
@@ -20,13 +21,19 @@
 #define ntohll(x) (((uint64_t)ntohl((x)&0xFFFFFFFF) << 32) | ntohl((x) >> 32))
 #endif
 
+static constexpr char MAGIC[] = "DDECPRT";
+
 #pragma pack(push, 1)
 struct MessageHeader {
+    char magic_[sizeof(MAGIC)];
     uint64_t size_;
 
     MessageHeader(uint64_t size = 0)
-        : size_(htonll(size)) {}
+        : size_(htonll(size)) {
+        std::copy(&MAGIC[0], &MAGIC[sizeof(MAGIC)], &magic_[0]);
+    }
 
+    bool legal() const { return memcmp(&magic_[0], &MAGIC[0], sizeof(MAGIC)) == 0; }
     uint64_t size() const { return ntohll(size_); }
 };
 #pragma pack(pop)
@@ -34,6 +41,11 @@ struct MessageHeader {
 const ssize_t header_size = sizeof(MessageHeader);
 
 namespace MessageHelper {
+
+enum class PARSE_ERROR {
+    PARTIAL_MESSAGE,
+    ILLEGAL_MESSAGE,
+};
 
 inline std::vector<char> genMessage(const google::protobuf::Message &msg) {
     MessageHeader header(msg.ByteSizeLong());
@@ -58,10 +70,14 @@ inline T parseMessageBody(const char *buffer, size_t size) noexcept {
 }
 
 template <typename T>
-inline std::optional<T> parseMessage(uvxx::Buffer &buff) {
+inline tl::expected<T, PARSE_ERROR> parseMessage(uvxx::Buffer &buff) {
     auto header = buff.peak<MessageHeader>();
+    if (!header.legal()) {
+        return tl::make_unexpected(PARSE_ERROR::ILLEGAL_MESSAGE);
+    }
+
     if (buff.size() < header_size + header.size()) {
-        return std::nullopt;
+        return tl::make_unexpected(PARSE_ERROR::PARTIAL_MESSAGE);
     }
 
     T msg;

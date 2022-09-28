@@ -56,59 +56,64 @@ void FuseServer::handleDisconnected() noexcept {
 }
 
 void FuseServer::handleRequest(uvxx::Buffer &buff) noexcept {
-    auto res = MessageHelper::parseMessage<Message>(buff);
-    if (!res.has_value()) {
-        return;
-    }
+    while (buff.size() >= header_size) {
+        auto res = MessageHelper::parseMessage<Message>(buff);
+        if (!res.has_value()) {
+            if (res.error() == MessageHelper::PARSE_ERROR::ILLEGAL_MESSAGE) {
+                m_conn->close();
+            }
+            return;
+        }
 
-    Message &msg = res.value();
+        Message &msg = res.value();
 
-    switch (msg.payload_case()) {
-    case Message::PayloadCase::kFsMethodGetAttrRequest: {
-        const auto &req = msg.fsmethodgetattrrequest();
+        switch (msg.payload_case()) {
+        case Message::PayloadCase::kFsMethodGetAttrRequest: {
+            const auto &req = msg.fsmethodgetattrrequest();
 
-        Message resp;
-        methodGetattr(req, resp.mutable_fsmethodgetattrresponse());
-        m_conn->write(MessageHelper::genMessage(resp));
-        break;
-    }
-    case Message::PayloadCase::kFsMethodReadRequest: {
-        const auto &req = msg.fsmethodreadrequest();
+            Message resp;
+            methodGetattr(req, resp.mutable_fsmethodgetattrresponse());
+            m_conn->write(MessageHelper::genMessage(resp));
+            break;
+        }
+        case Message::PayloadCase::kFsMethodReadRequest: {
+            const auto &req = msg.fsmethodreadrequest();
 
-        Message resp;
-        methodRead(req, resp.mutable_fsmethodreadresponse());
-        m_conn->write(MessageHelper::genMessage(resp));
-        break;
-    }
-    case Message::PayloadCase::kFsMethodReadDirRequest: {
-        const auto &req = msg.fsmethodreaddirrequest();
+            Message resp;
+            methodRead(req, resp.mutable_fsmethodreadresponse());
+            m_conn->write(MessageHelper::genMessage(resp));
+            break;
+        }
+        case Message::PayloadCase::kFsMethodReadDirRequest: {
+            const auto &req = msg.fsmethodreaddirrequest();
 
-        Message resp;
-        methodReaddir(req, resp.mutable_fsmethodreaddirresponse());
-        m_conn->write(MessageHelper::genMessage(resp));
-        break;
-    }
-    case Message::PayloadCase::kFsMethodOpenRequest: {
-        const auto &req = msg.fsmethodopenrequest();
+            Message resp;
+            methodReaddir(req, resp.mutable_fsmethodreaddirresponse());
+            m_conn->write(MessageHelper::genMessage(resp));
+            break;
+        }
+        case Message::PayloadCase::kFsMethodOpenRequest: {
+            const auto &req = msg.fsmethodopenrequest();
 
-        Message resp;
-        methodOpen(req, resp.mutable_fsmethodopenresponse());
-        m_conn->write(MessageHelper::genMessage(resp));
-        break;
-    }
-    case Message::PayloadCase::kFsMethodReleaseRequest: {
-        const auto &req = msg.fsmethodreleaserequest();
+            Message resp;
+            methodOpen(req, resp.mutable_fsmethodopenresponse());
+            m_conn->write(MessageHelper::genMessage(resp));
+            break;
+        }
+        case Message::PayloadCase::kFsMethodReleaseRequest: {
+            const auto &req = msg.fsmethodreleaserequest();
 
-        Message resp;
-        methodRelease(req, resp.mutable_fsmethodreleaseresponse());
-        m_conn->write(MessageHelper::genMessage(resp));
-        break;
-    }
-    default: {
-        spdlog::warn("invalid message type: {}", msg.payload_case());
-        m_conn->close();
-        return;
-    }
+            Message resp;
+            methodRelease(req, resp.mutable_fsmethodreleaseresponse());
+            m_conn->write(MessageHelper::genMessage(resp));
+            break;
+        }
+        default: {
+            spdlog::warn("invalid message type: {}", msg.payload_case());
+            m_conn->close();
+            return;
+        }
+        }
     }
 }
 

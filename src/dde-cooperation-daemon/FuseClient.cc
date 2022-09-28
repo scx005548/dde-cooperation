@@ -215,49 +215,54 @@ int FuseClient::readdir(const char *path,
 }
 
 void FuseClient::handleResponse(uvxx::Buffer &buff) noexcept {
-    auto res = MessageHelper::parseMessage<Message>(buff);
-    if (!res.has_value()) {
-        return;
-    }
+    while (buff.size() >= header_size) {
+        auto res = MessageHelper::parseMessage<Message>(buff);
+        if (!res.has_value()) {
+            if (res.error() == MessageHelper::PARSE_ERROR::ILLEGAL_MESSAGE) {
+                m_conn->close();
+            }
+            return;
+        }
 
-    Message &msg = res.value();
+        Message &msg = res.value();
 
-    switch (msg.payload_case()) {
-    case Message::PayloadCase::kFsMethodGetAttrResponse: {
-        const auto &data = msg.fsmethodgetattrresponse();
-        m_buff.reset(new FsMethodGetAttrResponse(data));
-        m_cv.notify_one();
-        break;
-    }
-    case Message::PayloadCase::kFsMethodOpenResponse: {
-        const auto &data = msg.fsmethodopenresponse();
-        m_buff.reset(new FsMethodOpenResponse(data));
-        m_cv.notify_one();
-        break;
-    }
-    case Message::PayloadCase::kFsMethodReadResponse: {
-        const auto &data = msg.fsmethodreadresponse();
-        m_buff.reset(new FsMethodReadResponse(data));
-        m_cv.notify_one();
-        break;
-    }
-    case Message::PayloadCase::kFsMethodReadDirResponse: {
-        const auto &data = msg.fsmethodreaddirresponse();
-        m_buff.reset(new FsMethodReadDirResponse(data));
-        m_cv.notify_one();
-        break;
-    }
-    case Message::PayloadCase::kFsMethodReleaseResponse: {
-        const auto &data = msg.fsmethodreleaseresponse();
-        m_buff.reset(new FsMethodReleaseResponse(data));
-        m_cv.notify_one();
-        break;
-    }
-    default: {
-        spdlog::warn("invalid message type: {}", msg.payload_case());
-        m_conn->close();
-        return;
-    }
+        switch (msg.payload_case()) {
+        case Message::PayloadCase::kFsMethodGetAttrResponse: {
+            const auto &data = msg.fsmethodgetattrresponse();
+            m_buff.reset(new FsMethodGetAttrResponse(data));
+            m_cv.notify_one();
+            break;
+        }
+        case Message::PayloadCase::kFsMethodOpenResponse: {
+            const auto &data = msg.fsmethodopenresponse();
+            m_buff.reset(new FsMethodOpenResponse(data));
+            m_cv.notify_one();
+            break;
+        }
+        case Message::PayloadCase::kFsMethodReadResponse: {
+            const auto &data = msg.fsmethodreadresponse();
+            m_buff.reset(new FsMethodReadResponse(data));
+            m_cv.notify_one();
+            break;
+        }
+        case Message::PayloadCase::kFsMethodReadDirResponse: {
+            const auto &data = msg.fsmethodreaddirresponse();
+            m_buff.reset(new FsMethodReadDirResponse(data));
+            m_cv.notify_one();
+            break;
+        }
+        case Message::PayloadCase::kFsMethodReleaseResponse: {
+            const auto &data = msg.fsmethodreleaseresponse();
+            m_buff.reset(new FsMethodReleaseResponse(data));
+            m_cv.notify_one();
+            break;
+        }
+        default: {
+            spdlog::warn("invalid message type: {}", msg.payload_case());
+            m_conn->close();
+            return;
+        }
+        }
     }
 }
 

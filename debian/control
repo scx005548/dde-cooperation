@@ -8,6 +8,7 @@ Build-Depends:
 # libfmt 5.3.0+ 后可删除 cmake 依赖
  debhelper-compat (= 12),
  libevdev-dev,
+ libexpected-dev,
  libfmt-dev,
  libfuse3-dev,
  libglibmm-2.4-dev,

@@ -369,6 +369,9 @@ void Machine::dispatcher(uvxx::Buffer &buff) noexcept {
     while (buff.size() >= header_size) {
         auto res = MessageHelper::parseMessage<Message>(buff);
         if (!res.has_value()) {
+            if (res.error() == MessageHelper::PARSE_ERROR::ILLEGAL_MESSAGE) {
+                m_conn->close();
+            }
             return;
         }
 
