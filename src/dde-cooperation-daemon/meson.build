@@ -28,7 +28,7 @@ dde_cooperation_daemon_sources = files('''
   X11/Clipboard.cc
 '''.split())
 
-dde_cooperation_daemon_sources += common_sources + uvxx_sources + protocol + ipc_protocol
+dde_cooperation_daemon_sources += common_sources + uvxx_sources + [protocol] + [ipc_protocol]
 
 conf_data = configuration_data()
 conf_data.set('libexecdir', libexecdir)

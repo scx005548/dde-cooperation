@@ -4,7 +4,7 @@ input_emittor_sources = files('''
   InputEmittor.cc
 '''.split())
 
-input_emittor_sources += uvxx_sources + ipc_protocol
+input_emittor_sources += uvxx_sources + [ipc_protocol]
 
 input_emittor = executable('input-emittor',
   input_emittor_sources,

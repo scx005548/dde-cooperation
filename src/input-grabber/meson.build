@@ -4,7 +4,7 @@ input_grabber_sources = files('''
   InputGrabber.cc
 '''.split())
 
-input_grabber_sources += uvxx_sources + ipc_protocol
+input_grabber_sources += uvxx_sources + [ipc_protocol]
 
 input_grabber = executable('input-grabber',
   input_grabber_sources,
