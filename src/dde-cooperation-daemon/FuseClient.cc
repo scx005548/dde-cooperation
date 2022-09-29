@@ -4,6 +4,7 @@
 #include <filesystem>
 
 #include <sys/time.h>
+#include <sys/stat.h>
 
 #include <spdlog/spdlog.h>
 #include <google/protobuf/util/time_util.h>
@@ -78,22 +79,27 @@ bool FuseClient::mount() {
     }
 
     ret = fuse_loop(m_fuse.get());
-    unmount();
+    fuse_unmount(m_fuse.get());
     if (ret != 0) {
         return false;
     }
 
+    m_fuse.reset(nullptr);
     return true;
 }
 
-void FuseClient::unmount() {
-    fuse_unmount(m_fuse.get());
-};
-
 void FuseClient::exit() {
     if (m_fuse) {
+        // 此函数只是设置标志，并不能中断 fuse 的阻塞，
+        // 所以需要调用一下 stat 解除阻塞
         fuse_exit(m_fuse.get());
-        unmount();
+
+        struct stat statbuf;
+        stat(m_mountpoint.c_str(), &statbuf);
+
+        if (m_mountThread.joinable()) {
+            m_mountThread.join();
+        }
     }
 }
 
