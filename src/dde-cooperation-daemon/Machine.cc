@@ -350,6 +350,10 @@ void Machine::handleDisconnected() {
     m_propertyCooperating->emitChanged(Glib::Variant<bool>::create(m_deviceSharing));
     m_paired = false;
     m_propertyPaired->emitChanged(Glib::Variant<bool>::create(m_paired));
+    
+    m_fuseClient->exit();
+    m_fuseClient.reset();
+    m_fuseServer.reset();
 
     m_conn.reset();
 
