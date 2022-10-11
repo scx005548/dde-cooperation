@@ -287,19 +287,18 @@ void Manager::handleReceivedSocketScan(std::shared_ptr<uvxx::Addr> addr,
         auto iter = m_machines.find(uuid);
         if (iter == m_machines.end()) {
             addMachine(ipv4->ip(), request.port(), request.deviceinfo());
-
-            Message msg;
-            ScanResponse *response = msg.mutable_scanresponse();
-            response->set_key(SCAN_KEY);
-            response->mutable_deviceinfo()->set_uuid(m_uuid);
-            response->mutable_deviceinfo()->set_name(Net::getHostname());
-            response->mutable_deviceinfo()->set_os(DeviceOS::LINUX);
-            response->set_port(m_port);
-
-            m_socketScan->send(addr, MessageHelper::genMessage(msg));
         } else {
             iter->second->receivedPing();
         }
+
+        Message msg;
+        ScanResponse *response = msg.mutable_scanresponse();
+        response->set_key(SCAN_KEY);
+        response->mutable_deviceinfo()->set_uuid(m_uuid);
+        response->mutable_deviceinfo()->set_name(Net::getHostname());
+        response->mutable_deviceinfo()->set_os(DeviceOS::LINUX);
+        response->set_port(m_port);
+        m_socketScan->send(addr, MessageHelper::genMessage(msg));
 
         break;
     }
