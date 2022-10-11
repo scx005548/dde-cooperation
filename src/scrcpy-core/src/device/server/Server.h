@@ -5,7 +5,6 @@
 #include <QPointer>
 #include <QSize>
 
-#include "AdbProcess.h"
 #include "TcpServer.h"
 #include "VideoSocket.h"
 

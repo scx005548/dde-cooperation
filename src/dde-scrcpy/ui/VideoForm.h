@@ -17,7 +17,7 @@ class QLabel;
 class VideoForm : public QWidget, public qsc::DeviceObserver {
     Q_OBJECT
 public:
-    explicit VideoForm(bool framelessWindow = false, bool skin = true, QWidget *parent = 0);
+    explicit VideoForm(qsc::IDevice *device, QWidget *parent = nullptr);
     ~VideoForm();
 
     void staysOnTop(bool top = true);
@@ -52,7 +52,6 @@ private:
     void updateFPS(quint32 fps) override;
     void grabCursor(bool grab) override;
 
-    void updateStyleSheet(bool vertical);
     QMargins getMargins(bool vertical);
     void initUI();
 
@@ -93,7 +92,6 @@ private:
     QSize m_normalSize;
     QPoint m_dragPosition;
     float m_widthHeightRatio = 0.5f;
-    bool m_skin = true;
     QPoint m_fullScreenBeforePos;
     QString m_serial;
     qsc::IDevice *m_device;

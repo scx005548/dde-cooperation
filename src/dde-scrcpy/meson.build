@@ -1,6 +1,7 @@
 dde_scrcpy_sources = files('''
   main.cc
   MainWindow.cc
+  QrCodeWidget.cc
   ui/VideoForm.cc
   ui/ToolForm.cc
   render/QYUVOpenGLWidget.cc
@@ -12,6 +13,7 @@ dde_scrcpy_sources = files('''
 
 dde_scrcpy_moc_headers = files('''
   MainWindow.h
+  QrCodeWidget.h
   ui/VideoForm.h
   ui/ToolForm.h
   render/QYUVOpenGLWidget.h
@@ -38,6 +40,7 @@ executable('dde-scrcpy',
   dependencies: [
     qt5dep,
     xcb,
+    qrcodegencpp,
     scrcpy_core_dep,
   ],
   install: true,

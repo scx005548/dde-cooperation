@@ -17,7 +17,7 @@ class ToolForm : public MagneticWidget {
     Q_OBJECT
 
 public:
-    explicit ToolForm(QWidget *adsorbWidget, AdsorbPositions adsorbPos);
+    explicit ToolForm(qsc::IDevice *device, QWidget *adsorbWidget, AdsorbPositions adsorbPos);
     ~ToolForm();
 
     void setSerial(const QString &serial);

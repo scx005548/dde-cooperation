@@ -35,7 +35,7 @@ public:
 class IDevice : public QObject {
     Q_OBJECT
 public:
-    static IDevice *create(DeviceParams params, QObject *parent);
+    static IDevice *create(DeviceParams params, QObject *parent = nullptr);
     IDevice(QObject *parent = nullptr)
         : QObject(parent) {}
     virtual ~IDevice() {}

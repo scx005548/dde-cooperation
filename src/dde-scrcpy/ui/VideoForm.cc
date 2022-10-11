@@ -20,21 +20,14 @@
 #include "render/QYUVOpenGLWidget.h"
 #include "util/mousetap/MouseTap.h"
 
-VideoForm::VideoForm(bool framelessWindow, bool skin, QWidget *parent)
+VideoForm::VideoForm(qsc::IDevice *device, QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::VideoForm)
-    , m_skin(skin) {
+    , m_device(device) {
     ui->setupUi(this);
     initUI();
     installShortcut();
     updateShowSize(size());
-    bool vertical = size().height() > size().width();
-    if (m_skin) {
-        updateStyleSheet(vertical);
-    }
-    if (framelessWindow) {
-        setWindowFlags(windowFlags() | Qt::FramelessWindowHint);
-    }
 }
 
 VideoForm::~VideoForm() {
@@ -42,21 +35,6 @@ VideoForm::~VideoForm() {
 }
 
 void VideoForm::initUI() {
-    if (m_skin) {
-        QPixmap phone;
-        if (phone.load(":/res/phone.png")) {
-            m_widthHeightRatio = 1.0f * phone.width() / phone.height();
-        }
-
-#ifndef Q_OS_OSX
-        // mac下去掉标题栏影响showfullscreen
-        // 去掉标题栏
-        setWindowFlags(windowFlags() | Qt::FramelessWindowHint);
-        // 根据图片构造异形窗口
-        setAttribute(Qt::WA_TranslucentBackground);
-#endif
-    }
-
     m_videoWidget = new QYUVOpenGLWidget();
     m_videoWidget->hide();
     ui->keepRatioWidget->setWidget(m_videoWidget);
@@ -162,7 +140,7 @@ void VideoForm::setSerial(const QString &serial) {
 
 void VideoForm::showToolForm(bool show) {
     if (!m_toolForm) {
-        m_toolForm = new ToolForm(this, ToolForm::AP_OUTSIDE_RIGHT);
+        m_toolForm = new ToolForm(m_device, this, ToolForm::AP_OUTSIDE_RIGHT);
         m_toolForm->setSerial(m_serial);
     }
     m_toolForm->move(pos().x() + geometry().width(), pos().y() + 30);
@@ -291,25 +269,6 @@ QRect VideoForm::getScreenRect() {
     return screenRect;
 }
 
-void VideoForm::updateStyleSheet(bool vertical) {
-    if (vertical) {
-        setStyleSheet(R"(
-                 #videoForm {
-                     border-image: url(:/image/videoform/phone-v.png) 150px 65px 85px 65px;
-                     border-width: 150px 65px 85px 65px;
-                 }
-                 )");
-    } else {
-        setStyleSheet(R"(
-                 #videoForm {
-                     border-image: url(:/image/videoform/phone-h.png) 65px 85px 65px 150px;
-                     border-width: 65px 85px 65px 150px;
-                 }
-                 )");
-    }
-    layout()->setContentsMargins(getMargins(vertical));
-}
-
 QMargins VideoForm::getMargins(bool vertical) {
     QMargins margins;
     if (vertical) {
@@ -350,17 +309,8 @@ void VideoForm::updateShowSize(const QSize &newSize) {
             showNormal();
         }
 
-        if (m_skin) {
-            QMargins m = getMargins(vertical);
-            showSize.setWidth(showSize.width() + m.left() + m.right());
-            showSize.setHeight(showSize.height() + m.top() + m.bottom());
-        }
-
         if (showSize != size()) {
             resize(showSize);
-            if (m_skin) {
-                updateStyleSheet(vertical);
-            }
             moveCenter();
         }
     }
@@ -383,9 +333,6 @@ void VideoForm::switchFullScreen() {
         // setWindowFlags(windowFlags() | Qt::FramelessWindowHint);
         // show();
 #endif
-        if (m_skin) {
-            updateStyleSheet(m_frameSize.height() > m_frameSize.width());
-        }
         showToolForm(true);
 #ifdef Q_OS_WIN32
         ::SetThreadExecutionState(ES_CONTINUOUS);
@@ -407,9 +354,6 @@ void VideoForm::switchFullScreen() {
         // setWindowFlags(windowFlags() & ~Qt::FramelessWindowHint);
 #endif
         showToolForm(false);
-        if (m_skin) {
-            layout()->setContentsMargins(0, 0, 0, 0);
-        }
         showFullScreen();
 
         // 全屏状态禁止电脑休眠、息屏

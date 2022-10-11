@@ -8,9 +8,10 @@
 #include "ToolForm.h"
 #include "ui_ToolForm.h"
 
-ToolForm::ToolForm(QWidget *adsorbWidget, AdsorbPositions adsorbPos)
+ToolForm::ToolForm(qsc::IDevice *device, QWidget *adsorbWidget, AdsorbPositions adsorbPos)
     : MagneticWidget(adsorbWidget, adsorbPos)
-    , ui(new Ui::ToolForm) {
+    , ui(new Ui::ToolForm)
+    , m_device(device) {
     ui->setupUi(this);
     setWindowFlags(windowFlags() | Qt::FramelessWindowHint);
     // setWindowFlags(windowFlags() & ~Qt::WindowMinMaxButtonsHint);

@@ -16,6 +16,7 @@ Build-Depends:
  libfuse3-dev,
  libglibmm-2.4-dev,
  libprotobuf-dev,
+ libqrcodegencpp-dev,
  libqt5x11extras5-dev,
  libspdlog-dev,
  libssl-dev,
