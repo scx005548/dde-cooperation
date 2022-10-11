@@ -5,20 +5,21 @@ namespace qsc {
 
 struct DeviceParams {
     // necessary
-    QString serial = "";              // 设备序列号
-    QString serverLocalPath = "";     // 本地安卓server路径
+    QString serial = "";          // 设备序列号
+    QString serverLocalPath = ""; // 本地安卓server路径
 
     // optional
-    QString serverRemotePath = "/data/local/tmp/scrcpy-server.jar";    // 要推送到远端设备的server路径
-    quint16 localPort = 27183;        // reverse时本地监听端口
-    quint16 maxSize = 720;            // 视频分辨率
-    quint32 bitRate = 2000000;        // 视频比特率
-    quint32 maxFps = 60;              // 视频最大帧率
-    bool useReverse = true;           // true:先使用adb reverse，失败后自动使用adb forward；false:直接使用adb forward
-    int lockVideoOrientation = -1;    // 是否锁定视频方向
-    bool stayAwake = false;           // 是否保持唤醒
-    QString serverVersion = "1.21";// server版本
-    QString logLevel = "info";     // log级别 debug/info/warn/error
+    QString serverRemotePath = "/data/local/tmp/scrcpy-server.jar"; // 要推送到远端设备的server路径
+    quint16 localPort = 27183;                                      // reverse时本地监听端口
+    quint16 maxSize = 720;                                          // 视频分辨率
+    quint32 bitRate = 2000000;                                      // 视频比特率
+    quint32 maxFps = 60;                                            // 视频最大帧率
+    bool useReverse = true; // true:先使用adb reverse，失败后自动使用adb forward；false:直接使用adb
+                            // forward
+    int lockVideoOrientation = -1;  // 是否锁定视频方向
+    bool stayAwake = false;         // 是否保持唤醒
+    QString serverVersion = "1.21"; // server版本
+    QString logLevel = "info";      // log级别 debug/info/warn/error
     // 编码选项 ""表示默认
     // 例如 CodecOptions="profile=1,level=2"
     // 更多编码选项参考 https://d.android.com/reference/android/media/MediaFormat
@@ -38,5 +39,5 @@ struct DeviceParams {
     bool renderExpiredFrames = false; // 是否渲染延迟视频帧
     QString gameScript = "";          // 游戏映射脚本
 };
-    
-}
+
+} // namespace qsc

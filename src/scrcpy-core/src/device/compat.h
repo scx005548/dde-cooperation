@@ -6,9 +6,10 @@
 // In ffmpeg/doc/APIchanges:
 // 2016-04-11 - 6f69f7a / 9200514 - lavf 57.33.100 / 57.5.0 - avformat.h
 //   Add AVStream.codecpar, deprecate AVStream.codec.
-#if (LIBAVFORMAT_VERSION_MICRO >= 100 /* FFmpeg */ && LIBAVFORMAT_VERSION_INT >= AV_VERSION_INT(57, 33, 100))                                                  \
-    || (LIBAVFORMAT_VERSION_MICRO < 100 && /* Libav */                                                                                                         \
-        LIBAVFORMAT_VERSION_INT >= AV_VERSION_INT(57, 5, 0))
+#if (LIBAVFORMAT_VERSION_MICRO >= 100 /* FFmpeg */ &&                                              \
+     LIBAVFORMAT_VERSION_INT >= AV_VERSION_INT(57, 33, 100)) ||                                    \
+    (LIBAVFORMAT_VERSION_MICRO < 100 && /* Libav */                                                \
+     LIBAVFORMAT_VERSION_INT >= AV_VERSION_INT(57, 5, 0))
 #define QTSCRCPY_LAVF_HAS_NEW_CODEC_PARAMS_API
 #endif
 

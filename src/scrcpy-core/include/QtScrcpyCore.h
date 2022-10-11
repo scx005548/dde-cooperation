@@ -7,15 +7,18 @@ namespace qsc {
 
 class DeviceObserver {
 protected:
-    DeviceObserver() {
-
-    }
-    virtual ~DeviceObserver() {
-
-    }
+    DeviceObserver() {}
+    virtual ~DeviceObserver() {}
 
 public:
-    virtual void onFrame(int width, int height, uint8_t* dataY, uint8_t* dataU, uint8_t* dataV, int linesizeY, int linesizeU, int linesizeV) {
+    virtual void onFrame(int width,
+                         int height,
+                         uint8_t *dataY,
+                         uint8_t *dataU,
+                         uint8_t *dataV,
+                         int linesizeY,
+                         int linesizeU,
+                         int linesizeV) {
         Q_UNUSED(width);
         Q_UNUSED(height);
         Q_UNUSED(dataY);
@@ -26,14 +29,18 @@ public:
         Q_UNUSED(linesizeV);
     }
     virtual void updateFPS(quint32 fps) { Q_UNUSED(fps); }
-    virtual void grabCursor(bool grab) {Q_UNUSED(grab);}
+    virtual void grabCursor(bool grab) { Q_UNUSED(grab); }
 
-    virtual void mouseEvent(const QMouseEvent *from, const QSize &frameSize, const QSize &showSize) {
+    virtual void mouseEvent(const QMouseEvent *from,
+                            const QSize &frameSize,
+                            const QSize &showSize) {
         Q_UNUSED(from);
         Q_UNUSED(frameSize);
         Q_UNUSED(showSize);
     }
-    virtual void wheelEvent(const QWheelEvent *from, const QSize &frameSize, const QSize &showSize) {
+    virtual void wheelEvent(const QWheelEvent *from,
+                            const QSize &frameSize,
+                            const QSize &showSize) {
         Q_UNUSED(from);
         Q_UNUSED(frameSize);
         Q_UNUSED(showSize);
@@ -73,24 +80,32 @@ public:
 class IDevice : public QObject {
     Q_OBJECT
 public:
-    IDevice(QObject *parent = nullptr) : QObject(parent) {}
-    virtual ~IDevice(){}
+    IDevice(QObject *parent = nullptr)
+        : QObject(parent) {}
+    virtual ~IDevice() {}
 
 signals:
-    void deviceConnected(bool success, const QString& serial, const QString& deviceName, const QSize& size);
+    void deviceConnected(bool success,
+                         const QString &serial,
+                         const QString &deviceName,
+                         const QSize &size);
     void deviceDisconnected(QString serial);
 
 public:
-    virtual void setUserData(void* data) = 0;
-    virtual void* getUserData() = 0;
-    virtual void registerDeviceObserver(DeviceObserver* observer) = 0;
-    virtual void deRegisterDeviceObserver(DeviceObserver* observer) = 0;
+    virtual void setUserData(void *data) = 0;
+    virtual void *getUserData() = 0;
+    virtual void registerDeviceObserver(DeviceObserver *observer) = 0;
+    virtual void deRegisterDeviceObserver(DeviceObserver *observer) = 0;
 
     virtual bool connectDevice() = 0;
     virtual void disconnectDevice() = 0;
 
-    virtual void mouseEvent(const QMouseEvent *from, const QSize &frameSize, const QSize &showSize) = 0;
-    virtual void wheelEvent(const QWheelEvent *from, const QSize &frameSize, const QSize &showSize) = 0;
+    virtual void mouseEvent(const QMouseEvent *from,
+                            const QSize &frameSize,
+                            const QSize &showSize) = 0;
+    virtual void wheelEvent(const QWheelEvent *from,
+                            const QSize &frameSize,
+                            const QSize &showSize) = 0;
     virtual void keyEvent(const QKeyEvent *from, const QSize &frameSize, const QSize &showSize) = 0;
 
     virtual void postGoBack() = 0;
@@ -126,15 +141,18 @@ public:
 class IDeviceManage : public QObject {
     Q_OBJECT
 public:
-    static IDeviceManage& getInstance();
+    static IDeviceManage &getInstance();
     virtual bool connectDevice(DeviceParams params) = 0;
     virtual bool disconnectDevice(const QString &serial) = 0;
     virtual void disconnectAllDevice() = 0;
-    virtual QPointer<IDevice> getDevice(const QString& serial) = 0;
+    virtual QPointer<IDevice> getDevice(const QString &serial) = 0;
 
 signals:
-    void deviceConnected(bool success, const QString& serial, const QString& deviceName, const QSize& size);
+    void deviceConnected(bool success,
+                         const QString &serial,
+                         const QString &deviceName,
+                         const QSize &size);
     void deviceDisconnected(QString serial);
 };
 
-}
+} // namespace qsc

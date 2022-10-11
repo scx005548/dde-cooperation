@@ -1,4 +1,5 @@
-// copied from <https://android.googlesource.com/platform/frameworks/native/+/master/include/android/keycodes.h>
+// copied from
+// <https://android.googlesource.com/platform/frameworks/native/+/master/include/android/keycodes.h>
 // blob 2164d6163e1646c22825e364cad4f3c47638effd
 // (and modified)
 /*
@@ -23,8 +24,7 @@
 /**
  * Key codes.
  */
-enum AndroidKeycode
-{
+enum AndroidKeycode {
     /** Unknown key code. */
     AKEYCODE_UNKNOWN = 0,
     /** Soft Left key.
