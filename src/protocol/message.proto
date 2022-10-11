@@ -41,8 +41,8 @@ message Message {
     InputEventResponse inputEventResponse = 4001;
 
     ClipboardNotify clipboardNotify = 5000;
-    ClipboardGetContent clipboardGetContent = 5001;
-    ClipboardGetContentReply clipboardGetContentReply = 5002;
+    ClipboardGetContentRequest clipboardGetContentRequest = 5001;
+    ClipboardGetContentResponse clipboardGetContentResponse = 5002;
 
     // RemoteDisplayConfigRequest remoteDisplayConfigRequest = 6000;
     // RemoteDisplayConfigResponse remoteDisplayConfigResponse = 6001;

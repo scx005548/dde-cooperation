@@ -154,8 +154,8 @@ private:
     void handleFsResponse(const FsResponse &resp);
     void handleFsSendFileRequest(const FsSendFileRequest &req);
     void handleClipboardNotify(const ClipboardNotify &notify);
-    void handleClipboardGetContent(const ClipboardGetContent &req);
-    void handleClipboardGetContentReply(const ClipboardGetContentReply &resp);
+    void handleClipboardGetContentRequest(const ClipboardGetContentRequest &req);
+    void handleClipboardGetContentResponse(const ClipboardGetContentResponse &resp);
 
     void handleAcceptSendFile(bool accepted,
                               const std::map<Glib::ustring, Glib::VariantBase> &hint,

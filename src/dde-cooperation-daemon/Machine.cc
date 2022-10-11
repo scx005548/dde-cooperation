@@ -449,13 +449,13 @@ void Machine::dispatcher(uvxx::Buffer &buff) noexcept {
             break;
         }
 
-        case Message::PayloadCase::kClipboardGetContent: {
-            handleClipboardGetContent(msg.clipboardgetcontent());
+        case Message::PayloadCase::kClipboardGetContentRequest: {
+            handleClipboardGetContentRequest(msg.clipboardgetcontentrequest());
             break;
         }
 
-        case Message::PayloadCase::kClipboardGetContentReply: {
-            handleClipboardGetContentReply(msg.clipboardgetcontentreply());
+        case Message::PayloadCase::kClipboardGetContentResponse: {
+            handleClipboardGetContentResponse(msg.clipboardgetcontentresponse());
             break;
         }
 
@@ -612,11 +612,11 @@ void Machine::handleClipboardNotify(const ClipboardNotify &notify) {
     m_manager->onMachineOwnClipboard(weak_from_this(), targets);
 }
 
-void Machine::handleClipboardGetContent(const ClipboardGetContent &req) {
+void Machine::handleClipboardGetContentRequest(const ClipboardGetContentRequest &req) {
     auto target = req.target();
     auto cb = [this, target](const std::vector<char> &content) {
         Message msg;
-        auto *reply = msg.mutable_clipboardgetcontentreply();
+        auto *reply = msg.mutable_clipboardgetcontentresponse();
         reply->set_target(target);
         reply->set_content(std::string(content.begin(), content.end()));
         m_conn->write(MessageHelper::genMessage(msg));
@@ -624,7 +624,7 @@ void Machine::handleClipboardGetContent(const ClipboardGetContent &req) {
     m_clipboard->readTargetContent(target, cb);
 }
 
-void Machine::handleClipboardGetContentReply(const ClipboardGetContentReply &resp) {
+void Machine::handleClipboardGetContentResponse(const ClipboardGetContentResponse &resp) {
     auto target = resp.target();
     auto content = resp.content();
     if (target == "x-special/gnome-copied-files") {
@@ -692,7 +692,7 @@ void Machine::flowTo(uint16_t direction, uint16_t x, uint16_t y) noexcept {
 
 void Machine::readTarget(const std::string &target) {
     Message msg;
-    auto *clipboardGetContent = msg.mutable_clipboardgetcontent();
+    auto *clipboardGetContent = msg.mutable_clipboardgetcontentrequest();
     clipboardGetContent->set_target(target);
     m_conn->write(MessageHelper::genMessage(msg));
 }
