@@ -26,6 +26,7 @@ class Request;
 class InputEmittorWrapper;
 class FuseServer;
 class FuseClient;
+class ConfirmDialogWrapper;
 
 class Machine : public std::enable_shared_from_this<Machine> {
     friend Manager;
@@ -128,6 +129,7 @@ private:
     std::shared_ptr<uvxx::Timer> m_offlineTimer;
     std::shared_ptr<uvxx::Async> m_async;
     std::shared_ptr<uvxx::TCP> m_conn;
+    std::unique_ptr<ConfirmDialogWrapper> m_confirmDialog;
 
     std::unordered_map<InputDeviceType, std::unique_ptr<InputEmittorWrapper>> m_inputEmittors;
 
@@ -165,6 +167,7 @@ private:
                                 uint32_t serial);
 
     void stopDeviceSharingAux();
+    void receivedUserConfirm(uvxx::Buffer &buff);
 };
 
 #endif // !DDE_COOPERATION_DAEMON_DEVICE_H

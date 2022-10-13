@@ -10,6 +10,7 @@
 #include "FuseClient.h"
 #include "utils/net.h"
 #include "utils/message_helper.h"
+#include "ConfirmDialogWrapper.h"
 
 #include "protocol/message.pb.h"
 
@@ -170,28 +171,18 @@ void Machine::receivedPing() {
 }
 
 void Machine::onPair(const std::shared_ptr<uvxx::TCP> &sock) {
-    spdlog::info("onPair");
+    spdlog::info("request onPair");
     m_conn = sock;
     initConnection();
 
     m_pingTimer->stop();
     m_offlineTimer->stop();
 
-    m_paired = true;
-    m_propertyPaired->emitChanged(Glib::Variant<bool>::create(m_paired));
-
-    Message msg;
-    auto *response = msg.mutable_pairresponse();
-    response->set_key(SCAN_KEY);
-    response->mutable_deviceinfo()->set_uuid(m_manager->uuid());
-    response->mutable_deviceinfo()->set_name(Net::getHostname());
-    response->mutable_deviceinfo()->set_os(DEVICE_OS_LINUX);
-    response->mutable_deviceinfo()->set_compositor(COMPOSITOR_X11);
-    response->set_agree(true); // TODO: 询问用户是否同意
-
-    m_conn->write(MessageHelper::genMessage(msg));
-
-    mountFs("/");
+    m_confirmDialog = std::make_unique<ConfirmDialogWrapper>(
+        m_ip,
+        m_name,
+        m_uvLoop,
+        uvxx::memFunc(this, &Machine::receivedUserConfirm));
 }
 
 void Machine::disconnect([[maybe_unused]] const Glib::VariantContainerBase &args,
@@ -479,7 +470,8 @@ void Machine::dispatcher(uvxx::Buffer &buff) noexcept {
 void Machine::handlePairResponse(const PairResponse &resp) {
     bool agree = resp.agree();
     if (!agree) {
-        // TODO: handle not agree
+        // handle not agree
+        m_conn->close();
         return;
     }
 
@@ -746,4 +738,33 @@ void Machine::stopDeviceSharingAux() {
 
     m_deviceSharing = false;
     m_propertyCooperating->emitChanged(Glib::Variant<bool>::create(m_deviceSharing));
+}
+
+void Machine::receivedUserConfirm(uvxx::Buffer &buff) {
+    m_confirmDialog.reset();
+
+    if (buff.size() != 1) {
+        spdlog::warn("user confirm has error!");
+        return;
+    }
+
+    bool isAccept = (buff.data()[0] == ACCEPT);
+    buff.clear();
+
+    Message msg;
+    auto *response = msg.mutable_pairresponse();
+    response->set_key(SCAN_KEY);
+    response->mutable_deviceinfo()->set_uuid(m_manager->uuid());
+    response->mutable_deviceinfo()->set_name(Net::getHostname());
+    response->mutable_deviceinfo()->set_os(DEVICE_OS_LINUX);
+    response->mutable_deviceinfo()->set_compositor(COMPOSITOR_X11);
+    response->set_agree(isAccept); // 询问用户是否同意
+    m_conn->write(MessageHelper::genMessage(msg));
+
+    if (isAccept) {
+        m_paired = true;
+        m_propertyPaired->emitChanged(Glib::Variant<bool>::create(m_paired));
+
+        mountFs("/");
+    }
 }

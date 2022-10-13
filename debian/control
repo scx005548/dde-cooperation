@@ -5,8 +5,8 @@ Maintainer: planc <hubenchang0515@outlook.com>
 Rules-Requires-Root: no
 Build-Depends:
  cmake,
-# libfmt 5.3.0+ 后可删除 cmake 依赖
  debhelper-compat (= 12),
+ libdtkwidget-dev,
  libevdev-dev,
  libexpected-dev,
  libfmt-dev,

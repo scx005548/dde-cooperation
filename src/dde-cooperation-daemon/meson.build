@@ -12,6 +12,8 @@ dde_cooperation_daemon_sources = files('''
   InputEmittorWrapper.cc
   InputGrabberWrapper.h
   InputGrabberWrapper.cc
+  ConfirmDialogWrapper.h
+  ConfirmDialogWrapper.cc
   FuseClient.h
   FuseClient.cc
   FuseServer.h
