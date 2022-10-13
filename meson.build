@@ -46,7 +46,7 @@ xcb_xinput = dependency('xcb-xinput', required: true)
 xcb_xfixes = dependency('xcb-xfixes', required: true)
 
 qt5 = import('qt5')
-qt5dep = dependency('qt5', modules: ['Core', 'Gui', 'Widgets', 'Network', 'DBus'])
+qt5dep = dependency('qt5', modules: ['Core', 'Gui', 'Widgets', 'Network', 'DBus', 'X11Extras'])
 dtk_widget = dependency('dtkwidget', required: true)
 
 libavcodec = dependency('libavcodec', required: true)
