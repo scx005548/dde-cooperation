@@ -60,6 +60,7 @@ public:
     bool isAndroid() const;
 
     virtual void handleConnected() = 0;
+    virtual void handleDisconnected() = 0;
 
 protected:
     void init();
@@ -102,7 +103,6 @@ private:
     Glib::RefPtr<DBus::Method> m_methodRequestCooperate;
     Glib::RefPtr<DBus::Method> m_methodStopCooperation;
 
-    Glib::ustring m_ip;
     Glib::RefPtr<DBus::Property> m_propertyIP;
 
     uint16_t m_port;
@@ -129,7 +129,6 @@ private:
     uint16_t m_direction;
     Glib::RefPtr<DBus::Property> m_propertyDirection;
 
-    std::shared_ptr<uvxx::Loop> m_uvLoop;
     std::shared_ptr<uvxx::Timer> m_pingTimer;
     std::shared_ptr<uvxx::Timer> m_offlineTimer;
     std::unique_ptr<ConfirmDialogWrapper> m_confirmDialog;
@@ -146,7 +145,7 @@ private:
 
     void initConnection();
 
-    void handleDisconnected();
+    void handleDisconnectedAux();
     void dispatcher(uvxx::Buffer &buff) noexcept;
     void handlePairResponseAux(const PairResponse &resp);
     void handleDeviceSharingStartRequest();
@@ -172,10 +171,13 @@ private:
     void receivedUserConfirm(uvxx::Buffer &buff);
 
 protected:
+    std::shared_ptr<uvxx::Loop> m_uvLoop;
     std::shared_ptr<uvxx::Async> m_async;
     std::shared_ptr<uvxx::TCP> m_conn;
 
     Glib::RefPtr<DBus::Object> m_object;
+
+    Glib::ustring m_ip;
 
     void sendFiles(const std::vector<Glib::ustring> &filePaths);
     void sendMessage(const Message &msg);

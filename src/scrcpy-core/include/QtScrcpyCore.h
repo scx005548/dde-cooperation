@@ -53,8 +53,7 @@ public:
     virtual void registerDeviceObserver(DeviceObserver *observer) = 0;
     virtual void deRegisterDeviceObserver(DeviceObserver *observer) = 0;
 
-    virtual bool startListen() = 0;
-    virtual uint16_t getPort() = 0;
+    virtual bool connectDevice() = 0;
     virtual void disconnectDevice() = 0;
 
     virtual void mouseEvent(const QMouseEvent *from,

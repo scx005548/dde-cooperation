@@ -13,11 +13,11 @@ class ToolForm;
 }
 
 class Device;
-class ToolForm : public MagneticWidget {
+class ToolForm : public QWidget {
     Q_OBJECT
 
 public:
-    explicit ToolForm(qsc::IDevice *device, QWidget *adsorbWidget, AdsorbPositions adsorbPos);
+    explicit ToolForm(qsc::IDevice *device, QWidget *adsorbWidget);
     ~ToolForm();
 
     void setSerial(const QString &serial);

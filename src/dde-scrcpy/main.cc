@@ -1,15 +1,29 @@
-#include <QtGui/QGuiApplication>
+#include <DApplication>
 
-#include "MainWindow.h"
+#include "ui/MainWindow.h"
+#include "ui/VideoForm.h"
+#include "QtScrcpyCore.h"
+
+DWIDGET_USE_NAMESPACE
 
 int main(int argc, char *argv[]) {
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-#endif
+    DApplication app(argc, argv);
+    app.setOrganizationName("deepin");
+    app.setApplicationName("dde-scrcpy");
 
-    QGuiApplication app(argc, argv);
+    QApplication::setAttribute(Qt::AA_UseOpenGLES);
 
-    MainWindow w;
+    QStringList argList = app.arguments();
+    if (argList.count() < 2) {
+        qWarning() << "arguments count error!";
+        return -1;
+    }
+
+    QString ip = argList[1];
+
+    qDebug() << "IP:" << ip;
+
+    MainWindow w(ip);
     w.show();
 
     return app.exec();

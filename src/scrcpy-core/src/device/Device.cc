@@ -18,7 +18,8 @@ IDevice *IDevice::create(DeviceParams params, QObject *parent) {
 }
 
 Device::Device(DeviceParams params, QObject *parent)
-    : IDevice(parent) {
+    : IDevice(parent)
+    , m_params(params) {
     m_decoder = new Decoder(
         [this](int width,
                int height,
@@ -252,7 +253,7 @@ void Device::initSignals() {
     }
 }
 
-bool Device::startListen() {
+bool Device::connectDevice() {
     if (!m_server || m_serverStartSuccess) {
         return false;
     }
@@ -264,11 +265,7 @@ bool Device::startListen() {
     // only one devices, serial can be null
     // mark: crop input format: "width:height:x:y" or "" for no crop, for example: "100:200:0:0"
 
-    return m_server->start();
-}
-
-uint16_t Device::getPort() {
-    return m_server->getPort();
+    return m_server->start(m_params.serial);
 }
 
 void Device::disconnectDevice() {

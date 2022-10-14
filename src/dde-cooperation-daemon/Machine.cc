@@ -58,7 +58,6 @@ Machine::Machine(Manager *manager,
                            DBus::Method::warp(this, &Machine::requestCooperate)))
     , m_methodStopCooperation(
           new DBus::Method("StopCooperation", DBus::Method::warp(this, &Machine::stopCooperation)))
-    , m_ip(ip)
     , m_propertyIP(new DBus::Property("IP", "s", DBus::Property::warp(this, &Machine::getIP)))
     , m_port(port)
     , m_propertyPort(new DBus::Property("Port", "q", DBus::Property::warp(this, &Machine::getPort)))
@@ -83,13 +82,14 @@ Machine::Machine(Manager *manager,
     , m_direction(FLOW_DIRECTION_RIGHT)
     , m_propertyDirection(
           new DBus::Property("Direction", "q", DBus::Property::warp(this, &Machine::getDirection)))
-    , m_uvLoop(uvLoop)
-    , m_pingTimer(std::make_shared<uvxx::Timer>(m_uvLoop, uvxx::memFunc(this, &Machine::ping)))
+    , m_pingTimer(std::make_shared<uvxx::Timer>(uvLoop, uvxx::memFunc(this, &Machine::ping)))
     , m_offlineTimer(
-          std::make_shared<uvxx::Timer>(m_uvLoop, uvxx::memFunc(this, &Machine::onOffline)))
+          std::make_shared<uvxx::Timer>(uvLoop, uvxx::memFunc(this, &Machine::onOffline)))
     , m_mounted(false)
-    , m_async(std::make_shared<uvxx::Async>(m_uvLoop))
-    , m_object(new DBus::Object(m_path)) {
+    , m_uvLoop(uvLoop)
+    , m_async(std::make_shared<uvxx::Async>(uvLoop))
+    , m_object(new DBus::Object(m_path))
+    , m_ip(ip) {
 
     m_interface->exportMethod(m_methodPair);
     m_interface->exportMethod(m_methodDisconnect);
@@ -304,7 +304,7 @@ void Machine::onOffline() {
 }
 
 void Machine::initConnection() {
-    m_conn->onClosed(uvxx::memFunc(this, &Machine::handleDisconnected));
+    m_conn->onClosed(uvxx::memFunc(this, &Machine::handleDisconnectedAux));
     m_conn->onReceived(uvxx::memFunc(this, &Machine::dispatcher));
     m_conn->tcpNoDelay();
     m_conn->keepalive(true, 20);
@@ -355,7 +355,7 @@ void Machine::getDirection(Glib::VariantBase &property,
     property = Glib::Variant<uint16_t>::create(m_direction);
 }
 
-void Machine::handleDisconnected() {
+void Machine::handleDisconnectedAux() {
     spdlog::info("disconnected");
 
     m_manager->onStopDeviceSharing();
@@ -377,6 +377,8 @@ void Machine::handleDisconnected() {
     m_conn.reset();
 
     m_pingTimer->reset();
+
+    handleDisconnected();
 }
 
 void Machine::dispatcher(uvxx::Buffer &buff) noexcept {

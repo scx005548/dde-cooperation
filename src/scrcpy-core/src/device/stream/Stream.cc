@@ -5,9 +5,12 @@
 #include "Stream.h"
 #include "VideoSocket.h"
 
-#define BUFSIZE 0x10000
 #define HEADER_SIZE 12
-#define NO_PTS UINT64_MAX
+
+#define SC_PACKET_FLAG_CONFIG (UINT64_C(1) << 63)
+#define SC_PACKET_FLAG_KEY_FRAME (UINT64_C(1) << 62)
+
+#define SC_PACKET_PTS_MASK (SC_PACKET_FLAG_KEY_FRAME - 1)
 
 typedef qint32 (*ReadPacketFunc)(void *, quint8 *, qint32);
 
@@ -106,6 +109,7 @@ void Stream::stopDecode() {
 void Stream::run() {
     m_codecCtx = Q_NULLPTR;
     m_parser = Q_NULLPTR;
+    AVPacket *packet = Q_NULLPTR;
 
     // codec
     const AVCodec *codec = avcodec_find_decoder(AV_CODEC_ID_H264);
@@ -131,16 +135,21 @@ void Stream::run() {
     // It's more complicated, but this allows to reduce the latency by 1 frame!
     m_parser->flags |= PARSER_FLAG_COMPLETE_FRAMES;
 
+    packet = av_packet_alloc();
+    if (!packet) {
+        qCritical("OOM");
+        goto runQuit;
+    }
+
     for (;;) {
-        AVPacket packet;
-        bool ok = recvPacket(&packet);
+        bool ok = recvPacket(packet);
         if (!ok) {
             // end of stream
             break;
         }
 
-        ok = pushPacket(&packet);
-        av_packet_unref(&packet);
+        ok = pushPacket(packet);
+        av_packet_unref(packet);
         if (!ok) {
             // cannot process packet (error already logged)
             break;
@@ -149,9 +158,11 @@ void Stream::run() {
 
     qDebug("End of frames");
 
-    if (m_hasPending) {
-        av_packet_unref(&m_pending);
+    if (m_pending) {
+        av_packet_free(&m_pending);
     }
+
+    av_packet_free(&packet);
 
     av_parser_close(m_parser);
 
@@ -175,6 +186,15 @@ bool Stream::recvPacket(AVPacket *packet) {
     //                    size
     //
     // It is followed by <packet_size> bytes containing the packet/frame.
+    //
+    // The most significant bits of the PTS are used for packet flags:
+    //
+    //  byte 7   byte 6   byte 5   byte 4   byte 3   byte 2   byte 1   byte 0
+    // CK...... ........ ........ ........ ........ ........ ........ ........
+    // ^^<------------------------------------------------------------------->
+    // ||                                PTS
+    // | `- config packet
+    //  `-- key frame
 
     quint8 header[HEADER_SIZE];
     qint32 r = recvData(header, HEADER_SIZE);
@@ -182,9 +202,8 @@ bool Stream::recvPacket(AVPacket *packet) {
         return false;
     }
 
-    quint64 pts = bufferRead64be(header);
+    quint64 ptsFlags = bufferRead64be(header);
     quint32 len = bufferRead32be(&header[8]);
-    Q_ASSERT(pts == NO_PTS || (pts & 0x8000000000000000) == 0);
     Q_ASSERT(len);
 
     if (av_new_packet(packet, static_cast<int>(len))) {
@@ -198,8 +217,17 @@ bool Stream::recvPacket(AVPacket *packet) {
         return false;
     }
 
-    packet->pts = pts != NO_PTS ? static_cast<int64_t>(pts) : static_cast<int64_t>(AV_NOPTS_VALUE);
+    if (ptsFlags & SC_PACKET_FLAG_CONFIG) {
+        packet->pts = AV_NOPTS_VALUE;
+    } else {
+        packet->pts = ptsFlags & SC_PACKET_PTS_MASK;
+    }
 
+    if (ptsFlags & SC_PACKET_FLAG_KEY_FRAME) {
+        packet->flags |= AV_PKT_FLAG_KEY;
+    }
+
+    packet->dts = packet->pts;
     return true;
 }
 
@@ -208,31 +236,32 @@ bool Stream::pushPacket(AVPacket *packet) {
 
     // A config packet must not be decoded immetiately (it contains no
     // frame); instead, it must be concatenated with the future data packet.
-    if (m_hasPending || isConfig) {
+    if (m_pending || isConfig) {
         qint32 offset;
-        if (m_hasPending) {
-            offset = m_pending.size;
-            if (av_grow_packet(&m_pending, packet->size)) {
+        if (m_pending) {
+            offset = m_pending->size;
+            if (av_grow_packet(m_pending, packet->size)) {
                 qCritical("Could not grow packet");
                 return false;
             }
         } else {
             offset = 0;
-            if (av_new_packet(&m_pending, packet->size)) {
+            m_pending = av_packet_alloc();
+            if (av_new_packet(m_pending, packet->size)) {
+                av_packet_free(&m_pending);
                 qCritical("Could not create packet");
                 return false;
             }
-            m_hasPending = true;
         }
 
-        memcpy(m_pending.data + offset, packet->data, static_cast<unsigned int>(packet->size));
+        memcpy(m_pending->data + offset, packet->data, static_cast<unsigned int>(packet->size));
 
         if (!isConfig) {
             // prepare the concat packet to send to the decoder
-            m_pending.pts = packet->pts;
-            m_pending.dts = packet->dts;
-            m_pending.flags = packet->flags;
-            packet = &m_pending;
+            m_pending->pts = packet->pts;
+            m_pending->dts = packet->dts;
+            m_pending->flags = packet->flags;
+            packet = m_pending;
         }
     }
 
@@ -246,10 +275,9 @@ bool Stream::pushPacket(AVPacket *packet) {
         // data packet
         bool ok = parse(packet);
 
-        if (m_hasPending) {
+        if (m_pending) {
             // the pending packet must be discarded (consumed or error)
-            m_hasPending = false;
-            av_packet_unref(&m_pending);
+            av_packet_free(&m_pending);
         }
 
         if (!ok) {

@@ -46,8 +46,7 @@ private:
     AVCodecParserContext *m_parser = Q_NULLPTR;
     // successive packets may need to be concatenated, until a non-config
     // packet is available
-    bool m_hasPending = false;
-    AVPacket m_pending;
+    AVPacket* m_pending = Q_NULLPTR;
 };
 
 #endif // STREAM_H

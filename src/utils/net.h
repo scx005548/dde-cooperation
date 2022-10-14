@@ -8,8 +8,6 @@
 
 #include <string>
 
-#include <giomm.h>
-
 namespace Net {
 
 inline std::string getHostname(void) {

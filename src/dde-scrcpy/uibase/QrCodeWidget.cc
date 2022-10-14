@@ -20,11 +20,8 @@ void QrCodeWidget::paintEvent([[maybe_unused]] QPaintEvent *event) {
 
     QPainter painter(this);
     QColor fg("black");
-    QColor bg("white");
 
     painter.setPen(Qt::NoPen);
-    painter.setBrush(bg);
-    painter.drawRect(0, 0, width(), height());
 
     const int s = qr0.getSize();
     const double w = width();

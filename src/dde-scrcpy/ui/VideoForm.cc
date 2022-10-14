@@ -20,10 +20,9 @@
 #include "render/QYUVOpenGLWidget.h"
 #include "util/mousetap/MouseTap.h"
 
-VideoForm::VideoForm(qsc::IDevice *device, QWidget *parent)
+VideoForm::VideoForm(QWidget *parent)
     : QWidget(parent)
-    , ui(new Ui::VideoForm)
-    , m_device(device) {
+    , ui(new Ui::VideoForm) {
     ui->setupUi(this);
     initUI();
     installShortcut();
@@ -53,6 +52,10 @@ void VideoForm::initUI() {
     setMouseTracking(true);
     m_videoWidget->setMouseTracking(true);
     ui->keepRatioWidget->setMouseTracking(true);
+}
+
+void VideoForm::setDevice(qsc::IDevice *device) {
+    m_device = device;
 }
 
 QRect VideoForm::getGrabCursorRect() {
@@ -140,7 +143,7 @@ void VideoForm::setSerial(const QString &serial) {
 
 void VideoForm::showToolForm(bool show) {
     if (!m_toolForm) {
-        m_toolForm = new ToolForm(m_device, this, ToolForm::AP_OUTSIDE_RIGHT);
+        m_toolForm = new ToolForm(m_device, this);
         m_toolForm->setSerial(m_serial);
     }
     m_toolForm->move(pos().x() + geometry().width(), pos().y() + 30);

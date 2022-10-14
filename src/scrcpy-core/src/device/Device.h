@@ -37,8 +37,7 @@ public:
     void registerDeviceObserver(DeviceObserver *observer) override;
     void deRegisterDeviceObserver(DeviceObserver *observer) override;
 
-    bool startListen() override;
-    uint16_t getPort() override;
+    bool connectDevice() override;
     void disconnectDevice() override;
 
     // key map

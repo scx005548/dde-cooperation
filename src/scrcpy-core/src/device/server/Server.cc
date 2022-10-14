@@ -8,11 +8,14 @@
 #include "Server.h"
 
 #define DEVICE_NAME_FIELD_LENGTH 64
+#define SOCKET_NAME "scrcpy"
 #define MAX_CONNECT_COUNT 30
 #define MAX_RESTART_COUNT 1
 
 Server::Server(QObject *parent)
     : QObject(parent) {
+    connect(&m_workProcess, &qsc::AdbProcess::adbProcessResult, this, &Server::onWorkProcessResult);
+
     connect(&m_serverSocket, &QTcpServer::newConnection, this, [this]() {
         QTcpSocket *tmp = m_serverSocket.nextPendingConnection();
         if (dynamic_cast<VideoSocket *>(tmp)) {
@@ -40,21 +43,53 @@ Server::Server(QObject *parent)
 Server::~Server() {
 }
 
-bool Server::start() {
+bool Server::enableTunnelReverse() {
+    if (m_workProcess.isRuning()) {
+        m_workProcess.kill();
+    }
+    m_workProcess.reverse(m_serial, SOCKET_NAME, m_port);
+    return true;
+}
+
+bool Server::disableTunnelReverse() {
+    qsc::AdbProcess *adb = new qsc::AdbProcess();
+    if (!adb) {
+        return false;
+    }
+    connect(adb,
+            &qsc::AdbProcess::adbProcessResult,
+            this,
+            [this](qsc::AdbProcess::ADB_EXEC_RESULT processResult) {
+                if (qsc::AdbProcess::AER_SUCCESS_START != processResult) {
+                    sender()->deleteLater();
+                }
+            });
+    adb->reverseRemove(m_serial, SOCKET_NAME);
+    return true;
+}
+
+bool Server::start(const QString &serial) {
+    m_serial = serial;
+
     // At the application level, the device part is "the server" because it
     // serves video stream and control. However, at the network level, the
     // client listens and the server connects to the client. That way, the
     // client can listen before starting the server app, so there is no need to
     // try to connect until the server socket is listening on the device.
     m_serverSocket.setMaxPendingConnections(2);
-    if (!m_serverSocket.listen()) {
-        qCritical() << "Could not listen";
+    if (!m_serverSocket.listen(QHostAddress::LocalHost)) {
+        qCritical() << "Could not listen on localhost";
         return false;
     }
 
     m_port = m_serverSocket.serverPort();
 
-    return true;
+    bool rev = enableTunnelReverse();
+    if (!rev) {
+        // emit serverStartResult(false);
+    }
+
+    return rev;
 }
 
 bool Server::connectTo() {
@@ -127,5 +162,21 @@ void Server::stopAcceptTimeoutTimer() {
     if (m_acceptTimeoutTimer) {
         killTimer(m_acceptTimeoutTimer);
         m_acceptTimeoutTimer = 0;
+    }
+}
+
+void Server::onWorkProcessResult(qsc::AdbProcess::ADB_EXEC_RESULT processResult) {
+    if (sender() == &m_workProcess) {
+        if (qsc::AdbProcess::AER_SUCCESS_EXEC == processResult) {
+            // At the application level, the device part is "the server" because it
+            // serves video stream and control. However, at the network level, the
+            // client listens and the server connects to the client. That way, the
+            // client can listen before starting the server app, so there is no need to
+            // try to connect until the server socket is listening on the device.
+        } else if (qsc::AdbProcess::AER_SUCCESS_START != processResult) {
+            // 有一些设备reverse会报错more than o'ne device，adb的bug
+            // https://github.com/Genymobile/scrcpy/issues/5
+            qCritical("adb reverse failed");
+        }
     }
 }

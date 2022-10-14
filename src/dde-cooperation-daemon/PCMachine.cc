@@ -46,6 +46,9 @@ void PCMachine::handleConnected() {
     mountFs("/");
 }
 
+void PCMachine::handleDisconnected() {
+}
+
 void PCMachine::mountFs(const std::string &path) {
     Message msg;
     auto *request = msg.mutable_fsrequest();

@@ -18,6 +18,7 @@ public:
               const DeviceInfo &sp);
 
     virtual void handleConnected() override;
+    virtual void handleDisconnected() override;
 
 protected:
     void mountFs(const Glib::VariantContainerBase &args,

@@ -8,8 +8,8 @@
 #include "ToolForm.h"
 #include "ui_ToolForm.h"
 
-ToolForm::ToolForm(qsc::IDevice *device, QWidget *adsorbWidget, AdsorbPositions adsorbPos)
-    : MagneticWidget(adsorbWidget, adsorbPos)
+ToolForm::ToolForm(qsc::IDevice *device, QWidget *adsorbWidget)
+    : QWidget(adsorbWidget)
     , ui(new Ui::ToolForm)
     , m_device(device) {
     ui->setupUi(this);

@@ -17,9 +17,10 @@ class QLabel;
 class VideoForm : public QWidget, public qsc::DeviceObserver {
     Q_OBJECT
 public:
-    explicit VideoForm(qsc::IDevice *device, QWidget *parent = nullptr);
+    explicit VideoForm(QWidget *parent = nullptr);
     ~VideoForm();
 
+    void setDevice(qsc::IDevice *device);
     void staysOnTop(bool top = true);
     void updateShowSize(const QSize &newSize);
     void updateRender(int width,
