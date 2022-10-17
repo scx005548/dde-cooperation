@@ -66,9 +66,9 @@ protected:
 
     // DBus property handlers
     void getMachines(Glib::VariantBase &property, const Glib::ustring &propertyName) const noexcept;
-    void getEnableCooperation(Glib::VariantBase &property,
+    void getDeviceSharingSwitch(Glib::VariantBase &property,
                               const Glib::ustring &propertyName) const noexcept;
-    bool setEnableCooperation(const Glib::ustring &propertyName,
+    bool setDeviceSharingSwitch(const Glib::ustring &propertyName,
                               const Glib::VariantBase &value) noexcept;
 
 private:
@@ -77,7 +77,7 @@ private:
 
     uint32_t m_lastMachineIndex;
     std::unordered_map<std::string, std::shared_ptr<Machine>> m_machines;
-    bool m_enableCooperation;
+    bool m_deviceSharingSwitch;
     std::unique_ptr<DisplayBase> m_displayServer;
     std::unique_ptr<ClipboardBase> m_clipboard;
     uint32_t m_lastRequestId;
@@ -104,7 +104,7 @@ private:
 
     // DBus properties
     Glib::RefPtr<DBus::Property> m_propertyMachines;
-    Glib::RefPtr<DBus::Property> m_propertyEnableCooperation;
+    Glib::RefPtr<DBus::Property> m_propertyDeviceSharingSwitch;
 
     Glib::RefPtr<Gio::DBus::Proxy> m_powersaverProxy;
     int m_deviceSharingCnt;
@@ -117,6 +117,7 @@ private:
     void ensureDataDirExists();
     void initUUID();
 
+    void cooperationStatusChanged(bool enable);
     void addMachine(const std::string &ip, uint16_t port, const DeviceInfo &devInfo);
     std::vector<Glib::DBusObjectPathString> getMachinePaths() const noexcept;
     void inhibitScreensaver();

@@ -34,7 +34,7 @@ Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesyste
     : m_dataDir(dataDir)
     , m_mountRoot(m_dataDir / "mr")
     , m_lastMachineIndex(0)
-    , m_enableCooperation(true)
+    , m_deviceSharingSwitch(true)
     , m_lastRequestId(0)
     , m_uvLoop(uvLoop)
     , m_async(std::make_shared<uvxx::Async>(m_uvLoop))
@@ -50,11 +50,11 @@ Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesyste
                                      {{"ip", "s"}, {"port", "i"}}))
     , m_propertyMachines(
           new DBus::Property("Machines", "ao", DBus::Property::warp(this, &Manager::getMachines)))
-    , m_propertyEnableCooperation(
-          new DBus::Property("EnableCooperation",
+    , m_propertyDeviceSharingSwitch(
+          new DBus::Property("DeviceSharingSwitch",
                              "b",
-                             DBus::Property::warp(this, &Manager::getEnableCooperation),
-                             DBus::Property::warp(this, &Manager::setEnableCooperation)))
+                             DBus::Property::warp(this, &Manager::getDeviceSharingSwitch),
+                             DBus::Property::warp(this, &Manager::setDeviceSharingSwitch)))
     , m_powersaverProxy(Gio::DBus::Proxy::Proxy::create_sync(m_bus,
                                                              "org.freedesktop.ScreenSaver",
                                                              "/org/freedesktop/ScreenSaver",
@@ -69,6 +69,7 @@ Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesyste
     m_interface->exportMethod(m_methodScan);
     m_interface->exportMethod(m_methodKnock);
     m_interface->exportProperty(m_propertyMachines);
+    m_interface->exportProperty(m_propertyDeviceSharingSwitch);
     m_object->exportInterface(m_interface);
     m_service->exportObject(m_object);
 
@@ -187,16 +188,18 @@ void Manager::getMachines(Glib::VariantBase &property,
     property = Glib::Variant<std::vector<Glib::DBusObjectPathString>>::create(getMachinePaths());
 }
 
-void Manager::getEnableCooperation(
+void Manager::getDeviceSharingSwitch(
     Glib::VariantBase &property,
     [[maybe_unused]] const Glib::ustring &propertyName) const noexcept {
-    property = Glib::Variant<bool>::create(m_enableCooperation);
+    property = Glib::Variant<bool>::create(m_deviceSharingSwitch);
 }
 
-bool Manager::setEnableCooperation([[maybe_unused]] const Glib::ustring &propertyName,
+bool Manager::setDeviceSharingSwitch([[maybe_unused]] const Glib::ustring &propertyName,
                                    const Glib::VariantBase &value) noexcept {
     Glib::Variant<bool> v = Glib::VariantBase::cast_dynamic<Glib::Variant<bool>>(value);
-    m_enableCooperation = v.get();
+    m_deviceSharingSwitch = v.get();
+    m_propertyDeviceSharingSwitch->emitChanged(Glib::Variant<bool>::create(m_deviceSharingSwitch));
+    cooperationStatusChanged(m_deviceSharingSwitch);
     return true;
 }
 
@@ -227,6 +230,17 @@ bool Manager::tryFlowOut(uint16_t direction, uint16_t x, uint16_t y) {
     }
 
     return false;
+}
+
+void Manager::cooperationStatusChanged(bool enable) {
+    for (const auto &v : m_machines) {
+        const std::shared_ptr<Machine> &machine = v.second;
+        if (enable) {
+            machine->handleDeviceSharingStartRequest();
+        } else {
+            machine->stopDeviceSharingAux();
+        }
+    }
 }
 
 void Manager::addMachine(const std::string &ip, uint16_t port, const DeviceInfo &devInfo) {
