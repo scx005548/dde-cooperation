@@ -14,10 +14,10 @@ message DeviceSharingStopResponse {
 }
 
 enum DeviceType {
-    Unknown = 0;
-    Keyboard = 1;
-    Mouse = 2;
-    Touchpad = 3;
+    DEVICE_TYPE_UNKNOWN = 0;
+    DEVICE_TYPE_KEYBOARD = 1;
+    DEVICE_TYPE_MOUSE = 2;
+    DEVICE_TYPE_TOUCHPAD = 3;
 }
 
 // 事件类型、事件码、事件值和 Linux input event 一致，
@@ -36,10 +36,10 @@ message InputEventResponse {
 }
 
 enum FlowDirection {
-    Top = 0;
-    Right = 1;
-    Bottom = 2;
-    Left = 3;
+    FLOW_DIRECTION_TOP = 0;
+    FLOW_DIRECTION_RIGHT = 1;
+    FLOW_DIRECTION_BOTTOM = 2;
+    FLOW_DIRECTION_LEFT = 3;
 }
 
 message FlowRequest {

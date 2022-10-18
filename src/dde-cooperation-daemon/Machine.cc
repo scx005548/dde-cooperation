@@ -80,7 +80,7 @@ Machine::Machine(Manager *manager,
           new DBus::Property("Cooperating",
                              "b",
                              DBus::Property::warp(this, &Machine::getCooperating)))
-    , m_direction(FlowDirection::Right)
+    , m_direction(FLOW_DIRECTION_RIGHT)
     , m_propertyDirection(
           new DBus::Property("Direction", "q", DBus::Property::warp(this, &Machine::getDirection)))
     , m_uvLoop(uvLoop)
@@ -149,8 +149,8 @@ void Machine::pair([[maybe_unused]] const Glib::VariantContainerBase &args,
             request->set_key(SCAN_KEY);
             request->mutable_deviceinfo()->set_uuid(m_manager->uuid());
             request->mutable_deviceinfo()->set_name(Net::getHostname());
-            request->mutable_deviceinfo()->set_os(DeviceOS::LINUX);
-            request->mutable_deviceinfo()->set_compositor(Compositor::CPST_NONE);
+            request->mutable_deviceinfo()->set_os(DEVICE_OS_LINUX);
+            request->mutable_deviceinfo()->set_compositor(COMPOSITOR_X11);
 
             m_conn->write(MessageHelper::genMessage(msg));
 
@@ -185,8 +185,8 @@ void Machine::onPair(const std::shared_ptr<uvxx::TCP> &sock) {
     response->set_key(SCAN_KEY);
     response->mutable_deviceinfo()->set_uuid(m_manager->uuid());
     response->mutable_deviceinfo()->set_name(Net::getHostname());
-    response->mutable_deviceinfo()->set_os(DeviceOS::LINUX);
-    response->mutable_deviceinfo()->set_compositor(Compositor::CPST_NONE);
+    response->mutable_deviceinfo()->set_os(DEVICE_OS_LINUX);
+    response->mutable_deviceinfo()->set_compositor(COMPOSITOR_X11);
     response->set_agree(true); // TODO: 询问用户是否同意
 
     m_conn->write(MessageHelper::genMessage(msg));
@@ -497,7 +497,7 @@ void Machine::handleDeviceSharingStartRequest() {
             m_deviceSharing = true;
             m_propertyCooperating->emitChanged(Glib::Variant<bool>::create(m_deviceSharing));
 
-            m_direction = FlowDirection::Left;
+            m_direction = FLOW_DIRECTION_LEFT;
             m_propertyDirection->emitChanged(Glib::Variant<uint16_t>::create(m_direction));
         }
     });
@@ -511,7 +511,7 @@ void Machine::handleDeviceSharingStartResponse(const DeviceSharingStartResponse 
     m_deviceSharing = true;
     m_propertyCooperating->emitChanged(Glib::Variant<bool>::create(m_deviceSharing));
 
-    m_direction = FlowDirection::Right;
+    m_direction = FLOW_DIRECTION_RIGHT;
     m_propertyDirection->emitChanged(Glib::Variant<uint16_t>::create(m_direction));
 
     m_manager->onStartDeviceSharing(weak_from_this(), true);

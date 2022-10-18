@@ -209,7 +209,7 @@ void Manager::scanAux() noexcept {
     request->set_key(SCAN_KEY);
     request->mutable_deviceinfo()->set_uuid(m_uuid);
     request->mutable_deviceinfo()->set_name(Net::getHostname());
-    request->mutable_deviceinfo()->set_os(DeviceOS::LINUX);
+    request->mutable_deviceinfo()->set_os(DEVICE_OS_LINUX);
     request->set_port(m_port);
 
     m_socketScan->send(m_scanAddr, MessageHelper::genMessage(base));
@@ -310,7 +310,7 @@ void Manager::handleReceivedSocketScan(std::shared_ptr<uvxx::Addr> addr,
         response->set_key(SCAN_KEY);
         response->mutable_deviceinfo()->set_uuid(m_uuid);
         response->mutable_deviceinfo()->set_name(Net::getHostname());
-        response->mutable_deviceinfo()->set_os(DeviceOS::LINUX);
+        response->mutable_deviceinfo()->set_os(DEVICE_OS_LINUX);
         response->set_port(m_port);
         m_socketScan->send(addr, MessageHelper::genMessage(msg));
 
@@ -380,7 +380,7 @@ void Manager::ping(const std::string &ip, uint16_t port) {
     request->set_key(SCAN_KEY);
     request->mutable_deviceinfo()->set_uuid(m_uuid);
     request->mutable_deviceinfo()->set_name(Net::getHostname());
-    request->mutable_deviceinfo()->set_os(DeviceOS::LINUX);
+    request->mutable_deviceinfo()->set_os(DEVICE_OS_LINUX);
     request->set_port(m_port);
 
     m_socketScan->send(uvxx::IPv4Addr::create(ip, port), MessageHelper::genMessage(msg));

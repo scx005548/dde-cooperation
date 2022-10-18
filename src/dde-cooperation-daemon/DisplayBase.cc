@@ -21,14 +21,14 @@ void DisplayBase::handleMotion(int16_t x, int16_t y) {
             if (x == 0) {
                 // left flow
                 spdlog::info("left flow");
-                flowOut(FlowDirection::Left, 0, y);
+                flowOut(FLOW_DIRECTION_LEFT, 0, y);
                 break;
             }
 
             if (x == m_screenWidth - 1) {
                 // right flow
                 spdlog::info("right flow");
-                flowOut(FlowDirection::Right, 0, y);
+                flowOut(FLOW_DIRECTION_RIGHT, 0, y);
                 break;
             }
         }
@@ -37,14 +37,14 @@ void DisplayBase::handleMotion(int16_t x, int16_t y) {
             if (y == 0) {
                 // top flow
                 spdlog::info("top flow");
-                flowOut(FlowDirection::Top, x, 0);
+                flowOut(FLOW_DIRECTION_TOP, x, 0);
                 break;
             }
 
             if (y == m_screenHeight - 1) {
                 // bottom flow
                 spdlog::info("bottom flow");
-                flowOut(FlowDirection::Bottom, x, 0);
+                flowOut(FLOW_DIRECTION_BOTTOM, x, 0);
                 break;
             }
         }

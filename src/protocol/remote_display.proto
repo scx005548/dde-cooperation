@@ -2,9 +2,9 @@ syntax = "proto3";
 
 enum RemoteDisplayDataType
 {
-    BMP = 0;
-    MotionJPEG = 1;
-    H264 = 2;
+    REMOTE_DISPLAY_DATA_TYPE_BMP = 0;
+    REMOTE_DISPLAY_DATA_TYPE_MotionJPEG = 1;
+    REMOTE_DISPLAY_DATA_TYPE_H264 = 2;
 }
 
 message RemoteDisplayConfigRequest

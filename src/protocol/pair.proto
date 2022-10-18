@@ -2,19 +2,19 @@ syntax = "proto3";
 
 enum DeviceOS
 {
-    OTHER = 0;
-    UOS = 1;
-    LINUX = 2;
-    WINDOWS = 3;
-    MACOS = 4;
-    ANDROID = 5;
+    DEVICE_OS_OTHER = 0;
+    DEVICE_OS_UOS = 1;
+    DEVICE_OS_LINUX = 2;
+    DEVICE_OS_WINDOWS = 3;
+    DEVICE_OS_MACOS = 4;
+    DEVICE_OS_ANDROID = 5;
 }
 
 enum Compositor
 {
-    CPST_NONE = 0;
-    CPST_X11 = 1;
-    CPST_WAYLAND = 2;
+    COMPOSITOR_NONE = 0;
+    COMPOSITOR_X11 = 1;
+    COMPOSITOR_WAYLAND = 2;
 }
 
 message DeviceInfo
