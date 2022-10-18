@@ -346,14 +346,21 @@ void Machine::mountFs(const std::string &path) {
 void Machine::handleDisconnected() {
     spdlog::info("disconnected");
 
+    m_manager->onStopDeviceSharing();
+
     m_deviceSharing = false;
     m_propertyCooperating->emitChanged(Glib::Variant<bool>::create(m_deviceSharing));
     m_paired = false;
     m_propertyPaired->emitChanged(Glib::Variant<bool>::create(m_paired));
-    
-    m_fuseClient->exit();
-    m_fuseClient.reset();
-    m_fuseServer.reset();
+
+    if (m_fuseClient) {
+        m_fuseClient->exit();
+        m_fuseClient.reset();
+    }
+
+    if (m_fuseServer) {
+        m_fuseServer.reset();
+    }
 
     m_conn.reset();
 

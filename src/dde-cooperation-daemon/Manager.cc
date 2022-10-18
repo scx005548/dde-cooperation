@@ -278,7 +278,7 @@ void Manager::handleReceivedSocketScan(std::shared_ptr<uvxx::Addr> addr,
     buff += header_size;
     size -= header_size;
 
-    auto base = MessageHelper::parseMessageBody<Message>(buff, header.size());
+    auto base = MessageHelper::parseMessageBody<Message>(buff, size);
     spdlog::info("received packet, type: {}", base.payload_case());
 
     switch (base.payload_case()) {
