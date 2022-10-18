@@ -31,8 +31,8 @@ protected:
     void stay();
     void stopStay();
 
-    std::function<void()> successCb_{nullFunc{}};
-    std::function<void(const std::string &title, const std::string &msg)> errorCb_{nullFunc{}};
+    std::function<void()> successCb_;
+    std::function<void(const std::string &title, const std::string &msg)> errorCb_;
 
 private:
     std::shared_ptr<void> self_;
@@ -57,11 +57,15 @@ protected:
         ptr->stopStay();
 
         if (status != 0) {
-            ptr->errorCb_(uv_err_name(status), uv_strerror(status));
+            if (ptr->errorCb_) {
+                ptr->errorCb_(uv_err_name(status), uv_strerror(status));
+            }
             return;
         }
 
-        ptr->successCb_();
+        if (ptr->successCb_) {
+            ptr->successCb_();
+        }
     }
 
     template <typename... Args>
@@ -70,7 +74,9 @@ protected:
         int ret = std::forward<decltype(func)>(func)(std::forward<Args>(args)...,
                                                      &RequestT::callback);
         if (ret != 0) {
-            errorCb_(uv_err_name(ret), uv_strerror(ret));
+            if (errorCb_) {
+                errorCb_(uv_err_name(ret), uv_strerror(ret));
+            }
             return false;
         }
 

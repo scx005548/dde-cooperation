@@ -5,16 +5,6 @@
 
 namespace uvxx {
 
-class nullFunc {
-public:
-    template <class F>
-    operator std::function<F>() {
-        return [](auto &&...) {};
-    }
-
-    operator bool() { return false; }
-};
-
 template <class C, typename R, typename... Args>
 std::function<void(Args...)> memFunc(C *p, R (C::*f)(Args...)) {
     return [p, f](Args &&...args) { return (p->*f)(std::forward<Args>(args)...); };

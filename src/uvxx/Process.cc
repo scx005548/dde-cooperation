@@ -102,6 +102,12 @@ int Process::addStdio(uv_stdio_flags flags, int fd) {
 }
 
 void Process::exitCb([[maybe_unused]] uv_process_t *handle, int64_t exit_status, int term_signal) {
-    spdlog::debug("process {} {} [{}] exited with status {}", file, fmt::join(args, ", "), pid(), exit_status);
-    exitCb_(exit_status, term_signal);
+    spdlog::debug("process {} {} [{}] exited with status {}",
+                  file,
+                  fmt::join(args, ", "),
+                  pid(),
+                  exit_status);
+    if (exitCb_) {
+        exitCb_(exit_status, term_signal);
+    }
 }

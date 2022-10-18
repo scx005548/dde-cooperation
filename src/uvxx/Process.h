@@ -42,7 +42,7 @@ public:
     int addStdio(uv_stdio_flags flags, int fd);
 
 private:
-    std::function<void(int64_t exit_status, int term_signal)> exitCb_{nullFunc{}};
+    std::function<void(int64_t exit_status, int term_signal)> exitCb_;
     std::vector<uv_stdio_container_t> stdioContainers_;
 
     void exitCb(uv_process_t *handle, int64_t exit_status, int term_signal);

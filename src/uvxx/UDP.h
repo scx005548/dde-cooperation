@@ -38,12 +38,12 @@ public:
 
 protected:
 private:
-    std::function<void(const std::string &title, const std::string &msg)> sendFailedCb_{nullFunc{}};
+    std::function<void(const std::string &title, const std::string &msg)> sendFailedCb_;
     std::function<void(std::shared_ptr<uvxx::Addr> addr,
                        std::unique_ptr<char[]> data,
                        size_t size,
                        bool partial)>
-        receivedCb_{nullFunc{}};
+        receivedCb_;
 
     void allocCb([[maybe_unused]] uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf);
     void recvCb(uv_udp_t *handle,

@@ -30,5 +30,7 @@ void Handle::close() {
 }
 
 void Handle::closeCb([[maybe_unused]] uv_handle_t *handle) {
-    closedCb_();
+    if (closedCb_) {
+        closedCb_();
+    }
 }

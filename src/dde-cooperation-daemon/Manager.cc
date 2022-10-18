@@ -342,7 +342,7 @@ void Manager::handleNewConnection(bool) noexcept {
         if (!res.has_value()) {
             if (res.error() == MessageHelper::PARSE_ERROR::ILLEGAL_MESSAGE) {
                 socketConnected->close();
-                socketConnected->onReceived(uvxx::nullFunc{});
+                socketConnected->onReceived(nullptr);
             }
             return;
         }
@@ -353,7 +353,7 @@ void Manager::handleNewConnection(bool) noexcept {
         if (request.key() != SCAN_KEY) {
             spdlog::error("key mismatch {}", SCAN_KEY);
             socketConnected->close();
-            socketConnected->onReceived(uvxx::nullFunc{});
+            socketConnected->onReceived(nullptr);
             return;
         }
 
@@ -362,7 +362,7 @@ void Manager::handleNewConnection(bool) noexcept {
             // TODO: return failed
             spdlog::error("cannot found device with uuid {}", request.deviceinfo().uuid());
             socketConnected->close();
-            socketConnected->onReceived(uvxx::nullFunc{});
+            socketConnected->onReceived(nullptr);
             return;
         }
 

@@ -29,8 +29,8 @@ protected:
 private:
     Buffer buff_;
 
-    std::function<void(bool)> newConnectionCb_{nullFunc{}};
-    std::function<void(Buffer &buff)> receivedCb_{nullFunc{}};
+    std::function<void(bool)> newConnectionCb_;
+    std::function<void(Buffer &buff)> receivedCb_;
 
     void newConnectionCb(uv_stream_t *req, int status);
     void bufferedReadCb(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf);

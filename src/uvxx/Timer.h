@@ -18,7 +18,7 @@ public:
 private:
     bool isOneShot_;
     uint64_t timeout_;
-    std::function<void()> cb_{nullFunc{}};
+    std::function<void()> cb_;
 
     bool startAux();
     void timerCb(uv_timer_t *handle);

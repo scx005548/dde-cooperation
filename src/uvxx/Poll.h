@@ -15,7 +15,7 @@ public:
     void onEvent(const std::function<void(int events)> &cb) { eventCb_ = cb; };
 
 private:
-    std::function<void(int events)> eventCb_{nullFunc{}};
+    std::function<void(int events)> eventCb_;
 
     void pollCb(uv_poll_t *handle, int status, int events);
 };

@@ -17,9 +17,13 @@ bool Poll::stop() {
 
 void Poll::pollCb([[maybe_unused]] uv_poll_t *handle, int status, int events) {
     if (status != 0) {
-        errorCb_(uv_err_name(status), uv_strerror(status));
+        if (errorCb_) {
+            errorCb_(uv_err_name(status), uv_strerror(status));
+        }
         return;
     }
 
-    eventCb_(events);
+    if (eventCb_) {
+        eventCb_(events);
+    }
 }

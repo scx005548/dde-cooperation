@@ -19,9 +19,8 @@ public:
     }
 
 private:
-    std::function<void()> connectedCb_{nullFunc{}};
-    std::function<void(const std::string &title, const std::string &msg)> connectFailedCb_{
-        nullFunc{}};
+    std::function<void()> connectedCb_;
+    std::function<void(const std::string &title, const std::string &msg)> connectFailedCb_;
 };
 
 } // namespace uvxx

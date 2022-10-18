@@ -62,10 +62,12 @@ void UDP::recvCb([[maybe_unused]] uv_udp_t *handle,
                  const struct sockaddr *sa,
                  unsigned flags) {
     if (sa != nullptr) {
-        receivedCb_(Addr::create(sa),
-                    std::unique_ptr<char[]>{buf->base},
-                    nread,
-                    ((flags & UV_UDP_PARTIAL) != 0));
+        if (receivedCb_) {
+            receivedCb_(Addr::create(sa),
+                        std::unique_ptr<char[]>{buf->base},
+                        nread,
+                        ((flags & UV_UDP_PARTIAL) != 0));
+        }
     } else {
         // empty
     }

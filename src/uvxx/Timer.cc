@@ -38,5 +38,7 @@ bool Timer::startAux() {
 }
 
 void Timer::timerCb([[maybe_unused]] uv_timer_t *handle) {
-    cb_();
+    if (cb_) {
+        cb_();
+    }
 }

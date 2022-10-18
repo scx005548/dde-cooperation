@@ -23,7 +23,7 @@ protected:
     explicit Handle(const std::shared_ptr<Loop> &loop);
     ~Handle();
 
-    std::function<void(const std::string &title, const std::string &msg)> errorCb_{nullFunc{}};
+    std::function<void(const std::string &title, const std::string &msg)> errorCb_;
 
     template <typename T, typename... Args>
     bool initialize(int (*func)(uv_loop_t *, T *, Args...), Args... args) {
@@ -54,7 +54,7 @@ protected:
     std::shared_ptr<Loop> loop_;
 
 private:
-    std::function<void()> closedCb_{nullFunc{}};
+    std::function<void()> closedCb_;
 
     uv_loop_t *getLoop();
 
