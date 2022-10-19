@@ -19,6 +19,8 @@
 #include "uvxx/Pipe.h"
 
 #include "Machine.h"
+#include "PCMachine.h"
+#include "AndroidMachine.h"
 #include "Request.h"
 #include "X11/Display.h"
 #include "X11/Clipboard.h"
@@ -265,16 +267,30 @@ void Manager::addMachine(const std::string &ip, uint16_t port, const DeviceInfo 
     auto shortUUID = devInfo.uuid();
     shortUUID.resize(8);
     fs::path dataPath = m_dataDir / shortUUID;
-    auto m = std::make_shared<Machine>(this,
-                                       m_clipboard.get(),
-                                       m_uvLoop,
-                                       m_service,
-                                       m_lastMachineIndex,
-                                       dataPath,
-                                       ip,
-                                       port,
-                                       devInfo);
-    m_machines.insert(std::pair(devInfo.uuid(), m));
+
+    if (devInfo.os() == DEVICE_OS_ANDROID) {
+        auto m = std::make_shared<AndroidMachine>(this,
+                                             m_clipboard.get(),
+                                             m_uvLoop,
+                                             m_service,
+                                             m_lastMachineIndex,
+                                             dataPath,
+                                             ip,
+                                             port,
+                                             devInfo);
+        m_machines.insert(std::pair(devInfo.uuid(), m));
+    } else {
+        auto m = std::make_shared<PCMachine>(this,
+                                             m_clipboard.get(),
+                                             m_uvLoop,
+                                             m_service,
+                                             m_lastMachineIndex,
+                                             dataPath,
+                                             ip,
+                                             port,
+                                             devInfo);
+        m_machines.insert(std::pair(devInfo.uuid(), m));
+    }
     m_lastMachineIndex++;
 
     m_propertyMachines->emitChanged(

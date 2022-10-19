@@ -41,7 +41,7 @@ public:
             const Glib::ustring &ip,
             uint16_t port,
             const DeviceInfo &sp);
-    ~Machine();
+    virtual ~Machine();
 
     Glib::ustring path() const { return m_path; }
     const Glib::ustring &ip() const { return m_ip; };
@@ -56,7 +56,11 @@ public:
     void flowTo(uint16_t direction, uint16_t x, uint16_t y) noexcept;
     void readTarget(const std::string &target);
 
+    virtual void handleConnected() = 0;
+
 protected:
+    void init();
+
     void pair(const Glib::VariantContainerBase &args,
               const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
     void disconnect(const Glib::VariantContainerBase &args,
@@ -67,8 +71,6 @@ protected:
                           const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
     void stopCooperation(const Glib::VariantContainerBase &args,
                          const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
-    void mountFs(const Glib::VariantContainerBase &args,
-                 const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
 
     void getIP(Glib::VariantBase &property, const Glib::ustring &propertyName) const;
     void getPort(Glib::VariantBase &property, const Glib::ustring &propertyName) const;
@@ -89,7 +91,6 @@ private:
     const Glib::ustring m_path;
 
     Glib::RefPtr<DBus::Service> m_service;
-    Glib::RefPtr<DBus::Object> m_object;
     Glib::RefPtr<DBus::Interface> m_interface;
 
     Glib::RefPtr<DBus::Method> m_methodPair;
@@ -97,7 +98,6 @@ private:
     Glib::RefPtr<DBus::Method> m_methodSendFile;
     Glib::RefPtr<DBus::Method> m_methodRequestCooperate;
     Glib::RefPtr<DBus::Method> m_methodStopCooperation;
-    Glib::RefPtr<DBus::Method> m_methodMountFs;
 
     Glib::ustring m_ip;
     Glib::RefPtr<DBus::Property> m_propertyIP;
@@ -129,8 +129,6 @@ private:
     std::shared_ptr<uvxx::Loop> m_uvLoop;
     std::shared_ptr<uvxx::Timer> m_pingTimer;
     std::shared_ptr<uvxx::Timer> m_offlineTimer;
-    std::shared_ptr<uvxx::Async> m_async;
-    std::shared_ptr<uvxx::TCP> m_conn;
     std::unique_ptr<ConfirmDialogWrapper> m_confirmDialog;
 
     std::unordered_map<InputDeviceType, std::unique_ptr<InputEmittorWrapper>> m_inputEmittors;
@@ -144,11 +142,10 @@ private:
     void onOffline();
 
     void initConnection();
-    void mountFs(const std::string &path);
 
     void handleDisconnected();
     void dispatcher(uvxx::Buffer &buff) noexcept;
-    void handlePairResponse(const PairResponse &resp);
+    void handlePairResponseAux(const PairResponse &resp);
     void handleDeviceSharingStartRequest();
     void handleDeviceSharingStartResponse(const DeviceSharingStartResponse &resp);
     void handleDeviceSharingStopRequest();
@@ -170,6 +167,13 @@ private:
 
     void stopDeviceSharingAux();
     void receivedUserConfirm(uvxx::Buffer &buff);
+
+protected:
+    std::shared_ptr<uvxx::Async> m_async;
+    std::shared_ptr<uvxx::TCP> m_conn;
+
+    Glib::RefPtr<DBus::Object> m_object;
+
     void sendMessage(const Message &msg);
 };
 

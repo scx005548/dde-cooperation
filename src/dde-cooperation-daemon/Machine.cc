@@ -44,7 +44,6 @@ Machine::Machine(Manager *manager,
     , m_mountpoint(m_dataDir / "mp")
     , m_path(Glib::ustring::compose("/com/deepin/Cooperation/Machine/%1", id))
     , m_service(service)
-    , m_object(new DBus::Object(m_path))
     , m_interface(new DBus::Interface("com.deepin.Cooperation.Machine"))
     , m_methodPair(new DBus::Method("Pair", DBus::Method::warp(this, &Machine::pair)))
     , m_methodDisconnect(
@@ -57,8 +56,6 @@ Machine::Machine(Manager *manager,
                            DBus::Method::warp(this, &Machine::requestCooperate)))
     , m_methodStopCooperation(
           new DBus::Method("StopCooperation", DBus::Method::warp(this, &Machine::stopCooperation)))
-    , m_methodMountFs(
-          new DBus::Method("MountFs", DBus::Method::warp(this, &Machine::mountFs), {{"path", "s"}}))
     , m_ip(ip)
     , m_propertyIP(new DBus::Property("IP", "s", DBus::Property::warp(this, &Machine::getIP)))
     , m_port(port)
@@ -88,15 +85,15 @@ Machine::Machine(Manager *manager,
     , m_pingTimer(std::make_shared<uvxx::Timer>(m_uvLoop, uvxx::memFunc(this, &Machine::ping)))
     , m_offlineTimer(
           std::make_shared<uvxx::Timer>(m_uvLoop, uvxx::memFunc(this, &Machine::onOffline)))
+    , m_mounted(false)
     , m_async(std::make_shared<uvxx::Async>(m_uvLoop))
-    , m_mounted(false) {
+    , m_object(new DBus::Object(m_path)) {
 
     m_interface->exportMethod(m_methodPair);
     m_interface->exportMethod(m_methodDisconnect);
     m_interface->exportMethod(m_methodSendFile);
     m_interface->exportMethod(m_methodRequestCooperate);
     m_interface->exportMethod(m_methodStopCooperation);
-    m_interface->exportMethod(m_methodMountFs);
     m_interface->exportProperty(m_propertyIP);
     m_interface->exportProperty(m_propertyPort);
     m_interface->exportProperty(m_propertyUUID);
@@ -107,7 +104,6 @@ Machine::Machine(Manager *manager,
     m_interface->exportProperty(m_propertyCooperating);
     m_interface->exportProperty(m_propertyDirection);
     m_object->exportInterface(m_interface);
-    m_service->exportObject(m_object);
 
     m_inputEmittors.emplace(
         std::make_pair(InputDeviceType::KEYBOARD,
@@ -129,6 +125,10 @@ Machine::Machine(Manager *manager,
 
 Machine::~Machine() {
     m_service->unexportObject(m_object->path());
+}
+
+void Machine::init() {
+    m_service->exportObject(m_object);
 }
 
 void Machine::pair([[maybe_unused]] const Glib::VariantContainerBase &args,
@@ -298,22 +298,6 @@ void Machine::initConnection() {
     m_conn->keepalive(true, 20);
 }
 
-void Machine::mountFs(const Glib::VariantContainerBase &args,
-                      const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
-    if (!m_conn) {
-        invocation->return_error(
-            Gio::DBus::Error{Gio::DBus::Error::ACCESS_DENIED, "connect first"});
-        return;
-    }
-
-    Glib::Variant<Glib::ustring> path;
-    args.get_child(path, 0);
-
-    m_async->wake([this, path = path.get()]() { mountFs(path); });
-
-    invocation->return_value(Glib::VariantContainerBase{});
-}
-
 void Machine::getIP(Glib::VariantBase &property,
                     [[maybe_unused]] const Glib::ustring &propertyName) const {
     property = Glib::Variant<Glib::ustring>::create(m_ip);
@@ -357,13 +341,6 @@ void Machine::getCooperating(Glib::VariantBase &property,
 void Machine::getDirection(Glib::VariantBase &property,
                            [[maybe_unused]] const Glib::ustring &propertyName) const {
     property = Glib::Variant<uint16_t>::create(m_direction);
-}
-
-void Machine::mountFs(const std::string &path) {
-    Message msg;
-    auto *request = msg.mutable_fsrequest();
-    request->set_path(path);
-    sendMessage(msg);
 }
 
 void Machine::handleDisconnected() {
@@ -410,7 +387,7 @@ void Machine::dispatcher(uvxx::Buffer &buff) noexcept {
 
         switch (msg.payload_case()) {
         case Message::PayloadCase::kPairResponse: {
-            handlePairResponse(msg.pairresponse());
+            handlePairResponseAux(msg.pairresponse());
             break;
         }
 
@@ -499,7 +476,7 @@ void Machine::dispatcher(uvxx::Buffer &buff) noexcept {
     }
 }
 
-void Machine::handlePairResponse(const PairResponse &resp) {
+void Machine::handlePairResponseAux(const PairResponse &resp) {
     bool agree = resp.agree();
     if (!agree) {
         // handle not agree
@@ -510,7 +487,7 @@ void Machine::handlePairResponse(const PairResponse &resp) {
     m_paired = true;
     m_propertyPaired->emitChanged(Glib::Variant<bool>::create(m_paired));
 
-    mountFs("/");
+    handleConnected();
 }
 
 void Machine::handleDeviceSharingStartRequest() {
@@ -798,7 +775,7 @@ void Machine::receivedUserConfirm(uvxx::Buffer &buff) {
         m_paired = true;
         m_propertyPaired->emitChanged(Glib::Variant<bool>::create(m_paired));
 
-        mountFs("/");
+        handleConnected();
     }
 }
 

@@ -6,6 +6,10 @@ dde_cooperation_daemon_sources = files('''
   KeyPair.cc
   Machine.h
   Machine.cc
+  PCMachine.h
+  PCMachine.cc
+  AndroidMachine.h
+  AndroidMachine.cc
   Request.h
   Request.cc
   InputEmittorWrapper.h
