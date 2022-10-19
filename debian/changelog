@@ -1,3 +1,19 @@
+dde-cooperation (0.0.2) UNRELEASED; urgency=medium
+
+  [ Deepin Packages Builder ]
+  * feat: uvxx TCP 增加 keepalive(Task: 119615)(Influence: 无)
+  * feat: 启动后自动搜索(Task: 119615)(Influence: 设备列表)
+  * feat: 设备增加 ping 功能(Task: 119615)(Influence: 设备列表)
+  * fix: 修复停止共享后鼠标不显示(Task: 119629)(Influence: 停止外设共享)
+  * chore: cooperate 改为 device sharing(Task: 119629)(Influence: 无)
+  * fix: 修复连接后自动掉线(Task: 119615)(Influence: 配对连接)
+  * fix: 修复发送文件失败(Task: 119627)(Influence: 发送文件)
+  * fix: uxvv 修复 close 后无回调(Task: 119629)(Influence: 关闭链接)
+  * fix: 修复 Disconnect 接口无反应(Task: 119629)(Influence: 断开连接)
+  * fix: meson build 出错(Task: 119627)(Influence: meson 编译)
+
+ -- zyz <zhaoyingzhen@uniontech.com>  Wed, 19 Oct 2022 14:39:19 +0800
+
 dde-cooperation (0.0.1) UNRELEASED; urgency=medium
 
   * 实现了简单的日志功能
