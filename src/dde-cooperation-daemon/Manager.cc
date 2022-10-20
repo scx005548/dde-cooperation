@@ -152,6 +152,12 @@ void Manager::initUUID() {
     f.close();
 }
 
+bool Manager::isValidUUID(const std::string &str) const noexcept {
+    uuid_t uuid;
+    int res = uuid_parse_range(str.data(), str.data() + str.size(), uuid);
+    return res == 0;
+}
+
 void Manager::scan([[maybe_unused]] const Glib::VariantContainerBase &args,
                    const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
     m_async->wake([this]() { scanAux(); });
@@ -310,6 +316,10 @@ void Manager::handleReceivedSocketScan(std::shared_ptr<uvxx::Addr> addr,
             return;
         }
 
+        if (!isValidUUID(uuid)) {
+            return;
+        }
+
         updateMachine(ipv4->ip(), request.port(), request.deviceinfo());
 
         Message msg;
@@ -327,6 +337,11 @@ void Manager::handleReceivedSocketScan(std::shared_ptr<uvxx::Addr> addr,
         const auto &resp = base.scanresponse();
         if (resp.key() != SCAN_KEY) {
             spdlog::error("key mismatch: {}", SCAN_KEY);
+            return;
+        }
+
+        auto uuid = resp.deviceinfo().uuid();
+        if (!isValidUUID(uuid)) {
             return;
         }
 

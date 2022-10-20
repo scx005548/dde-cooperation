@@ -116,6 +116,7 @@ private:
 
     void ensureDataDirExists();
     void initUUID();
+    bool isValidUUID(const std::string &str) const noexcept;
 
     void cooperationStatusChanged(bool enable);
     void updateMachine(const std::string &ip, uint16_t port, const DeviceInfo &devInfo);
