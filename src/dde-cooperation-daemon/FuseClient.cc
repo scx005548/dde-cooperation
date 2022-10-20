@@ -50,7 +50,6 @@ FuseClient::FuseClient(const std::shared_ptr<uvxx::Loop> &uvLoop,
 
     fuse_opt_add_arg(&m_args, m_mountpoint.c_str());
     fuse_opt_add_arg(&m_args, "-d");
-    fuse_opt_add_arg(&m_args, "-odefault_permissions");
 
     m_conn->onConnected([this]() { m_mountThread = std::thread(&FuseClient::mount, this); });
     m_conn->onReceived(uvxx::memFunc(this, &FuseClient::handleResponse));
