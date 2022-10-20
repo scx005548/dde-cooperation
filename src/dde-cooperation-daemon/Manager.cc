@@ -453,7 +453,7 @@ void Manager::onFlowOut(const std::weak_ptr<Machine> &machine) {
 
 void Manager::onClipboardTargetsChanged(const std::vector<std::string> &targets) {
     for (auto &[uuid, machine] : m_machines) {
-        if (!machine->m_deviceSharing) {
+        if (!machine->m_paired) {
             continue;
         }
 
