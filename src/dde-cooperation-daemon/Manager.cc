@@ -222,7 +222,7 @@ void Manager::scanAux() noexcept {
 }
 
 void Manager::removeInputGrabber(const std::filesystem::path &path) {
-    m_inputGrabbers.erase(path.string());
+    m_async->wake([this, path]() { m_inputGrabbers.erase(path.string()); });
 }
 
 bool Manager::tryFlowOut(uint16_t direction, uint16_t x, uint16_t y) {
