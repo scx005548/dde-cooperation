@@ -133,6 +133,11 @@ Machine::~Machine() {
 
 void Machine::pair([[maybe_unused]] const Glib::VariantContainerBase &args,
                    const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
+    if (m_paired) {
+        invocation->return_value(Glib::VariantContainerBase{});
+        return;
+    }
+
     m_async->wake([this, invocation]() {
         m_conn = std::make_shared<uvxx::TCP>(m_uvLoop);
 
@@ -240,6 +245,11 @@ void Machine::sendFile(const Glib::VariantContainerBase &args,
 void Machine::requestCooperate(
     [[maybe_unused]] const Glib::VariantContainerBase &args,
     const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
+    if (m_deviceSharing) {
+        invocation->return_value(Glib::VariantContainerBase{});
+        return;
+    }
+
     if (!m_conn) {
         invocation->return_error(
             Gio::DBus::Error{Gio::DBus::Error::ACCESS_DENIED, "connect first"});
