@@ -175,22 +175,10 @@ void Machine::pair([[maybe_unused]] const Glib::VariantContainerBase &args,
 }
 
 void Machine::updateMachineInfo(const Glib::ustring &ip, uint16_t port, const DeviceInfo &devInfo) {
-    if (port != m_port || ip != m_ip) {
-        if (m_conn) {
-            m_conn->close();
-        }
-
-        m_ip = ip;
-        m_port = port;
-    }
-
-    if (m_name != devInfo.name()) {
-        m_name = devInfo.name();
-    }
-
-    if (m_compositor != devInfo.compositor()) {
-        m_compositor = devInfo.compositor();
-    }
+    m_ip = ip;
+    m_port = port;
+    m_name = devInfo.name();
+    m_compositor = devInfo.compositor();
 }
 
 void Machine::receivedPing() {
