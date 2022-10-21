@@ -110,12 +110,14 @@ int FuseClient::getattr(const char *path,
                         [[maybe_unused]] struct fuse_file_info *fi) {
     spdlog::debug("getattr: {}", path);
 
-    Message msg;
-    FsMethodGetAttrRequest *req = msg.mutable_fsmethodgetattrrequest();
-    m_serial++;
-    req->set_serial(m_serial);
-    req->set_path(path);
-    m_conn->write(MessageHelper::genMessage(msg));
+    m_async->wake([this, path]() {
+        Message msg;
+        FsMethodGetAttrRequest *req = msg.mutable_fsmethodgetattrrequest();
+        m_serial++;
+        req->set_serial(m_serial);
+        req->set_path(path);
+        m_conn->write(MessageHelper::genMessage(msg));
+    });
 
     auto resp = std::static_pointer_cast<FsMethodGetAttrResponse>(waitForServerReply());
     if (!resp) {
@@ -154,12 +156,14 @@ int FuseClient::getattr(const char *path,
 int FuseClient::open(const char *path, struct fuse_file_info *fi) {
     spdlog::debug("open: {}", path);
 
-    Message msg;
-    FsMethodOpenRequest *req = msg.mutable_fsmethodopenrequest();
-    m_serial++;
-    req->set_serial(m_serial);
-    req->set_path(path);
-    m_conn->write(MessageHelper::genMessage(msg));
+    m_async->wake([this, path]() {
+        Message msg;
+        FsMethodOpenRequest *req = msg.mutable_fsmethodopenrequest();
+        m_serial++;
+        req->set_serial(m_serial);
+        req->set_path(path);
+        m_conn->write(MessageHelper::genMessage(msg));
+    });
 
     auto resp = std::static_pointer_cast<FsMethodOpenResponse>(waitForServerReply());
     if (!resp) {
@@ -183,15 +187,17 @@ int FuseClient::read(const char *path,
                      struct fuse_file_info *fi) {
     spdlog::debug("read: {}, fh: {}, size: {}, offset: {}", path, fi->fh, size, offset);
 
-    Message msg;
-    FsMethodReadRequest *req = msg.mutable_fsmethodreadrequest();
-    m_serial++;
-    req->set_serial(m_serial);
-    req->set_offset(offset);
-    req->set_size(size);
-    auto rfi = req->mutable_fi();
-    rfi->set_fh(fi->fh);
-    m_conn->write(MessageHelper::genMessage(msg));
+    m_async->wake([this, offset, size, fi]() {
+        Message msg;
+        FsMethodReadRequest *req = msg.mutable_fsmethodreadrequest();
+        m_serial++;
+        req->set_serial(m_serial);
+        req->set_offset(offset);
+        req->set_size(size);
+        auto rfi = req->mutable_fi();
+        rfi->set_fh(fi->fh);
+        m_conn->write(MessageHelper::genMessage(msg));
+    });
 
     auto resp = std::static_pointer_cast<FsMethodReadResponse>(waitForServerReply());
     if (!resp) {
@@ -207,13 +213,16 @@ int FuseClient::read(const char *path,
 
 int FuseClient::release(const char *path, struct fuse_file_info *fi) {
     spdlog::debug("release: {}", path);
-    Message msg;
-    FsMethodReleaseRequest *req = msg.mutable_fsmethodreleaserequest();
-    m_serial++;
-    req->set_serial(m_serial);
-    req->set_path(path);
-    req->mutable_fi()->set_fh(fi->fh);
-    m_conn->write(MessageHelper::genMessage(msg));
+
+    m_async->wake([this, path, fi]() {
+        Message msg;
+        FsMethodReleaseRequest *req = msg.mutable_fsmethodreleaserequest();
+        m_serial++;
+        req->set_serial(m_serial);
+        req->set_path(path);
+        req->mutable_fi()->set_fh(fi->fh);
+        m_conn->write(MessageHelper::genMessage(msg));
+    });
 
     auto resp = std::static_pointer_cast<FsMethodReleaseResponse>(waitForServerReply());
     if (!resp) {
@@ -231,12 +240,15 @@ int FuseClient::readdir(const char *path,
                         [[maybe_unused]] struct fuse_file_info *fi,
                         [[maybe_unused]] enum fuse_readdir_flags flags) {
     spdlog::debug("readdir: {}", path);
-    Message msg;
-    FsMethodReadDirRequest *req = msg.mutable_fsmethodreaddirrequest();
-    m_serial++;
-    req->set_serial(m_serial);
-    req->set_path(path);
-    m_conn->write(MessageHelper::genMessage(msg));
+
+    m_async->wake([this, path]() {
+        Message msg;
+        FsMethodReadDirRequest *req = msg.mutable_fsmethodreaddirrequest();
+        m_serial++;
+        req->set_serial(m_serial);
+        req->set_path(path);
+        m_conn->write(MessageHelper::genMessage(msg));
+    });
 
     auto resp = std::static_pointer_cast<FsMethodReadDirResponse>(waitForServerReply());
     if (!resp) {
