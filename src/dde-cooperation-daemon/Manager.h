@@ -67,9 +67,9 @@ protected:
     // DBus property handlers
     void getMachines(Glib::VariantBase &property, const Glib::ustring &propertyName) const noexcept;
     void getDeviceSharingSwitch(Glib::VariantBase &property,
-                              const Glib::ustring &propertyName) const noexcept;
+                                const Glib::ustring &propertyName) const noexcept;
     bool setDeviceSharingSwitch(const Glib::ustring &propertyName,
-                              const Glib::VariantBase &value) noexcept;
+                                const Glib::VariantBase &value) noexcept;
 
 private:
     const std::filesystem::path m_dataDir;
@@ -118,6 +118,7 @@ private:
     void initUUID();
 
     void cooperationStatusChanged(bool enable);
+    void updateMachine(const std::string &ip, uint16_t port, const DeviceInfo &devInfo);
     void addMachine(const std::string &ip, uint16_t port, const DeviceInfo &devInfo);
     std::vector<Glib::DBusObjectPathString> getMachinePaths() const noexcept;
     void inhibitScreensaver();

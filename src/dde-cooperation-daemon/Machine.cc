@@ -27,7 +27,7 @@ namespace fs = std::filesystem;
 static const std::string fileSchema{"file://"};
 
 static const uint64_t U10s = 10 * 1000;
-static const uint64_t U15s = 25 * 1000;
+static const uint64_t U25s = 25 * 1000;
 
 Machine::Machine(Manager *manager,
                  ClipboardBase *clipboard,
@@ -124,7 +124,7 @@ Machine::Machine(Manager *manager,
                                                              InputDeviceType::TOUCHPAD)));
 
     m_pingTimer->start(U10s);
-    m_offlineTimer->oneshot(U15s);
+    m_offlineTimer->oneshot(U25s);
 }
 
 Machine::~Machine() {
@@ -153,17 +153,39 @@ void Machine::pair([[maybe_unused]] const Glib::VariantContainerBase &args,
             request->mutable_deviceinfo()->set_os(DEVICE_OS_LINUX);
             request->mutable_deviceinfo()->set_compositor(COMPOSITOR_X11);
 
-            m_conn->write(MessageHelper::genMessage(msg));
+            sendMessage(msg);
 
             invocation->return_value(Glib::VariantContainerBase{});
         });
         m_conn->onConnectFailed(
-            [invocation]([[maybe_unused]] const std::string &title, const std::string &msg) {
+            [this, invocation]([[maybe_unused]] const std::string &title, const std::string &msg) {
                 spdlog::info("connect failed: {}", msg);
                 invocation->return_error(Gio::DBus::Error{Gio::DBus::Error::FAILED, msg});
+
+                // TODO tips and send scan
+                m_manager->ping(m_ip);
             });
         m_conn->connect(uvxx::IPv4Addr::create(m_ip, m_port));
     });
+}
+
+void Machine::updateMachineInfo(const Glib::ustring &ip, uint16_t port, const DeviceInfo &devInfo) {
+    if (port != m_port || ip != m_ip) {
+        if (m_conn) {
+            m_conn->close();
+        }
+
+        m_ip = ip;
+        m_port = port;
+    }
+
+    if (m_name != devInfo.name()) {
+        m_name = devInfo.name();
+    }
+
+    if (m_compositor != devInfo.compositor()) {
+        m_compositor = devInfo.compositor();
+    }
 }
 
 void Machine::receivedPing() {
@@ -209,7 +231,7 @@ void Machine::sendFile(const Glib::VariantContainerBase &args,
         Message msg;
         FsSendFileRequest *send = msg.mutable_fssendfilerequest();
         send->set_path(path);
-        m_conn->write(MessageHelper::genMessage(msg));
+        sendMessage(msg);
     });
 
     invocation->return_value(Glib::VariantContainerBase{});
@@ -227,7 +249,7 @@ void Machine::requestCooperate(
     m_async->wake([this]() {
         Message msg;
         msg.mutable_devicesharingstartrequest();
-        m_conn->write(MessageHelper::genMessage(msg));
+        sendMessage(msg);
     });
 
     invocation->return_value(Glib::VariantContainerBase{});
@@ -245,7 +267,7 @@ void Machine::stopCooperation(
     m_async->wake([this]() {
         Message msg;
         msg.mutable_devicesharingstoprequest();
-        m_conn->write(MessageHelper::genMessage(msg));
+        sendMessage(msg);
     });
 
     stopDeviceSharingAux();
@@ -331,7 +353,7 @@ void Machine::mountFs(const std::string &path) {
     Message msg;
     auto *request = msg.mutable_fsrequest();
     request->set_path(path);
-    m_conn->write(MessageHelper::genMessage(msg));
+    sendMessage(msg);
 }
 
 void Machine::handleDisconnected() {
@@ -487,7 +509,7 @@ void Machine::handleDeviceSharingStartRequest() {
         Message msg;
         DeviceSharingStartResponse *resp = msg.mutable_devicesharingstartresponse();
         resp->set_accept(accepted);
-        m_conn->write(MessageHelper::genMessage(msg));
+        sendMessage(msg);
 
         if (accepted) {
             auto wptr = weak_from_this();
@@ -556,7 +578,7 @@ void Machine::handleFsRequest([[maybe_unused]] const FsRequest &req) {
     auto *fsresponse = msg.mutable_fsresponse();
     fsresponse->set_accepted(true);
     fsresponse->set_port(port);
-    m_conn->write(MessageHelper::genMessage(msg));
+    sendMessage(msg);
 }
 
 void Machine::handleFsResponse(const FsResponse &resp) {
@@ -574,12 +596,12 @@ void Machine::handleFsSendFileRequest(const FsSendFileRequest &req) {
 
     if (!m_fuseClient) {
         fssendfileresponse->set_accepted(false);
-        m_conn->write(MessageHelper::genMessage(msg));
+        sendMessage(msg);
         return;
     }
 
     fssendfileresponse->set_accepted(true);
-    m_conn->write(MessageHelper::genMessage(msg));
+    sendMessage(msg);
 
     std::string home = getenv("HOME");
     fs::path file = m_mountpoint / req.path();
@@ -600,7 +622,7 @@ void Machine::handleFsSendFileRequest(const FsSendFileRequest &req) {
         }
 
         fssendfileresult->set_result(exit_status == 0);
-        m_conn->write(MessageHelper::genMessage(msg));
+        sendMessage(msg);
     });
     process->spawn();
 }
@@ -618,7 +640,7 @@ void Machine::handleClipboardGetContentRequest(const ClipboardGetContentRequest 
         auto *reply = msg.mutable_clipboardgetcontentresponse();
         reply->set_target(target);
         reply->set_content(std::string(content.begin(), content.end()));
-        m_conn->write(MessageHelper::genMessage(msg));
+        sendMessage(msg);
     };
     m_clipboard->readTargetContent(target, cb);
 }
@@ -670,14 +692,14 @@ void Machine::onInputGrabberEvent(uint8_t deviceType,
     inputEvent->set_type(type);
     inputEvent->set_code(code);
     inputEvent->set_value(value);
-    m_conn->write(MessageHelper::genMessage(msg));
+    sendMessage(msg);
 }
 
 void Machine::onClipboardTargetsChanged(const std::vector<std::string> &targets) {
     Message msg;
     auto *clipboardNotify = msg.mutable_clipboardnotify();
     *(clipboardNotify->mutable_targets()) = {targets.cbegin(), targets.cend()};
-    m_conn->write(MessageHelper::genMessage(msg));
+    sendMessage(msg);
 }
 
 void Machine::flowTo(uint16_t direction, uint16_t x, uint16_t y) noexcept {
@@ -686,14 +708,14 @@ void Machine::flowTo(uint16_t direction, uint16_t x, uint16_t y) noexcept {
     flow->set_direction(FlowDirection(direction));
     flow->set_x(x);
     flow->set_y(y);
-    m_conn->write(MessageHelper::genMessage(msg));
+    sendMessage(msg);
 }
 
 void Machine::readTarget(const std::string &target) {
     Message msg;
     auto *clipboardGetContent = msg.mutable_clipboardgetcontentrequest();
     clipboardGetContent->set_target(target);
-    m_conn->write(MessageHelper::genMessage(msg));
+    sendMessage(msg);
 }
 
 void Machine::handleAcceptSendFile(
@@ -707,12 +729,12 @@ void Machine::handleAcceptSendFile(
         FsSendFileResponse *resp = msg.mutable_fssendfileresponse();
         resp->set_accepted(accepted);
         resp->set_serial(serial);
-        m_conn->write(MessageHelper::genMessage(msg));
+        sendMessage(msg);
 
         if (!m_mounted) {
             FsRequest *req = msg.mutable_fsrequest();
             req->set_path("/");
-            m_conn->write(MessageHelper::genMessage(msg));
+            sendMessage(msg);
         }
     });
 }
@@ -729,7 +751,7 @@ void Machine::handleAcceptFilesystem(bool accepted,
         resp->set_port(port);
         resp->set_serial(serial);
 
-        m_conn->write(MessageHelper::genMessage(msg));
+        sendMessage(msg);
     });
 }
 
@@ -759,7 +781,8 @@ void Machine::receivedUserConfirm(uvxx::Buffer &buff) {
     response->mutable_deviceinfo()->set_os(DEVICE_OS_LINUX);
     response->mutable_deviceinfo()->set_compositor(COMPOSITOR_X11);
     response->set_agree(isAccept); // 询问用户是否同意
-    m_conn->write(MessageHelper::genMessage(msg));
+
+    sendMessage(msg);
 
     if (isAccept) {
         m_paired = true;
@@ -767,4 +790,13 @@ void Machine::receivedUserConfirm(uvxx::Buffer &buff) {
 
         mountFs("/");
     }
+}
+
+void Machine::sendMessage(const Message &msg) {
+    if (!m_conn) {
+        spdlog::warn("connection reset but still want to send msg:{}", msg.GetTypeName());
+        return;
+    }
+
+    m_conn->write(MessageHelper::genMessage(msg));
 }

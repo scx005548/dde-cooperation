@@ -46,6 +46,8 @@ public:
     Glib::ustring path() const { return m_path; }
     const Glib::ustring &ip() const { return m_ip; };
 
+    void updateMachineInfo(const Glib::ustring &ip, uint16_t port, const DeviceInfo &devInfo);
+
     void receivedPing();
     void onPair(const std::shared_ptr<uvxx::TCP> &sock);
     void onInputGrabberEvent(uint8_t deviceType, unsigned int type, unsigned int code, int value);
@@ -168,6 +170,7 @@ private:
 
     void stopDeviceSharingAux();
     void receivedUserConfirm(uvxx::Buffer &buff);
+    void sendMessage(const Message &msg);
 };
 
 #endif // !DDE_COOPERATION_DAEMON_DEVICE_H

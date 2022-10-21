@@ -195,7 +195,7 @@ void Manager::getDeviceSharingSwitch(
 }
 
 bool Manager::setDeviceSharingSwitch([[maybe_unused]] const Glib::ustring &propertyName,
-                                   const Glib::VariantBase &value) noexcept {
+                                     const Glib::VariantBase &value) noexcept {
     Glib::Variant<bool> v = Glib::VariantBase::cast_dynamic<Glib::Variant<bool>>(value);
     m_deviceSharingSwitch = v.get();
     m_propertyDeviceSharingSwitch->emitChanged(Glib::Variant<bool>::create(m_deviceSharingSwitch));
@@ -240,6 +240,18 @@ void Manager::cooperationStatusChanged(bool enable) {
         } else {
             machine->stopDeviceSharingAux();
         }
+    }
+}
+
+void Manager::updateMachine(const std::string &ip, uint16_t port, const DeviceInfo &devInfo) {
+    auto iter = m_machines.find(devInfo.uuid());
+    if (iter == m_machines.end()) {
+        addMachine(ip, port, devInfo);
+    } else {
+        iter->second->receivedPing();
+
+        // existed need update machine info in case of the request pc restarted
+        iter->second->updateMachineInfo(ip, port, devInfo);
     }
 }
 
@@ -298,12 +310,7 @@ void Manager::handleReceivedSocketScan(std::shared_ptr<uvxx::Addr> addr,
             return;
         }
 
-        auto iter = m_machines.find(uuid);
-        if (iter == m_machines.end()) {
-            addMachine(ipv4->ip(), request.port(), request.deviceinfo());
-        } else {
-            iter->second->receivedPing();
-        }
+        updateMachine(ipv4->ip(), request.port(), request.deviceinfo());
 
         Message msg;
         ScanResponse *response = msg.mutable_scanresponse();
@@ -323,7 +330,7 @@ void Manager::handleReceivedSocketScan(std::shared_ptr<uvxx::Addr> addr,
             return;
         }
 
-        addMachine(addr->ipv4()->ip(), resp.port(), resp.deviceinfo());
+        updateMachine(addr->ipv4()->ip(), resp.port(), resp.deviceinfo());
 
         spdlog::info("{} responded", resp.deviceinfo().name());
         break;
