@@ -122,6 +122,7 @@ void Display::handleEvent(std::shared_ptr<xcb_generic_event_t> event) {
 }
 
 void Display::hideMouse(bool hide) {
+#if 0 // TODO this operation does not work on some pc machines
     if (hide) {
         xcb_void_cookie_t cookie = xcb_xfixes_hide_cursor_checked(m_conn, m_screen->root);
         xcb_generic_error_t *err = xcb_request_check(m_conn, cookie);
@@ -135,6 +136,7 @@ void Display::hideMouse(bool hide) {
             spdlog::error("failed to show cursor: {}", err->error_code);
         }
     }
+#endif
 }
 
 void Display::moveMouse(uint16_t x, uint16_t y) {
