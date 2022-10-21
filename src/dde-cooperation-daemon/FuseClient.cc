@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <filesystem>
+#include <chrono>
 
 #include <sys/time.h>
 #include <sys/stat.h>
@@ -15,6 +16,8 @@
 #include "uvxx/Loop.h"
 #include "uvxx/TCP.h"
 #include "uvxx/Async.h"
+
+using namespace std::chrono_literals;
 
 namespace fs = std::filesystem;
 
@@ -113,6 +116,11 @@ int FuseClient::getattr(const char *path,
     m_conn->write(MessageHelper::genMessage(msg));
 
     auto resp = std::static_pointer_cast<FsMethodGetAttrResponse>(waitForServerReply());
+    if (!resp) {
+        errno = ETIMEDOUT;
+        return -1;
+    }
+
     auto retStat = resp->stat();
 
     memset(st, 0, sizeof(struct stat));
@@ -149,6 +157,11 @@ int FuseClient::open(const char *path, struct fuse_file_info *fi) {
     m_conn->write(MessageHelper::genMessage(msg));
 
     auto resp = std::static_pointer_cast<FsMethodOpenResponse>(waitForServerReply());
+    if (!resp) {
+        errno = ETIMEDOUT;
+        return -1;
+    }
+
     if (resp->has_fh()) {
         fi->fh = resp->fh();
     }
@@ -163,7 +176,7 @@ int FuseClient::read(const char *path,
                      size_t size,
                      off_t offset,
                      struct fuse_file_info *fi) {
-    spdlog::debug("read: {}, fh: {}, size: {}", path, fi->fh, size);
+    spdlog::debug("read: {}, fh: {}, size: {}, offset: {}", path, fi->fh, size, offset);
 
     Message msg;
     FsMethodReadRequest *req = msg.mutable_fsmethodreadrequest();
@@ -174,7 +187,12 @@ int FuseClient::read(const char *path,
     m_conn->write(MessageHelper::genMessage(msg));
 
     auto resp = std::static_pointer_cast<FsMethodReadResponse>(waitForServerReply());
-    spdlog::info("readed size: {}", resp->data().size());
+    if (!resp) {
+        errno = ETIMEDOUT;
+        return -1;
+    }
+
+    spdlog::info("readed size: {}, result: {}", resp->data().size(), resp->result());
     memcpy(buf, resp->data().data(), resp->data().size());
 
     return resp->result();
@@ -189,6 +207,10 @@ int FuseClient::release(const char *path, struct fuse_file_info *fi) {
     m_conn->write(MessageHelper::genMessage(msg));
 
     auto resp = std::static_pointer_cast<FsMethodReleaseResponse>(waitForServerReply());
+    if (!resp) {
+        errno = ETIMEDOUT;
+        return -1;
+    }
 
     return resp->result();
 }
@@ -206,6 +228,11 @@ int FuseClient::readdir(const char *path,
     m_conn->write(MessageHelper::genMessage(msg));
 
     auto resp = std::static_pointer_cast<FsMethodReadDirResponse>(waitForServerReply());
+    if (!resp) {
+        errno = ETIMEDOUT;
+        return -1;
+    }
+
     for (const std::string &i : resp->item()) {
         filler(buf, i.c_str(), nullptr, 0, static_cast<fuse_fill_dir_flags>(0));
     }
@@ -267,9 +294,13 @@ void FuseClient::handleResponse(uvxx::Buffer &buff) noexcept {
 
 std::shared_ptr<google::protobuf::Message> FuseClient::waitForServerReply() {
     std::unique_lock lk(m_mut);
-    m_cv.wait(lk);
-
-    spdlog::info("responded");
+    m_buff.reset();
+    m_cv.wait_for(lk, 3s);
+    if (m_buff) {
+        spdlog::info("fuse responded");
+    } else {
+        spdlog::info("fuse not responded");
+    }
 
     return m_buff;
 }
