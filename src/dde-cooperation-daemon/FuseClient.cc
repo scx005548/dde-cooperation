@@ -112,6 +112,8 @@ int FuseClient::getattr(const char *path,
 
     Message msg;
     FsMethodGetAttrRequest *req = msg.mutable_fsmethodgetattrrequest();
+    m_serial++;
+    req->set_serial(m_serial);
     req->set_path(path);
     m_conn->write(MessageHelper::genMessage(msg));
 
@@ -139,8 +141,9 @@ int FuseClient::getattr(const char *path,
     st->st_ctim.tv_sec = retStat.ctime().seconds();
     st->st_ctim.tv_nsec = retStat.ctime().nanos();
 
-    spdlog::info("path: {}, S_IFDIR: {}, S_IFREG: {}, nlink: {}",
+    spdlog::info("path: {}, mode: {}, S_IFDIR: {}, S_IFREG: {}, nlink: {}",
                  path,
+                 static_cast<uint32_t>(st->st_mode),
                  static_cast<bool>(st->st_mode & S_IFDIR),
                  static_cast<bool>(st->st_mode & S_IFREG),
                  st->st_nlink);
@@ -153,6 +156,8 @@ int FuseClient::open(const char *path, struct fuse_file_info *fi) {
 
     Message msg;
     FsMethodOpenRequest *req = msg.mutable_fsmethodopenrequest();
+    m_serial++;
+    req->set_serial(m_serial);
     req->set_path(path);
     m_conn->write(MessageHelper::genMessage(msg));
 
@@ -180,6 +185,8 @@ int FuseClient::read(const char *path,
 
     Message msg;
     FsMethodReadRequest *req = msg.mutable_fsmethodreadrequest();
+    m_serial++;
+    req->set_serial(m_serial);
     req->set_offset(offset);
     req->set_size(size);
     auto rfi = req->mutable_fi();
@@ -202,6 +209,8 @@ int FuseClient::release(const char *path, struct fuse_file_info *fi) {
     spdlog::debug("release: {}", path);
     Message msg;
     FsMethodReleaseRequest *req = msg.mutable_fsmethodreleaserequest();
+    m_serial++;
+    req->set_serial(m_serial);
     req->set_path(path);
     req->mutable_fi()->set_fh(fi->fh);
     m_conn->write(MessageHelper::genMessage(msg));
@@ -224,6 +233,8 @@ int FuseClient::readdir(const char *path,
     spdlog::debug("readdir: {}", path);
     Message msg;
     FsMethodReadDirRequest *req = msg.mutable_fsmethodreaddirrequest();
+    m_serial++;
+    req->set_serial(m_serial);
     req->set_path(path);
     m_conn->write(MessageHelper::genMessage(msg));
 

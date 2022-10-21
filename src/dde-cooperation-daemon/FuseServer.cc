@@ -120,10 +120,11 @@ void FuseServer::handleRequest(uvxx::Buffer &buff) noexcept {
 void FuseServer::methodGetattr(const FsMethodGetAttrRequest &req, FsMethodGetAttrResponse *resp) {
     spdlog::info("methodGetattr: {}", req.path());
 
+    resp->set_serial(req.serial());
+
     struct stat st;
     int result = stat(req.path().c_str(), &st);
 
-    resp->set_serial(req.serial());
     resp->set_result(result);
     resp->mutable_stat()->set_ino(st.st_ino);
     resp->mutable_stat()->set_nlink(st.st_nlink);
@@ -141,8 +142,9 @@ void FuseServer::methodGetattr(const FsMethodGetAttrRequest &req, FsMethodGetAtt
     resp->mutable_stat()->mutable_ctime()->set_seconds(st.st_ctim.tv_sec);
     resp->mutable_stat()->mutable_ctime()->set_nanos(st.st_ctim.tv_nsec);
 
-    spdlog::info("path: {}, S_IFDIR: {}, S_IFREG: {}, nlink: {}",
+    spdlog::info("path: {}, mode: {}, S_IFDIR: {}, S_IFREG: {}, nlink: {}",
                  req.path(),
+                 static_cast<uint32_t>(st.st_mode),
                  static_cast<bool>(st.st_mode & S_IFDIR),
                  static_cast<bool>(st.st_mode & S_IFREG),
                  st.st_nlink);
@@ -150,6 +152,8 @@ void FuseServer::methodGetattr(const FsMethodGetAttrRequest &req, FsMethodGetAtt
 
 void FuseServer::methodOpen(const FsMethodOpenRequest &req, FsMethodOpenResponse *resp) {
     spdlog::info("methodOpen: {}", req.path());
+
+    resp->set_serial(req.serial());
 
     int flags = 0;
     if (req.has_fi()) {
@@ -167,6 +171,8 @@ void FuseServer::methodOpen(const FsMethodOpenRequest &req, FsMethodOpenResponse
 }
 
 void FuseServer::methodRead(const FsMethodReadRequest &req, FsMethodReadResponse *resp) {
+    resp->set_serial(req.serial());
+
     if (!req.has_fi()) {
         spdlog::error("methodRead: no fi");
         resp->set_result(-EBADF);
@@ -194,6 +200,8 @@ void FuseServer::methodRead(const FsMethodReadRequest &req, FsMethodReadResponse
 }
 
 void FuseServer::methodRelease(const FsMethodReleaseRequest &req, FsMethodReleaseResponse *resp) {
+    resp->set_serial(req.serial());
+
     if (!req.has_fi()) {
         spdlog::error("methodRelease: no fi");
         resp->set_result(EBADF);
@@ -207,6 +215,9 @@ void FuseServer::methodRelease(const FsMethodReleaseRequest &req, FsMethodReleas
 
 void FuseServer::methodReaddir(const FsMethodReadDirRequest &req, FsMethodReadDirResponse *resp) {
     spdlog::info("methodReaddir: {}", req.path());
+
+    resp->set_serial(req.serial());
+
     resp->set_result(0);
 
     fs::path p = req.path();

@@ -45,6 +45,7 @@ private:
 
     fuse_args m_args;
     std::unique_ptr<fuse, decltype(&fuse_destroy)> m_fuse;
+    uint16_t m_serial;
 
     std::thread m_mountThread;
     std::mutex m_mut;
