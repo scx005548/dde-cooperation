@@ -85,6 +85,7 @@ Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesyste
     m_listenPair->bind("0.0.0.0");
     m_listenPair->listen();
     m_port = m_listenPair->localAddress()->ipv4()->port();
+    spdlog::debug("TCP listening on port: {}", m_port);
 
     std::string ip = Net::getIpAddress();
     m_scanAddr = uvxx::IPv4Addr::create(Net::getBroadcastAddress(ip), m_scanPort);
@@ -374,6 +375,8 @@ void Manager::handleReceivedSocketScan(std::shared_ptr<uvxx::Addr> addr,
 }
 
 void Manager::handleNewConnection(bool) noexcept {
+    spdlog::debug("new connection received");
+
     auto socketConnected = m_listenPair->accept();
     socketConnected->onReceived([this, socketConnected](uvxx::Buffer &buff) {
         auto res = MessageHelper::parseMessage<Message>(buff);
