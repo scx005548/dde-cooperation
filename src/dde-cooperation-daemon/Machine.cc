@@ -156,6 +156,14 @@ void Machine::pair([[maybe_unused]] const Glib::VariantContainerBase &args,
         return;
     }
 
+    if ((isPcMachine() && m_manager->hasPcMachinePaired())
+        || (isAndroid() && m_manager->hasAndroidPaired())) {
+        // TODO tips
+        invocation->return_error(
+            Gio::DBus::Error{Gio::DBus::Error::ACCESS_DENIED, "This machine is cooperating with another machine!"});
+        return;
+    }
+
     m_async->wake([this, invocation]() {
         m_conn = std::make_shared<uvxx::TCP>(m_uvLoop);
 

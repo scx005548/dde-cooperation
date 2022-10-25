@@ -267,6 +267,28 @@ bool Manager::setDeviceSharingSwitch([[maybe_unused]] const Glib::ustring &prope
     return true;
 }
 
+bool Manager::hasPcMachinePaired() const {
+    for (const auto &v : m_machines) {
+        const std::shared_ptr<Machine> &machine = v.second;
+        if (machine->m_paired && machine->isPcMachine()) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool Manager::hasAndroidPaired() const {
+    for (const auto &v : m_machines) {
+        const std::shared_ptr<Machine> &machine = v.second;
+        if (machine->m_paired && machine->isAndroid()) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void Manager::scanAux() noexcept {
     Message base;
     ScanRequest *request = base.mutable_scanrequest();
@@ -478,10 +500,20 @@ void Manager::handleNewConnection(bool) noexcept {
             return;
         }
 
+        auto machine = i->second;
+        if ((machine->isPcMachine() && hasPcMachinePaired())
+            || (machine->isAndroid() && hasAndroidPaired())) {
+            // TODO tips
+            spdlog::error("cannot pair this device, this machine is paired with other machine");
+            socketConnected->close();
+            socketConnected->onReceived(nullptr);
+            return;
+        }
+
         auto remote = socketConnected->remoteAddress();
         spdlog::info("connected by {}@{}", request.deviceinfo().name().c_str(), remote->toString());
 
-        i->second->onPair(socketConnected);
+        machine->onPair(socketConnected);
     });
     socketConnected->startRead();
 }

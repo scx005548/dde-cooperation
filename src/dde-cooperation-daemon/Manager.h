@@ -45,6 +45,8 @@ public:
 
     std::string uuid() const noexcept { return m_uuid; }
     bool tryFlowOut(uint16_t direction, uint16_t x, uint16_t y);
+    bool hasPcMachinePaired() const;
+    bool hasAndroidPaired() const;
     void removeInputGrabber(const std::filesystem::path &path);
 
     void ping(const std::string &ip, uint16_t port = m_scanPort);
