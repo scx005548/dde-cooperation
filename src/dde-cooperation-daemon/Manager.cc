@@ -230,7 +230,7 @@ void Manager::removeInputGrabber(const std::filesystem::path &path) {
 bool Manager::tryFlowOut(uint16_t direction, uint16_t x, uint16_t y) {
     for (const auto &v : m_machines) {
         const std::shared_ptr<Machine> &machine = v.second;
-        if (machine->m_direction == direction) {
+        if (machine->m_deviceSharing && machine->m_direction == direction) {
             machine->flowTo(direction, x, y);
             onFlowOut(machine);
             return true;
