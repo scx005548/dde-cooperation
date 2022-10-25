@@ -582,9 +582,9 @@ void Machine::handleFsSendFileRequest(const FsSendFileRequest &req) {
     fs::path file = m_mountpoint / req.path();
     auto process = std::make_shared<uvxx::Process>(m_uvLoop, "/bin/cp");
     process->args = {"-r", file.string(), home};
-    process->onExit([this,
-                     serial = req.serial(),
-                     path = req.path()](int64_t exit_status, [[maybe_unused]] int term_signal) {
+    process->onExit([this, serial = req.serial(), path = req.path(), process](
+                        int64_t exit_status,
+                        [[maybe_unused]] int term_signal) {
         Message msg;
         auto *fssendfileresult = msg.mutable_fssendfileresult();
         fssendfileresult->set_serial(serial);
@@ -598,6 +598,8 @@ void Machine::handleFsSendFileRequest(const FsSendFileRequest &req) {
 
         fssendfileresult->set_result(exit_status == 0);
         sendMessage(msg);
+
+        process->onExit(nullptr);
     });
     process->spawn();
 }
