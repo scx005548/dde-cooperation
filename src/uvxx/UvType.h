@@ -29,7 +29,6 @@ protected:
 
 private:
     std::shared_ptr<U> uv_type_;
-    std::shared_ptr<void> self_;
 };
 
 } // namespace uvxx

@@ -48,7 +48,6 @@ protected:
             return false;
         }
 
-        // stay();
         return true;
     }
     std::shared_ptr<Loop> loop_;
