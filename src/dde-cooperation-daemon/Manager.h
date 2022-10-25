@@ -139,6 +139,7 @@ private:
                                   size_t size,
                                   bool partial) noexcept;
     void handleNewConnection(bool) noexcept;
+    void sendServiceStoppedNotification() const;
 };
 
 #endif // !DDE_COOPERATION_DAEMON_MANAGER_H

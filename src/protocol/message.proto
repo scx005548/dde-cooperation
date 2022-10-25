@@ -13,6 +13,7 @@ message Message {
     PairResponse pairResponse = 1003;
     StopPairRequest stopPairRequest = 1004;
     StopPairResponse stopPairResponse = 1005;
+    ServiceStoppedNotification serviceStoppedNotification = 1100;
 
     DeviceSharingStartRequest deviceSharingStartRequest = 2000;
     DeviceSharingStartResponse deviceSharingStartResponse = 2001;

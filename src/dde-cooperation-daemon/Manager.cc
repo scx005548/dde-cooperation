@@ -458,6 +458,22 @@ void Manager::handleReceivedSocketScan(std::shared_ptr<uvxx::Addr> addr,
         spdlog::info("{} responded", resp.deviceinfo().name());
         break;
     }
+    case Message::PayloadCase::kServiceStoppedNotification: {
+        const auto &notification = base.servicestoppednotification();
+        const auto& uuid = notification.deviceuuid();
+
+        auto iter = m_machines.find(uuid);
+        if (iter != m_machines.end()) {
+            if (iter->second->m_paired) {
+                iter->second->m_conn->close();
+            }
+
+            m_machines.erase(uuid);
+            m_propertyMachines->emitChanged(
+                Glib::Variant<std::vector<Glib::DBusObjectPathString>>::create(getMachinePaths()));
+        }
+        break;
+    }
     default: {
         spdlog::error("unknown data type");
         break;
@@ -645,5 +661,17 @@ void Manager::unInhibitScreensaver() {
         m_inhibitCookie = 0;
     } catch (Glib::Error &e) {
         spdlog::error("failed to uninhibit screensaver: {}", std::string(e.what()));
+    }
+}
+
+void Manager::sendServiceStoppedNotification() const {
+    for (const auto &v : m_machines) {
+        const std::shared_ptr<Machine> &machine = v.second;
+
+        Message base;
+        ServiceStoppedNotification *notification = base.mutable_servicestoppednotification();
+        notification->set_deviceuuid(machine->m_uuid);
+
+        m_socketScan->send(uvxx::IPv4Addr::create(machine->ip(),m_scanPort), MessageHelper::genMessage(base));
     }
 }
