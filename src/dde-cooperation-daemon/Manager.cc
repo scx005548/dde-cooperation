@@ -163,6 +163,12 @@ bool Manager::isValidUUID(const std::string &str) const noexcept {
 
 void Manager::scan([[maybe_unused]] const Glib::VariantContainerBase &args,
                    const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
+    if (!m_deviceSharingSwitch) {
+        invocation->return_error(Gio::DBus::Error{Gio::DBus::Error::FAILED, "DeviceSharing Switch close!"});
+        spdlog::debug("DeviceSharing Switch close");
+        return;
+    }
+
     m_async->wake([this]() { scanAux(); });
 
     invocation->return_value(Glib::VariantContainerBase{});
@@ -242,13 +248,18 @@ bool Manager::tryFlowOut(uint16_t direction, uint16_t x, uint16_t y) {
 }
 
 void Manager::cooperationStatusChanged(bool enable) {
-    for (const auto &v : m_machines) {
-        const std::shared_ptr<Machine> &machine = v.second;
-        if (enable) {
-            machine->handleDeviceSharingStartRequest();
-        } else {
-            machine->stopDeviceSharingAux();
+    if (enable) {
+        scanAux();
+    } else {
+        for (const auto &v : m_machines) {
+            const std::shared_ptr<Machine> &machine = v.second;
+            if (machine->m_paired) {
+                machine->m_conn->close();
+            }
         }
+        m_machines.clear();
+        m_propertyMachines->emitChanged(
+            Glib::Variant<std::vector<Glib::DBusObjectPathString>>::create(getMachinePaths()));    
     }
 }
 
@@ -307,6 +318,10 @@ void Manager::handleReceivedSocketScan(std::shared_ptr<uvxx::Addr> addr,
                                        [[maybe_unused]] size_t size,
                                        bool partial) noexcept {
     spdlog::debug("partial: {}", partial);
+
+    if (!m_deviceSharingSwitch) {
+       return;
+    } 
 
     auto buff = data.get();
     auto &header = MessageHelper::parseMessageHeader(buff);
