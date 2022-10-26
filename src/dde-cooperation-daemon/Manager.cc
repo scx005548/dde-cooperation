@@ -436,6 +436,9 @@ void Manager::ping(const std::string &ip, uint16_t port) {
 
 void Manager::onMachineOffline(const std::string &uuid) {
     m_machines.erase(m_machines.find(uuid));
+
+    m_propertyMachines->emitChanged(
+        Glib::Variant<std::vector<Glib::DBusObjectPathString>>::create(getMachinePaths()));
 }
 
 void Manager::onStartDeviceSharing(const std::weak_ptr<Machine> &machine, bool proactively) {
