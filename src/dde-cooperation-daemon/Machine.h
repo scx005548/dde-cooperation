@@ -174,6 +174,7 @@ protected:
 
     Glib::RefPtr<DBus::Object> m_object;
 
+    void sendFiles(const std::vector<Glib::ustring> &filePaths);
     void sendMessage(const Message &msg);
 };
 

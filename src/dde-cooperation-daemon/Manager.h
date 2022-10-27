@@ -65,6 +65,8 @@ protected:
               const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
     void knock(const Glib::VariantContainerBase &args,
                const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
+    void sendFile(const Glib::VariantContainerBase &args,
+                  const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
 
     // DBus property handlers
     void getMachines(Glib::VariantBase &property, const Glib::ustring &propertyName) const noexcept;
@@ -104,6 +106,7 @@ private:
     // DBus methods
     Glib::RefPtr<DBus::Method> m_methodScan;
     Glib::RefPtr<DBus::Method> m_methodKnock;
+    Glib::RefPtr<DBus::Method> m_methodSendFile;
 
     // DBus properties
     Glib::RefPtr<DBus::Property> m_propertyMachines;

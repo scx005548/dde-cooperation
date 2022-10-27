@@ -50,6 +50,8 @@ Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesyste
     , m_methodKnock(new DBus::Method("Knock",
                                      DBus::Method::warp(this, &Manager::knock),
                                      {{"ip", "s"}, {"port", "i"}}))
+    , m_methodSendFile(new DBus::Method("SendFile", DBus::Method::warp(this, &Manager::sendFile),
+                                        {{"filePath", "as"}, {"osType", "i"}}))
     , m_propertyMachines(
           new DBus::Property("Machines", "ao", DBus::Property::warp(this, &Manager::getMachines)))
     , m_propertyDeviceSharingSwitch(
@@ -70,6 +72,7 @@ Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesyste
     m_service->registerService();
     m_interface->exportMethod(m_methodScan);
     m_interface->exportMethod(m_methodKnock);
+    m_interface->exportMethod(m_methodSendFile);
     m_interface->exportProperty(m_propertyMachines);
     m_interface->exportProperty(m_propertyDeviceSharingSwitch);
     m_object->exportInterface(m_interface);
@@ -185,6 +188,36 @@ void Manager::knock(const Glib::VariantContainerBase &args,
     m_async->wake([this, ip = std::string(ip.get()), port = port.get()]() { ping(ip, port); });
 
     invocation->return_value(Glib::VariantContainerBase{});
+}
+
+void Manager::sendFile(const Glib::VariantContainerBase &args,
+                       const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
+    Glib::Variant<std::vector<Glib::ustring>> files;
+    Glib::Variant<int> osType;
+
+    args.get_child(files, 0);
+    args.get_child(osType, 1);
+
+    if (files.get().empty()) {
+        invocation->return_error(Gio::DBus::Error{Gio::DBus::Error::FAILED, "filepath param has error!"});
+        return;
+    }
+
+    bool hasSend = false;
+    for (const auto &v : m_machines) {
+        const std::shared_ptr<Machine> &machine = v.second;
+        if (machine->m_deviceSharing && machine->m_os == osType.get()) {
+            machine->sendFiles(files.get());
+            hasSend = true;
+            break;
+        }
+    }
+
+    if (hasSend) {
+        invocation->return_value(Glib::VariantContainerBase{});
+    } else {
+        invocation->return_error(Gio::DBus::Error{Gio::DBus::Error::FAILED, "Target machine not found!"});
+    }
 }
 
 std::vector<Glib::DBusObjectPathString> Manager::getMachinePaths() const noexcept {

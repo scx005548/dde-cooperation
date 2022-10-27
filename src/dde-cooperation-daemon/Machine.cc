@@ -220,12 +220,9 @@ void Machine::sendFile(const Glib::VariantContainerBase &args,
     Glib::Variant<Glib::ustring> filepath;
     args.get_child(filepath, 0);
 
-    m_async->wake([this, path = std::string(filepath.get())]() {
-        Message msg;
-        FsSendFileRequest *send = msg.mutable_fssendfilerequest();
-        send->set_path(path);
-        sendMessage(msg);
-    });
+    std::vector<Glib::ustring> files;
+    files.push_back(filepath.get());
+    sendFiles(files);
 
     invocation->return_value(Glib::VariantContainerBase{});
 }
@@ -768,6 +765,17 @@ void Machine::receivedUserConfirm(uvxx::Buffer &buff) {
 
         handleConnected();
     }
+}
+
+void Machine::sendFiles(const std::vector<Glib::ustring> &filePaths) {
+    m_async->wake([this, filePaths]() {
+        for (const Glib::ustring &filePath : filePaths) {
+            Message msg;
+            FsSendFileRequest *send = msg.mutable_fssendfilerequest();
+            send->set_path(std::string(filePath));
+            sendMessage(msg);
+        }
+    });
 }
 
 void Machine::sendMessage(const Message &msg) {
