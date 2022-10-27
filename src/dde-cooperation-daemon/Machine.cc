@@ -365,6 +365,7 @@ void Machine::dispatcher(uvxx::Buffer &buff) noexcept {
         auto res = MessageHelper::parseMessage<Message>(buff);
         if (!res.has_value()) {
             if (res.error() == MessageHelper::PARSE_ERROR::ILLEGAL_MESSAGE) {
+                spdlog::error("illegal message from {}, close the connection", std::string(m_uuid));
                 m_conn->close();
             }
             return;

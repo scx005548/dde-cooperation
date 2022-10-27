@@ -271,14 +271,14 @@ void Manager::addMachine(const std::string &ip, uint16_t port, const DeviceInfo 
 
     if (devInfo.os() == DEVICE_OS_ANDROID) {
         auto m = std::make_shared<AndroidMachine>(this,
-                                             m_clipboard.get(),
-                                             m_uvLoop,
-                                             m_service,
-                                             m_lastMachineIndex,
-                                             dataPath,
-                                             ip,
-                                             port,
-                                             devInfo);
+                                                  m_clipboard.get(),
+                                                  m_uvLoop,
+                                                  m_service,
+                                                  m_lastMachineIndex,
+                                                  dataPath,
+                                                  ip,
+                                                  port,
+                                                  devInfo);
         m_machines.insert(std::pair(devInfo.uuid(), m));
     } else {
         auto m = std::make_shared<PCMachine>(this,
@@ -310,6 +310,11 @@ void Manager::handleReceivedSocketScan(std::shared_ptr<uvxx::Addr> addr,
 
     auto buff = data.get();
     auto &header = MessageHelper::parseMessageHeader(buff);
+    if (!header.legal()) {
+        spdlog::error("illegal message from {}", addr->toString());
+        return;
+    }
+
     buff += header_size;
     size -= header_size;
 
@@ -382,6 +387,8 @@ void Manager::handleNewConnection(bool) noexcept {
         auto res = MessageHelper::parseMessage<Message>(buff);
         if (!res.has_value()) {
             if (res.error() == MessageHelper::PARSE_ERROR::ILLEGAL_MESSAGE) {
+                spdlog::error("illegal message from {}, close the connection",
+                              socketConnected->remoteAddress()->toString());
                 socketConnected->close();
                 socketConnected->onReceived(nullptr);
             }
