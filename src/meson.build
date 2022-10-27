@@ -36,42 +36,9 @@ common_sources = files('''
   utils/ptr.h
 '''.split())
 
-uvxx_sources = files('''
-  uvxx/UvType.h
-  uvxx/Loop.h
-  uvxx/Loop.cc
-  uvxx/noncopyable.h
-  uvxx/Addr.h
-  uvxx/Addr.cc
-  uvxx/Handle.h
-  uvxx/Handle.cc
-  uvxx/Stream.h
-  uvxx/Stream.cc
-  uvxx/Pipe.h
-  uvxx/Pipe.cc
-  uvxx/TCP.h
-  uvxx/TCP.cc
-  uvxx/UDP.h
-  uvxx/UDP.cc
-  uvxx/Buffer.h
-  uvxx/Buffer.cc
-  uvxx/Poll.h
-  uvxx/Poll.cc
-  uvxx/Timer.h
-  uvxx/Timer.cc
-  uvxx/Async.h
-  uvxx/Async.cc
-  uvxx/Process.h
-  uvxx/Process.cc
-  uvxx/Request.h
-  uvxx/Request.cc
-  uvxx/Signal.h
-  uvxx/Signal.cc
-  uvxx/utils.h
-'''.split())
-
 includes = include_directories('./')
 
+subdir('uvxx')
 subdir('input-emittor')
 subdir('input-grabber')
 subdir('dde-cooperation-daemon')

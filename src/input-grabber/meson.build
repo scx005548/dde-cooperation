@@ -4,7 +4,7 @@ input_grabber_sources = files('''
   InputGrabber.cc
 '''.split())
 
-input_grabber_sources += uvxx_sources + [ipc_protocol]
+input_grabber_sources += [ipc_protocol]
 
 input_grabber = executable('input-grabber',
   input_grabber_sources,
@@ -17,8 +17,10 @@ input_grabber = executable('input-grabber',
     fmt,
     spdlog,
     libevdev,
-    uv,
     protobuf,
+  ],
+  link_with: [
+    uvxx,
   ],
   install: true,
   install_mode: ['rwsr-xr-x'],
