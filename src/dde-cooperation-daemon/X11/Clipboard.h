@@ -13,20 +13,16 @@
 
 #include "../ClipboardBase.h"
 
-namespace uvxx {
-}
-
 namespace X11 {
 
 class Clipboard : public X11, public ClipboardBase {
 public:
-    explicit Clipboard(const std::shared_ptr<uvxx::Loop> &uvLoop, Manager *manager);
+    explicit Clipboard(const std::shared_ptr<uvxx::Loop> &uvLoop, ClipboardObserver *observer);
     virtual ~Clipboard();
 
     virtual void handleEvent(std::shared_ptr<xcb_generic_event_t> event) override;
 
-    virtual void newClipboardOwnerTargets(const std::weak_ptr<Machine> &machine,
-                                          const std::vector<std::string> &targets) override;
+    virtual void newClipboardOwnerTargets(const std::vector<std::string> &targets) override;
     virtual void readTargetContent(
         const std::string &target,
         const std::function<void(const std::vector<char> &data)> &callback) override;
@@ -60,7 +56,6 @@ private:
     };
     static const std::string ATOMS_NAME[];
 
-    std::weak_ptr<Machine> m_ownerMachine;
     std::vector<xcb_atom_t> m_cachedTargets;
     std::unordered_map<xcb_atom_t, std::vector<char>> m_cachedProperties;
 

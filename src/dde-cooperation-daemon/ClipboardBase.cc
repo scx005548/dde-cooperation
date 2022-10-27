@@ -1,11 +1,9 @@
 #include "ClipboardBase.h"
 
-#include "Manager.h"
-
-ClipboardBase::ClipboardBase(Manager *manager)
-    : m_manager(manager) {
+ClipboardBase::ClipboardBase(ClipboardObserver *observer)
+    : m_observer(observer) {
 }
 
 void ClipboardBase::notifyTargetsChanged(const std::vector<std::string> &targets) {
-    m_manager->onClipboardTargetsChanged(targets);
+    m_observer->onClipboardTargetsChanged(targets);
 }

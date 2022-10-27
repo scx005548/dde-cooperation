@@ -480,9 +480,20 @@ void Manager::onClipboardTargetsChanged(const std::vector<std::string> &targets)
     }
 }
 
+bool Manager::onReadClipboardContent(const std::string &target) {
+    auto machine = m_clipboardOwner.lock();
+    if (machine) {
+        machine->readTarget(target);
+        return true;
+    }
+
+    return false;
+}
+
 void Manager::onMachineOwnClipboard(const std::weak_ptr<Machine> &machine,
                                     const std::vector<std::string> &targets) {
-    m_clipboard->newClipboardOwnerTargets(machine, targets);
+    m_clipboardOwner = machine;
+    m_clipboard->newClipboardOwnerTargets(targets);
 }
 
 static const std::string applicationName = "DDE Cooperation";

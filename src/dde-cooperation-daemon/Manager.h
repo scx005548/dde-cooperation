@@ -14,6 +14,7 @@
 #include "InputGrabberWrapper.h"
 #include "dbus/dbus.h"
 #include "utils/net.h"
+#include "ClipboardBase.h"
 
 #include "protocol/pair.pb.h"
 #include "protocol/device_sharing.pb.h"
@@ -37,7 +38,7 @@ class Machine;
 class DisplayBase;
 class ClipboardBase;
 
-class Manager : public noncopyable {
+class Manager : public ClipboardObserver, public noncopyable {
 public:
     Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesystem::path &dataDir);
     ~Manager();
@@ -52,7 +53,8 @@ public:
     void onStopDeviceSharing();
     void onFlowBack(uint16_t direction, uint16_t x, uint16_t y);
     void onFlowOut(const std::weak_ptr<Machine> &machine);
-    void onClipboardTargetsChanged(const std::vector<std::string> &targets);
+    virtual void onClipboardTargetsChanged(const std::vector<std::string> &targets) override;
+    virtual bool onReadClipboardContent(const std::string &target) override;
     void onMachineOwnClipboard(const std::weak_ptr<Machine> &machine,
                                const std::vector<std::string> &targets);
     void onInputEvent();
@@ -78,6 +80,7 @@ private:
     uint32_t m_lastMachineIndex;
     std::unordered_map<std::string, std::shared_ptr<Machine>> m_machines;
     bool m_deviceSharingSwitch;
+    std::weak_ptr<Machine> m_clipboardOwner;
     std::unique_ptr<DisplayBase> m_displayServer;
     std::unique_ptr<ClipboardBase> m_clipboard;
     uint32_t m_lastRequestId;

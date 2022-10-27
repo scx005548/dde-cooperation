@@ -14,9 +14,6 @@
 
 #include "uvxx/Async.h"
 
-#include "Manager.h"
-#include "Machine.h"
-
 using namespace X11;
 
 const std::string Clipboard::ATOMS_NAME[] = {
@@ -34,9 +31,9 @@ const std::string Clipboard::ATOMS_NAME[] = {
     "TEXT",
 };
 
-Clipboard::Clipboard(const std::shared_ptr<uvxx::Loop> &uvLoop, Manager *manager)
+Clipboard::Clipboard(const std::shared_ptr<uvxx::Loop> &uvLoop, ClipboardObserver *observer)
     : X11(uvLoop)
-    , ClipboardBase(manager)
+    , ClipboardBase(observer)
     , m_printingProperty(false) {
     m_dummyWindow = xcb_generate_id(m_conn);
     uint32_t valueList[] = {XCB_BACK_PIXMAP_NONE};
@@ -425,9 +422,7 @@ void Clipboard::handleXcbSelectionRequest(std::shared_ptr<xcb_selection_request_
 
         bool succ = cb();
         if (!succ) {
-            auto machine = m_ownerMachine.lock();
-            if (machine) {
-                machine->readTarget(getTargetName(event->target));
+            if (m_observer->onReadClipboardContent(getTargetName(event->target))) {
                 m_propertyUpdatedCb.emplace_back(cb);
             }
         }
@@ -440,7 +435,7 @@ void Clipboard::handleXcbSelectionNotify(std::shared_ptr<xcb_selection_notify_ev
         auto targetsName = getTargetsName(m_cachedTargets);
         spdlog::debug("targets: {}", fmt::join(targetsName, ", "));
 
-        m_manager->onClipboardTargetsChanged(targetsName);
+        notifyTargetsChanged(targetsName);
 
     } else if (event->property == getAtom(ATOM_LIST::CPRT_PROPERTY)) {
         m_cachedProperties[event->target] = readProperty(event->requestor, event->property);
@@ -488,15 +483,13 @@ bool Clipboard::ownSelection() {
     return true;
 }
 
-void Clipboard::newClipboardOwnerTargets(const std::weak_ptr<Machine> &machine,
-                                         const std::vector<std::string> &targets) {
+void Clipboard::newClipboardOwnerTargets(const std::vector<std::string> &targets) {
     decltype(m_cachedTargets) targets_;
     targets_.reserve(targets.size());
     for (const std::string &target : targets) {
         targets_.emplace_back(getAtom(target));
     }
 
-    m_ownerMachine = machine;
     reset();
     m_cachedTargets.swap(targets_);
     ownSelection();
