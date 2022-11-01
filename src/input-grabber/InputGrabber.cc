@@ -61,6 +61,10 @@ bool InputGrabber::shouldIgnore() {
 }
 
 void InputGrabber::start() {
+    // clear already existed events
+    input_event ev;
+    while (-EAGAIN != libevdev_next_event(m_dev, LIBEVDEV_READ_FLAG_NORMAL, &ev));
+
     m_uvPoll->start(UV_READABLE);
 
     int rc = libevdev_grab(m_dev, LIBEVDEV_GRAB);
