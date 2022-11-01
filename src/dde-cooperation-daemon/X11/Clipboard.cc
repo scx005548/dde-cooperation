@@ -168,7 +168,7 @@ std::vector<char> Clipboard::readProperty(xcb_window_t requestor, xcb_atom_t pro
 
     decltype(reply->bytes_after) buffOffset = 0, offset = 0;
     auto bytesLeft = reply->bytes_after;
-    spdlog::info("property size: {}", bytesLeft);
+    spdlog::info("target {} size: {}", getTargetName(property), bytesLeft);
     std::vector<char> buff(bytesLeft);
 
     while (bytesLeft > 0) {
@@ -221,6 +221,12 @@ void Clipboard::printPropertyTargets() {
     }
 }
 
+/**
+ * 通过设置 CPRT_PROPERTY 属性，并通过 xcb_convert_selection 通知剪切板所有者。
+ * 剪切板所有者读取 CPRT_PROPERTY 属性知道我们想要获取的 target，然后设置回来。
+ * 因此，需要等上一次获取的属性值返回后，才能继续获取，否则覆盖了 CPRT_PROPERTY
+ * 可能导致获取错误
+ */
 void Clipboard::printProperty(xcb_atom_t atom) {
     m_penddingPrint.push_back(atom);
     if (m_printingProperty) {
@@ -379,7 +385,7 @@ void Clipboard::notifyRequestor(std::shared_ptr<xcb_selection_request_event_t> e
 
 void Clipboard::handleXcbSelectionRequest(std::shared_ptr<xcb_selection_request_event_t> event) {
     if (event->target == getAtom("TARGETS")) {
-        spdlog::info("print TARGETS");
+        spdlog::debug("print TARGETS");
         setTargets(event->requestor, event->property, m_cachedTargets);
         notifyRequestor(event);
 
@@ -405,24 +411,34 @@ void Clipboard::handleXcbSelectionRequest(std::shared_ptr<xcb_selection_request_
 
         // notifyRequestor(event);
     } else {
-        auto cb = [this, event]() {
-            if (m_cachedProperties.find(event->target) != m_cachedProperties.end()) {
-                if (!setRequestorPropertyWithClipboardContent(event->requestor,
-                                                              event->property,
-                                                              event->target)) {
-                    return true;
-                }
+        auto targetName = getTargetName(event->target);
+        spdlog::debug("print target: {}", targetName);
+        if (std::find(m_cachedTargets.begin(), m_cachedTargets.end(), event->target) ==
+            m_cachedTargets.end()) {
+            spdlog::warn("target {} is not exist", event->target);
 
-                notifyRequestor(event);
-                return true;
+            setRequestorPropertyWithClipboardContent(event->requestor,
+                                                     event->property,
+                                                     event->target);
+            notifyRequestor(event);
+            return;
+        }
+
+        auto cb = [this, event]() {
+            if (m_cachedProperties.find(event->target) == m_cachedProperties.end()) {
+                return false;
             }
 
-            return false;
+            setRequestorPropertyWithClipboardContent(event->requestor,
+                                                     event->property,
+                                                     event->target);
+            notifyRequestor(event);
+            return true;
         };
 
         bool succ = cb();
         if (!succ) {
-            if (m_observer->onReadClipboardContent(getTargetName(event->target))) {
+            if (m_observer->onReadClipboardContent(targetName)) {
                 m_propertyUpdatedCb.emplace_back(cb);
             }
         }
