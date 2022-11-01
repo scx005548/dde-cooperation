@@ -543,14 +543,22 @@ void Machine::handleFlowRequest(const FlowRequest &req) {
 }
 
 void Machine::handleFsRequest([[maybe_unused]] const FsRequest &req) {
+    if (m_fuseServer) {
+        Message msg;
+        auto *fsresponse = msg.mutable_fsresponse();
+        fsresponse->set_accepted(false);
+        fsresponse->set_port(0);
+        sendMessage(msg);
+        return;
+    }
+
     m_fuseServer = std::make_unique<FuseServer>(weak_from_this(), m_uvLoop);
-    uint16_t port = m_fuseServer->port();
 
     // TODO: request accept
     Message msg;
     auto *fsresponse = msg.mutable_fsresponse();
     fsresponse->set_accepted(true);
-    fsresponse->set_port(port);
+    fsresponse->set_port(m_fuseServer->port());
     sendMessage(msg);
 }
 
