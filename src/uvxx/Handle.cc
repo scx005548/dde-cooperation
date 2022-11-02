@@ -11,11 +11,7 @@ Handle::Handle(const std::shared_ptr<Loop> &loop, std::string &&typeName)
 
 Handle::~Handle() {
     if (!uv_is_closing(get())) {
-        if (closedCb_) {
-            spdlog::error("closed callback is setted, close manual!");
-        }
-
-        uv_close(get(), nullptr);
+        spdlog::error("{} is not closed", getTypeName());
     }
 }
 
@@ -27,6 +23,10 @@ void Handle::close() {
     if (!uv_is_closing(get())) {
         uv_close(get(), CallbackWrapper<&Handle::closeCb>::func);
     }
+}
+
+bool Handle::isClosing() {
+    return uv_is_closing(get());
 }
 
 void Handle::closeCb([[maybe_unused]] uv_handle_t *handle) {

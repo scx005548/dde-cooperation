@@ -13,6 +13,7 @@ class Loop;
 class Handle : public UvType<uv_any_handle, uv_handle_t> {
 public:
     void close();
+    bool isClosing();
 
     void onError(const std::function<void(const std::string &title, const std::string &msg)> &cb) {
         errorCb_ = cb;
