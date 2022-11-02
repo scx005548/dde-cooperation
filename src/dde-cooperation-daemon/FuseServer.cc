@@ -50,6 +50,8 @@ void FuseServer::handleNewConnection(bool) noexcept {
     m_conn->onReceived(uvxx::memFunc(this, &FuseServer::handleRequest));
     m_conn->startRead();
     m_conn->onClosed(uvxx::memFunc(this, &FuseServer::handleDisconnected));
+
+    m_listen->close();
 }
 
 void FuseServer::handleDisconnected() noexcept {
