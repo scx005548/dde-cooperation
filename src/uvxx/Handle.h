@@ -20,7 +20,7 @@ public:
     void onClosed(const std::function<void()> &cb) { closedCb_ = cb; }
 
 protected:
-    explicit Handle(const std::shared_ptr<Loop> &loop);
+    explicit Handle(const std::shared_ptr<Loop> &loop, std::string &&typeName);
     ~Handle();
 
     std::function<void(const std::string &title, const std::string &msg)> errorCb_;
@@ -29,7 +29,10 @@ protected:
     bool initialize(int (*func)(uv_loop_t *, T *, Args...), Args... args) {
         int ret = func(getLoop(), get<T>(), std::forward<Args>(args)...);
         if (ret != 0) {
-            spdlog::error("init failed: {}, {}", uv_err_name(ret), uv_strerror(ret));
+            spdlog::error("{} init failed: {}, {}",
+                          getTypeName(),
+                          uv_err_name(ret),
+                          uv_strerror(ret));
             return false;
         }
 
@@ -42,7 +45,7 @@ protected:
         if (ret != 0) {
             // errorCb_(uv_err_name(ret), uv_strerror(ret));
             spdlog::error("{}, {}, {}",
-                          typeid(decltype(func)).name(),
+                          typeName<decltype(func)>(),
                           uv_err_name(ret),
                           uv_strerror(ret));
             return false;
@@ -65,7 +68,8 @@ class HandleT : public Handle {
     friend class Process;
 
 protected:
-    using Handle::Handle;
+    explicit HandleT(const std::shared_ptr<Loop> &loop)
+        : Handle(loop, typeName<T>()) {}
 
     T *get() { return Handle::get<T>(); }
 };

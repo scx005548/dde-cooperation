@@ -12,8 +12,9 @@ namespace uvxx {
 template <typename U, typename T>
 class UvType : public noncopyable {
 protected:
-    UvType()
-        : uv_type_(std::make_shared<U>()) {
+    UvType(std::string &&typeName)
+        : uv_type_(std::make_shared<U>())
+        , typeName_(typeName) {
         get()->data = this;
     }
 
@@ -27,8 +28,11 @@ protected:
         return reinterpret_cast<const D *>(uv_type_.get());
     }
 
+    const std::string &getTypeName() const { return typeName_; }
+
 private:
     std::shared_ptr<U> uv_type_;
+    const std::string typeName_;
 };
 
 } // namespace uvxx

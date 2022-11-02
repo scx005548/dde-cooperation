@@ -4,8 +4,8 @@
 
 using namespace uvxx;
 
-Handle::Handle(const std::shared_ptr<Loop> &loop)
-    : UvType()
+Handle::Handle(const std::shared_ptr<Loop> &loop, std::string &&typeName)
+    : UvType(std::forward<std::string>(typeName))
     , loop_(loop) {
 }
 

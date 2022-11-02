@@ -1,6 +1,8 @@
 #ifndef UVXX_UTILS_H
 #define UVXX_UTILS_H
 
+#include <cxxabi.h>
+
 #include <spdlog/spdlog.h>
 
 namespace uvxx {
@@ -30,6 +32,16 @@ struct CallbackWrapper<F> {
         return (p->*F)(handle, args...);
     }
 };
+
+template <typename T>
+std::string typeName() {
+    size_t buffSize = 128;
+    char buff[buffSize];
+    int stat = 0;
+    char *res = abi::__cxa_demangle(typeid(T).name(), buff, &buffSize, &stat);
+
+    return res;
+}
 
 } // namespace uvxx
 

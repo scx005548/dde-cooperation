@@ -47,7 +47,8 @@ public:
     static std::shared_ptr<D> create() { return std::shared_ptr<D>(new D()); }
 
 protected:
-    using Request::Request;
+    RequestT()
+        : Request(typeName<T>()) {}
 
     T *get() { return Request::get<T>(); }
 
