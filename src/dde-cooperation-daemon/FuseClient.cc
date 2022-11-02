@@ -16,6 +16,7 @@
 #include "uvxx/Loop.h"
 #include "uvxx/TCP.h"
 #include "uvxx/Async.h"
+#include "uvxx/Process.h"
 
 using namespace std::chrono_literals;
 
@@ -47,17 +48,29 @@ FuseClient::FuseClient(const std::shared_ptr<uvxx::Loop> &uvLoop,
     , m_fuse(std::unique_ptr<fuse, decltype(&fuse_destroy)>(nullptr, &fuse_destroy)) {
     spdlog::info("FuseClient::FuseClient, mountpoint: {}", m_mountpoint.string());
 
-    if (!fs::exists(m_mountpoint)) {
-        fs::create_directories(m_mountpoint);
-    }
+    auto process = std::make_shared<uvxx::Process>(m_uvLoop, "/usr/bin/umount");
+    process->args = {m_mountpoint.string()};
+    process->onExit([this, process](int64_t exit_status, [[maybe_unused]] int term_signal) {
+        if (!exit_status) {
+            spdlog::info("umount point success");
+        }
 
-    fuse_opt_add_arg(&m_args, m_mountpoint.c_str());
-    fuse_opt_add_arg(&m_args, "-d");
+        if (!fs::exists(m_mountpoint)) {
+            fs::create_directories(m_mountpoint);
+        }
 
-    m_conn->onConnected([this]() { m_mountThread = std::thread(&FuseClient::mount, this); });
-    m_conn->onReceived(uvxx::memFunc(this, &FuseClient::handleResponse));
-    m_conn->connect(m_ip, m_port);
-    m_conn->startRead();
+        fuse_opt_add_arg(&m_args, m_mountpoint.c_str());
+        fuse_opt_add_arg(&m_args, "-d");
+
+        m_conn->onConnected([this]() { m_mountThread = std::thread(&FuseClient::mount, this); });
+        m_conn->onReceived(uvxx::memFunc(this, &FuseClient::handleResponse));
+        m_conn->connect(m_ip, m_port);
+        m_conn->startRead();
+
+        process->onExit(nullptr);
+    });
+
+    process->spawn();
 }
 
 FuseClient::~FuseClient() {
