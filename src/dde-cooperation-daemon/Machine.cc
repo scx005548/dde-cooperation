@@ -585,7 +585,11 @@ void Machine::handleFsSendFileRequest(const FsSendFileRequest &req) {
     sendMessage(msg);
 
     std::string home = getenv("HOME");
-    std::string filePath = m_mountpoint.string() + req.path();
+    std::string reqPath = req.path();
+    if (!reqPath.empty() && reqPath[0] != '/') {
+        reqPath = "/" + reqPath;
+    }
+    std::string filePath = m_mountpoint.string() + reqPath;
     auto process = std::make_shared<uvxx::Process>(m_uvLoop, "/bin/cp");
     process->args = {"-r", filePath, home};
     process->onExit([this, serial = req.serial(), path = req.path(), process](
