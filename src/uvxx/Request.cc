@@ -9,13 +9,6 @@ bool Request::cancel() {
     return ret == 0;
 }
 
-void Request::stay() {
-    self_ = shared_from_this();
-}
-void Request::stopStay() {
-    self_.reset();
-}
-
 bool ShutdownRequest::shutdown(uv_stream_t *handle) {
     return invoke(&uv_shutdown, get(), std::forward<uv_stream_t *>(handle));
 }

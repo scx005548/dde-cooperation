@@ -21,6 +21,7 @@ uv_loop_t *Handle::getLoop() {
 
 void Handle::close() {
     if (!uv_is_closing(get())) {
+        stay();
         uv_close(get(), CallbackWrapper<&Handle::closeCb>::func);
     }
 }
@@ -33,4 +34,6 @@ void Handle::closeCb([[maybe_unused]] uv_handle_t *handle) {
     if (closedCb_) {
         closedCb_();
     }
+
+    stopStay();
 }

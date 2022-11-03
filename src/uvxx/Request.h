@@ -1,8 +1,6 @@
 #ifndef UVXX_REQUEST_H
 #define UVXX_REQUEST_H
 
-#include <memory>
-
 #include <uv.h>
 
 #include "utils.h"
@@ -16,7 +14,7 @@ class Addr;
 
 typedef void (*uv_write_cb)(uv_write_t *req, int status);
 
-class Request : public UvType<uv_any_req, uv_req_t>, public std::enable_shared_from_this<Request> {
+class Request : public UvType<uv_any_req, uv_req_t> {
 public:
     bool cancel();
 
@@ -28,14 +26,8 @@ public:
 protected:
     using UvType::UvType;
 
-    void stay();
-    void stopStay();
-
     std::function<void()> successCb_;
     std::function<void(const std::string &title, const std::string &msg)> errorCb_;
-
-private:
-    std::shared_ptr<void> self_;
 };
 
 template <class D, typename T>
