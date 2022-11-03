@@ -14,6 +14,7 @@ ConfirmDialog::ConfirmDialog(const QString &ip, const QString &machineName, int 
     , m_contentLabel(new QLabel(this))
 {
     setAttribute(Qt::WA_QuitOnClose);
+    setFocus(Qt::MouseFocusReason);
 
     QFont font = m_titleLabel->font();
     font.setBold(true);
