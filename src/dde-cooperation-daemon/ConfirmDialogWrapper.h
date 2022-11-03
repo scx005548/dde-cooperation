@@ -9,7 +9,7 @@ class Loop;
 class Pipe;
 class Process;
 class Buffer;
-}
+} // namespace uvxx
 
 class Manager;
 class Machine;
@@ -19,9 +19,11 @@ class Machine;
 
 class ConfirmDialogWrapper {
 public:
-    explicit ConfirmDialogWrapper(const std::string &machineIp, const std::string &machineName,
+    explicit ConfirmDialogWrapper(const std::string &machineIp,
+                                  const std::string &machineName,
                                   const std::shared_ptr<uvxx::Loop> &uvLoop,
                                   const std::function<void(uvxx::Buffer &buff)> &cb);
+    ~ConfirmDialogWrapper();
 
 private:
     std::shared_ptr<uvxx::Loop> m_uvLoop;

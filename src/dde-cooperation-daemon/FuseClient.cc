@@ -67,6 +67,7 @@ FuseClient::FuseClient(const std::shared_ptr<uvxx::Loop> &uvLoop,
         m_conn->connect(m_ip, m_port);
         m_conn->startRead();
 
+        process->close();
         process->onExit(nullptr);
     });
 
@@ -74,6 +75,8 @@ FuseClient::FuseClient(const std::shared_ptr<uvxx::Loop> &uvLoop,
 }
 
 FuseClient::~FuseClient() {
+    m_async->close();
+    m_conn->close();
     exit();
 }
 

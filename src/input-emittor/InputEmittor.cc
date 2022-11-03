@@ -114,6 +114,10 @@ InputEmittor::InputEmittor(const std::shared_ptr<uvxx::Loop> &uvLoop, InputDevic
     m_uidev = make_handle(uidev, &libevdev_uinput_destroy);
 }
 
+InputEmittor::~InputEmittor() {
+    m_pipe->close();
+}
+
 void InputEmittor::enableEventType(unsigned int type) {
     int rc = libevdev_enable_event_type(m_dev.get(), type);
     if (rc != 0) {

@@ -21,6 +21,7 @@ class FuseServer {
 public:
     explicit FuseServer(const std::weak_ptr<Machine> &machine,
                         const std::shared_ptr<uvxx::Loop> &uvLoop);
+    ~FuseServer();
 
     uint16_t port() const;
 

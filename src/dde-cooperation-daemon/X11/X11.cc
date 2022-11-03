@@ -42,6 +42,9 @@ X11::X11(const std::shared_ptr<uvxx::Loop> &uvLoop)
 
 X11::~X11() {
     m_uvPoll->stop();
+    m_uvPoll->close();
+
+    xcb_disconnect(m_conn);
 }
 
 xcb_screen_t *X11::screenOfDisplay(int screen) {

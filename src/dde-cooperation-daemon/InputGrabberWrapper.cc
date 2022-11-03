@@ -15,7 +15,8 @@ InputGrabberWrapper::InputGrabberWrapper(Manager *manager,
     : m_manager(manager)
     , m_uvLoop(uvLoop)
     , m_pipe(std::make_shared<uvxx::Pipe>(m_uvLoop, true))
-    , m_process(std::make_shared<uvxx::Process>(m_uvLoop, INPUT_GRABBER_PATH)) {
+    , m_process(std::make_shared<uvxx::Process>(m_uvLoop, INPUT_GRABBER_PATH))
+    , m_path(path) {
     m_process->setStdout(static_cast<uv_stdio_flags>(UV_INHERIT_FD), fileno(stdout));
     m_process->setStderr(static_cast<uv_stdio_flags>(UV_INHERIT_FD), fileno(stderr));
     int fd = m_process->addStdio(
@@ -24,11 +25,23 @@ InputGrabberWrapper::InputGrabberWrapper(Manager *manager,
     m_process->args.emplace_back(std::to_string(fd));
     m_process->args.emplace_back(path.string());
     m_process->spawn();
+    m_process->onExit([this](int64_t, int) { m_process->close(); });
 
-    m_process->onExit([this, path](int64_t, int) { m_manager->removeInputGrabber(path); });
+    m_process->onClosed(uvxx::memFunc(this, &InputGrabberWrapper::onClosed));
 
     m_pipe->onReceived(uvxx::memFunc(this, &InputGrabberWrapper::onReceived));
+    m_pipe->onClosed(uvxx::memFunc(this, &InputGrabberWrapper::onClosed));
     m_pipe->startRead();
+}
+
+InputGrabberWrapper::~InputGrabberWrapper() {
+    m_pipe->onClosed(nullptr);
+    m_process->onExit(nullptr);
+    m_process->onClosed(nullptr);
+
+    m_pipe->close();
+    m_process->kill(SIGINT);
+    m_process->close();
 }
 
 void InputGrabberWrapper::setMachine(const std::weak_ptr<Machine> &machine) {
@@ -79,4 +92,8 @@ void InputGrabberWrapper::onReceived(uvxx::Buffer &buff) noexcept {
         }
         }
     }
+}
+
+void InputGrabberWrapper::onClosed() {
+    m_manager->removeInputGrabber(m_path);
 }

@@ -5,7 +5,8 @@
 #include "uvxx/Pipe.h"
 #include "uvxx/Process.h"
 
-ConfirmDialogWrapper::ConfirmDialogWrapper(const std::string &machineIp, const std::string &machineName,
+ConfirmDialogWrapper::ConfirmDialogWrapper(const std::string &machineIp,
+                                           const std::string &machineName,
                                            const std::shared_ptr<uvxx::Loop> &uvLoop,
                                            const std::function<void(uvxx::Buffer &)> &cb)
     : m_uvLoop(uvLoop)
@@ -24,4 +25,10 @@ ConfirmDialogWrapper::ConfirmDialogWrapper(const std::string &machineIp, const s
 
     m_pipe->onReceived(cb);
     m_pipe->startRead();
+}
+
+ConfirmDialogWrapper::~ConfirmDialogWrapper() {
+    m_pipe->close();
+    m_process->kill(SIGTERM);
+    m_process->close();
 }

@@ -42,6 +42,7 @@ InputGrabber::InputGrabber(const std::shared_ptr<uvxx::Loop> &uvLoop, const fs::
 
 InputGrabber::~InputGrabber() {
     spdlog::debug("InputDevice::~InputDevice() {}", m_name);
+    m_uvPoll->close();
     libevdev_free(m_dev);
     close(m_fd);
 }

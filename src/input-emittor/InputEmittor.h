@@ -15,8 +15,8 @@ class Pipe;
 
 class InputEmittor {
 public:
-    explicit InputEmittor(const std::shared_ptr<uvxx::Loop> &uvLoop,
-                          InputDeviceType type);
+    explicit InputEmittor(const std::shared_ptr<uvxx::Loop> &uvLoop, InputDeviceType type);
+    ~InputEmittor();
 
     bool emitEvent(unsigned int type, unsigned int code, int value);
 

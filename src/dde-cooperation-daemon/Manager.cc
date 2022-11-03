@@ -50,7 +50,8 @@ Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesyste
     , m_methodKnock(new DBus::Method("Knock",
                                      DBus::Method::warp(this, &Manager::knock),
                                      {{"ip", "s"}, {"port", "i"}}))
-    , m_methodSendFile(new DBus::Method("SendFile", DBus::Method::warp(this, &Manager::sendFile),
+    , m_methodSendFile(new DBus::Method("SendFile",
+                                        DBus::Method::warp(this, &Manager::sendFile),
                                         {{"filePath", "as"}, {"osType", "i"}}))
     , m_propertyMachines(
           new DBus::Property("Machines", "ao", DBus::Property::warp(this, &Manager::getMachines)))
@@ -114,6 +115,9 @@ Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesyste
 }
 
 Manager::~Manager() {
+    m_async->close();
+    m_socketScan->close();
+    m_listenPair->close();
 }
 
 void Manager::ensureDataDirExists() {
@@ -167,7 +171,8 @@ bool Manager::isValidUUID(const std::string &str) const noexcept {
 void Manager::scan([[maybe_unused]] const Glib::VariantContainerBase &args,
                    const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
     if (!m_deviceSharingSwitch) {
-        invocation->return_error(Gio::DBus::Error{Gio::DBus::Error::FAILED, "DeviceSharing Switch close!"});
+        invocation->return_error(
+            Gio::DBus::Error{Gio::DBus::Error::FAILED, "DeviceSharing Switch close!"});
         spdlog::debug("DeviceSharing Switch close");
         return;
     }
@@ -199,7 +204,8 @@ void Manager::sendFile(const Glib::VariantContainerBase &args,
     args.get_child(osType, 1);
 
     if (files.get().empty()) {
-        invocation->return_error(Gio::DBus::Error{Gio::DBus::Error::FAILED, "filepath param has error!"});
+        invocation->return_error(
+            Gio::DBus::Error{Gio::DBus::Error::FAILED, "filepath param has error!"});
         return;
     }
 
@@ -216,7 +222,8 @@ void Manager::sendFile(const Glib::VariantContainerBase &args,
     if (hasSend) {
         invocation->return_value(Glib::VariantContainerBase{});
     } else {
-        invocation->return_error(Gio::DBus::Error{Gio::DBus::Error::FAILED, "Target machine not found!"});
+        invocation->return_error(
+            Gio::DBus::Error{Gio::DBus::Error::FAILED, "Target machine not found!"});
     }
 }
 
@@ -292,7 +299,7 @@ void Manager::cooperationStatusChanged(bool enable) {
         }
         m_machines.clear();
         m_propertyMachines->emitChanged(
-            Glib::Variant<std::vector<Glib::DBusObjectPathString>>::create(getMachinePaths()));    
+            Glib::Variant<std::vector<Glib::DBusObjectPathString>>::create(getMachinePaths()));
     }
 }
 
@@ -353,8 +360,8 @@ void Manager::handleReceivedSocketScan(std::shared_ptr<uvxx::Addr> addr,
     spdlog::debug("partial: {}", partial);
 
     if (!m_deviceSharingSwitch) {
-       return;
-    } 
+        return;
+    }
 
     auto buff = data.get();
     auto &header = MessageHelper::parseMessageHeader(buff);

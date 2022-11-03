@@ -20,9 +20,8 @@ public:
     explicit InputEmittorWrapper(const std::weak_ptr<Machine> &machine,
                                  const std::shared_ptr<uvxx::Loop> &uvLoop,
                                  InputDeviceType type);
+    ~InputEmittorWrapper();
     void setMachine(const std::weak_ptr<Machine> &machine);
-    void start();
-    void stop();
     bool emitEvent(unsigned int type, unsigned int code, int value) noexcept;
 
 private:
@@ -34,6 +33,8 @@ private:
     InputDeviceType m_type;
 
     void onReceived(uvxx::Buffer &buff) noexcept;
+    void onProcessClosed();
+    void onPipeClosed();
 };
 
 #endif // !DDE_COOPERATION_DAEMON_INPUTEMITTORWRAPPER_H

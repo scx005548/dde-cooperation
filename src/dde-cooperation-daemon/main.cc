@@ -56,4 +56,9 @@ int main() {
     signalHup->start(SIGHUP);
 
     loop->run();
+
+    signalInt->close();
+    signalQuit->close();
+    signalTerm->close();
+    signalHup->close();
 }

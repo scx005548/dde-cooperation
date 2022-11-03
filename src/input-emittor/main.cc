@@ -66,4 +66,10 @@ int main(int argc, const char *argv[]) {
     signalHup->start(SIGHUP);
 
     loop->run();
+
+    pipe->close();
+    signalInt->close();
+    signalQuit->close();
+    signalTerm->close();
+    signalHup->close();
 }

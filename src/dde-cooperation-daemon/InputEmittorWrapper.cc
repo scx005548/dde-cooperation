@@ -24,9 +24,22 @@ InputEmittorWrapper::InputEmittorWrapper(const std::weak_ptr<Machine> &machine,
     m_process->args.emplace_back(std::to_string(fd));
     m_process->args.emplace_back(std::to_string(uint8_t(type)));
     m_process->spawn();
+    m_process->onExit([this](int64_t, int) { m_process->close(); });
+
+    m_process->onClosed(uvxx::memFunc(this, &InputEmittorWrapper::onProcessClosed));
 
     m_pipe->onReceived(uvxx::memFunc(this, &InputEmittorWrapper::onReceived));
+    m_pipe->onClosed(uvxx::memFunc(this, &InputEmittorWrapper::onPipeClosed));
     m_pipe->startRead();
+}
+
+InputEmittorWrapper::~InputEmittorWrapper() {
+    m_pipe->onClosed(nullptr);
+    m_process->onExit(nullptr);
+    m_process->onClosed(nullptr);
+
+    m_pipe->close();
+    m_process->close();
 }
 
 bool InputEmittorWrapper::emitEvent(unsigned int type, unsigned int code, int value) noexcept {
@@ -40,4 +53,12 @@ bool InputEmittorWrapper::emitEvent(unsigned int type, unsigned int code, int va
 
 void InputEmittorWrapper::onReceived([[maybe_unused]] uvxx::Buffer &buff) noexcept {
     spdlog::info("onReceived");
+}
+
+void InputEmittorWrapper::onProcessClosed() {
+    // todo: remove emitter
+}
+
+void InputEmittorWrapper::onPipeClosed() {
+    // todo: remove emitter
 }

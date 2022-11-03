@@ -124,6 +124,13 @@ Machine::Machine(Manager *manager,
 }
 
 Machine::~Machine() {
+    m_pingTimer->close();
+    m_offlineTimer->close();
+    m_async->close();
+    if (m_conn) {
+        m_conn->close();
+    }
+
     m_service->unexportObject(m_object->path());
 }
 

@@ -36,6 +36,10 @@ FuseServer::FuseServer(const std::weak_ptr<Machine> &machine,
     m_listen->onNewConnection(uvxx::memFunc(this, &FuseServer::handleNewConnection));
 }
 
+FuseServer::~FuseServer() {
+    m_listen->close();
+}
+
 uint16_t FuseServer::port() const {
     return m_listen->localAddress()->ipv4()->port();
 }
