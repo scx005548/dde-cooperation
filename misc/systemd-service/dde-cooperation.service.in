@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=@libexecdir@/dde-cooperation/dde-cooperation-daemon
+ExecStart=@executable_install_dir@/dde-cooperation-daemon
 
 [Install]
 WantedBy=multi-user.target

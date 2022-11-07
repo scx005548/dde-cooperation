@@ -24,5 +24,5 @@ input_emittor = executable('input-emittor',
   ],
   install: true,
   install_mode: ['rwsr-xr-x'],
-  install_dir: join_paths(libexecdir, 'dde-cooperation'),
+  install_dir: executable_install_dir
 )

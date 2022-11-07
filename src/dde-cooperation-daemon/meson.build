@@ -37,7 +37,7 @@ dde_cooperation_daemon_sources = files('''
 dde_cooperation_daemon_sources += common_sources + [protocol] + [ipc_protocol]
 
 conf_data = configuration_data()
-conf_data.set('libexecdir', libexecdir)
+conf_data.set('executable_install_dir', executable_install_dir)
 configure_file(
   input: 'config.h.in',
   output: 'config.h',
@@ -71,5 +71,5 @@ executable('dde-cooperation-daemon',
     uvxx,
   ],
   install: true,
-  install_dir: join_paths(libexecdir, 'dde-cooperation'),
+  install_dir: executable_install_dir
 )
