@@ -63,6 +63,8 @@ public:
 
 protected:
     // DBus method handlers
+    void getUUID(const Glib::VariantContainerBase &args,
+                 const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
     void scan(const Glib::VariantContainerBase &args,
               const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
     void knock(const Glib::VariantContainerBase &args,
@@ -106,6 +108,7 @@ private:
     Glib::RefPtr<DBus::Interface> m_interface;
 
     // DBus methods
+    Glib::RefPtr<DBus::Method> m_methodGetUUID;
     Glib::RefPtr<DBus::Method> m_methodScan;
     Glib::RefPtr<DBus::Method> m_methodKnock;
     Glib::RefPtr<DBus::Method> m_methodSendFile;
@@ -114,6 +117,7 @@ private:
     Glib::RefPtr<DBus::Property> m_propertyMachines;
     Glib::RefPtr<DBus::Property> m_propertyDeviceSharingSwitch;
 
+    Glib::RefPtr<Gio::DBus::Proxy> m_dbusProxy;
     Glib::RefPtr<Gio::DBus::Proxy> m_powersaverProxy;
     int m_deviceSharingCnt;
     uint32_t m_inhibitCookie;

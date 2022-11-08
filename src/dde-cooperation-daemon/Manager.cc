@@ -18,6 +18,7 @@
 #include "uvxx/Pipe.h"
 #include "uvxx/Pipe.h"
 
+#include "config.h"
 #include "Machine.h"
 #include "PCMachine.h"
 #include "AndroidMachine.h"
@@ -31,6 +32,29 @@
 namespace fs = std::filesystem;
 
 const static fs::path inputDevicePath = "/dev/input";
+
+static fs::path getExecutablePath(uint32_t pid) {
+    fs::path exeFilePath = fmt::format("/proc/{}/exe", pid);
+    if (!fs::exists(exeFilePath) || !fs::is_symlink(exeFilePath)) {
+        return "";
+    }
+
+    return fs::read_symlink(exeFilePath);
+}
+
+static bool isSubDir(fs::path p, fs::path root) {
+    for (;;) {
+        if (p == root) {
+            return true;
+        }
+        if (!p.has_parent_path()) {
+            return false;
+        }
+        p = p.parent_path();
+    }
+
+    return false;
+}
 
 Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesystem::path &dataDir)
     : m_dataDir(dataDir)
@@ -46,6 +70,10 @@ Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesyste
     , m_service(new DBus::Service{"com.deepin.Cooperation", Gio::DBus::BusType::BUS_TYPE_SESSION})
     , m_object(new DBus::Object("/com/deepin/Cooperation"))
     , m_interface(new DBus::Interface("com.deepin.Cooperation"))
+    , m_methodGetUUID(new DBus::Method("GetUUID",
+                                       DBus::Method::warp(this, &Manager::getUUID),
+                                       {},
+                                       {{"uuid", "s"}}))
     , m_methodScan(new DBus::Method("Scan", DBus::Method::warp(this, &Manager::scan)))
     , m_methodKnock(new DBus::Method("Knock",
                                      DBus::Method::warp(this, &Manager::knock),
@@ -60,6 +88,10 @@ Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesyste
                              "b",
                              DBus::Property::warp(this, &Manager::getDeviceSharingSwitch),
                              DBus::Property::warp(this, &Manager::setDeviceSharingSwitch)))
+    , m_dbusProxy(Gio::DBus::Proxy::Proxy::create_sync(m_bus,
+                                                       "org.freedesktop.DBus",
+                                                       "/org/freedesktop/DBus",
+                                                       "org.freedesktop.DBus"))
     , m_powersaverProxy(Gio::DBus::Proxy::Proxy::create_sync(m_bus,
                                                              "org.freedesktop.ScreenSaver",
                                                              "/org/freedesktop/ScreenSaver",
@@ -71,6 +103,7 @@ Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesyste
     m_keypair.load();
 
     m_service->registerService();
+    m_interface->exportMethod(m_methodGetUUID);
     m_interface->exportMethod(m_methodScan);
     m_interface->exportMethod(m_methodKnock);
     m_interface->exportMethod(m_methodSendFile);
@@ -166,6 +199,30 @@ bool Manager::isValidUUID(const std::string &str) const noexcept {
     uuid_t uuid;
     int res = uuid_parse_range(str.data(), str.data() + str.size(), uuid);
     return res == 0;
+}
+
+void Manager::getUUID([[maybe_unused]] const Glib::VariantContainerBase &args,
+                      const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
+    Glib::ustring sender = invocation->get_sender();
+
+    auto params = Glib::Variant<std::vector<Glib::VariantBase>>::create_tuple({
+        Glib::Variant<Glib::ustring>::create(sender),
+    });
+    auto res = m_dbusProxy->call_sync("GetConnectionUnixProcessID", params);
+    Glib::Variant<uint32_t> vpid;
+    res.get_child(vpid);
+    uint32_t pid = vpid.get();
+
+    auto callerPath = getExecutablePath(pid);
+    if (!isSubDir(callerPath, EXECUTABLE_INSTALL_DIR)) {
+        invocation->return_error(
+            Gio::DBus::Error{Gio::DBus::Error::ACCESS_DENIED, "Access Denied"});
+        return;
+    }
+
+    invocation->return_value(Glib::Variant<std::vector<Glib::VariantBase>>::create_tuple({
+        Glib::Variant<Glib::ustring>::create(m_uuid),
+    }));
 }
 
 void Manager::scan([[maybe_unused]] const Glib::VariantContainerBase &args,
