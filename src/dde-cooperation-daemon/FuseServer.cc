@@ -37,6 +37,9 @@ FuseServer::FuseServer(const std::weak_ptr<Machine> &machine,
 }
 
 FuseServer::~FuseServer() {
+    if (m_conn) {
+        m_conn->close();
+    }
     m_listen->close();
 }
 
