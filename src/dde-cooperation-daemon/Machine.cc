@@ -190,6 +190,7 @@ void Machine::updateMachineInfo(const Glib::ustring &ip, uint16_t port, const De
 
 void Machine::receivedPing() {
     m_offlineTimer->reset();
+    m_pingTimer->reset();
 }
 
 void Machine::onPair(const std::shared_ptr<uvxx::TCP> &sock) {
