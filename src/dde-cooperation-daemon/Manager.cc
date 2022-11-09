@@ -209,10 +209,19 @@ void Manager::sendFile(const Glib::VariantContainerBase &args,
         return;
     }
 
+    int dstOs = osType.get();
+    bool dstIsPcMachine = dstOs == DEVICE_OS_UOS || dstOs == DEVICE_OS_LINUX
+                          || dstOs == DEVICE_OS_WINDOWS || dstOs == DEVICE_OS_MACOS;
+    bool dstIsAndroid = dstOs == DEVICE_OS_ANDROID;
+
     bool hasSend = false;
     for (const auto &v : m_machines) {
         const std::shared_ptr<Machine> &machine = v.second;
-        if (machine->m_deviceSharing && machine->m_os == osType.get()) {
+        if (!machine->m_paired) {
+            continue;
+        }
+
+        if ((dstIsPcMachine && machine->isPcMachine()) || (dstIsAndroid && machine->isAndroid())) {
             machine->sendFiles(files.get());
             hasSend = true;
             break;

@@ -56,6 +56,9 @@ public:
     void flowTo(uint16_t direction, uint16_t x, uint16_t y) noexcept;
     void readTarget(const std::string &target);
 
+    bool isPcMachine() const;
+    bool isAndroid() const;
+
     virtual void handleConnected() = 0;
 
 protected:

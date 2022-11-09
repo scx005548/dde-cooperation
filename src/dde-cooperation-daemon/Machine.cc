@@ -138,6 +138,15 @@ void Machine::init() {
     m_service->exportObject(m_object);
 }
 
+bool Machine::isPcMachine() const {
+    return m_os == DEVICE_OS_UOS || m_os == DEVICE_OS_LINUX
+           || m_os == DEVICE_OS_WINDOWS || m_os == DEVICE_OS_MACOS;
+}
+
+bool Machine::isAndroid() const {
+    return m_os == DEVICE_OS_ANDROID;
+}
+
 void Machine::pair([[maybe_unused]] const Glib::VariantContainerBase &args,
                    const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
     if (m_paired) {
