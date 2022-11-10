@@ -25,6 +25,8 @@
 namespace fs = std::filesystem;
 
 static const std::string fileSchema{"file://"};
+static const std::string clipboardFileTarget{"x-special/gnome-copied-files"};
+static const std::string uriListTarget{"text/uri-list"};
 
 static const uint64_t U10s = 10 * 1000;
 static const uint64_t U25s = 25 * 1000;
@@ -634,6 +636,12 @@ void Machine::handleFsSendFileRequest(const FsSendFileRequest &req) {
 void Machine::handleClipboardNotify(const ClipboardNotify &notify) {
     auto &targetsp = notify.targets();
     std::vector<std::string> targets{targetsp.cbegin(), targetsp.cend()};
+
+    // other pc machine need fill up text/uri-list target
+    if (m_os != DEVICE_OS_UOS && std::find(targets.begin(), targets.end(), clipboardFileTarget) != targets.end()) {
+        targets.emplace_back(uriListTarget);
+    }
+
     m_manager->onMachineOwnClipboard(weak_from_this(), targets);
 }
 
@@ -680,9 +688,25 @@ void Machine::handleClipboardGetContentResponse(const ClipboardGetContentRespons
         content.swap(out);
         // spdlog::info("content[{}]: {}", content.length(), content);
     }
-    if (target == "x-special/gnome-copied-files") {
-        spdlog::warn("x-special/gnome-copied-files: {}", content);
+
+    // fill up text/uri-list target. when pasted, this target is need;
+    if (m_os != DEVICE_OS_UOS && target == clipboardFileTarget) {
+        std::stringstream tempStream(content);
+        std::string filePath;
+        while (!tempStream.eof()) {
+            std::getline(tempStream, filePath, '\n');
+            if (!filePath.empty() && filePath.rfind(fileSchema, 0) == 0) { // starts with 'file://'
+                filePath = std::string(filePath.data() + fileSchema.size(), filePath.size() - fileSchema.size());
+                break;
+            }
+        }
+
+        if (!filePath.empty()) {
+            spdlog::info("pc machine fill up text/uri-list target:{}", filePath);
+            m_clipboard->updateTargetContent(uriListTarget, std::vector<char>(filePath.begin(), filePath.end()));
+        }
     }
+
     m_clipboard->updateTargetContent(target, std::vector<char>(content.begin(), content.end()));
 }
 
