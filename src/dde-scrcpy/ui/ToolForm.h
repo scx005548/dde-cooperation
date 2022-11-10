@@ -6,18 +6,12 @@
 
 #include "QtScrcpyCore.h"
 
-#include "uibase/MagneticWidget.h"
-
-namespace Ui {
-class ToolForm;
-}
-
 class Device;
 class ToolForm : public QWidget {
     Q_OBJECT
 
 public:
-    explicit ToolForm(qsc::IDevice *device, QWidget *adsorbWidget);
+    explicit ToolForm(qsc::IDevice *device, QWidget *parent);
     ~ToolForm();
 
     void setSerial(const QString &serial);
@@ -32,28 +26,16 @@ protected:
     void hideEvent(QHideEvent *event);
 
 private slots:
-    void on_fullScreenBtn_clicked();
-    void on_returnBtn_clicked();
+    void on_backBtn_clicked();
+    void on_overviewBtn_clicked();
     void on_homeBtn_clicked();
-    void on_menuBtn_clicked();
-    void on_appSwitchBtn_clicked();
-    void on_powerBtn_clicked();
-    void on_screenShotBtn_clicked();
-    void on_volumeUpBtn_clicked();
-    void on_volumeDownBtn_clicked();
-    void on_closeScreenBtn_clicked();
-    void on_expandNotifyBtn_clicked();
-    void on_touchBtn_clicked();
-    void on_openScreenBtn_clicked();
+    void on_switchScreenBtn_clicked();
 
 private:
-    void initStyle();
-
-private:
-    Ui::ToolForm *ui;
     QPoint m_dragPosition;
     QString m_serial;
     qsc::IDevice *m_device;
+    bool m_screenClosed = false;
     bool m_showTouch = false;
     bool m_isHost = false;
 };

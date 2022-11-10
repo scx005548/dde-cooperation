@@ -1,5 +1,6 @@
 #include "VideoForm.h"
 
+#include <QGuiApplication>
 #include <QDesktopWidget>
 #include <QFileInfo>
 #include <QLabel>
@@ -16,28 +17,30 @@
 #include <QtWidgets/QHBoxLayout>
 
 #include "ToolForm.h"
-#include "ui_VideoForm.h"
+#include "uibase/KeepRatioWidget.h"
 #include "render/QYUVOpenGLWidget.h"
 #include "util/mousetap/MouseTap.h"
 
 VideoForm::VideoForm(QWidget *parent)
     : QWidget(parent)
-    , ui(new Ui::VideoForm) {
-    ui->setupUi(this);
+    , m_keepRatioWidget(new KeepRatioWidget(this)) {
     initUI();
     installShortcut();
     updateShowSize(size());
 }
 
 VideoForm::~VideoForm() {
-    delete ui;
 }
 
 void VideoForm::initUI() {
+    m_layout = new QVBoxLayout(this);
+    setLayout(m_layout);
+    m_layout->addWidget(m_keepRatioWidget);
+
     m_videoWidget = new QYUVOpenGLWidget();
     m_videoWidget->hide();
-    ui->keepRatioWidget->setWidget(m_videoWidget);
-    ui->keepRatioWidget->setWidthHeightRatio(m_widthHeightRatio);
+    m_keepRatioWidget->setWidget(m_videoWidget);
+    m_keepRatioWidget->setWidthHeightRatio(m_widthHeightRatio);
 
     m_fpsLabel = new QLabel(m_videoWidget);
     QFont ft;
@@ -51,7 +54,7 @@ void VideoForm::initUI() {
 
     setMouseTracking(true);
     m_videoWidget->setMouseTracking(true);
-    ui->keepRatioWidget->setMouseTracking(true);
+    m_keepRatioWidget->setMouseTracking(true);
 }
 
 void VideoForm::setDevice(qsc::IDevice *device) {
@@ -61,7 +64,7 @@ void VideoForm::setDevice(qsc::IDevice *device) {
 QRect VideoForm::getGrabCursorRect() {
     QRect rc;
 #if defined(Q_OS_WIN32)
-    rc = QRect(ui->keepRatioWidget->mapToGlobal(m_videoWidget->pos()), m_videoWidget->size());
+    rc = QRect(m_keepRatioWidget->mapToGlobal(m_videoWidget->pos()), m_videoWidget->size());
     // high dpi support
     rc.setTopLeft(rc.topLeft() * m_videoWidget->devicePixelRatioF());
     rc.setBottomRight(rc.bottomRight() * m_videoWidget->devicePixelRatioF());
@@ -72,15 +75,15 @@ QRect VideoForm::getGrabCursorRect() {
     rc.setHeight(rc.height() - 20);
 #elif defined(Q_OS_OSX)
     rc = m_videoWidget->geometry();
-    rc.setTopLeft(ui->keepRatioWidget->mapToGlobal(rc.topLeft()));
-    rc.setBottomRight(ui->keepRatioWidget->mapToGlobal(rc.bottomRight()));
+    rc.setTopLeft(m_keepRatioWidget->mapToGlobal(rc.topLeft()));
+    rc.setBottomRight(m_keepRatioWidget->mapToGlobal(rc.bottomRight()));
 
     rc.setX(rc.x() + 10);
     rc.setY(rc.y() + 10);
     rc.setWidth(rc.width() - 20);
     rc.setHeight(rc.height() - 20);
 #elif defined(Q_OS_LINUX)
-    rc = QRect(ui->keepRatioWidget->mapToGlobal(m_videoWidget->pos()), m_videoWidget->size());
+    rc = QRect(m_keepRatioWidget->mapToGlobal(m_videoWidget->pos()), m_videoWidget->size());
     // high dpi support -- taken from the WIN32 section and untested
     rc.setTopLeft(rc.topLeft() * m_videoWidget->devicePixelRatioF());
     rc.setBottomRight(rc.bottomRight() * m_videoWidget->devicePixelRatioF());
@@ -107,7 +110,7 @@ void VideoForm::resizeSquare() {
 }
 
 void VideoForm::removeBlackRect() {
-    resize(ui->keepRatioWidget->goodSize());
+    resize(m_keepRatioWidget->goodSize());
 }
 
 void VideoForm::showFPS(bool show) {
@@ -146,8 +149,9 @@ void VideoForm::showToolForm(bool show) {
         m_toolForm = new ToolForm(m_device, this);
         m_toolForm->setSerial(m_serial);
     }
-    m_toolForm->move(pos().x() + geometry().width(), pos().y() + 30);
+    // m_toolForm->move(pos().x() + geometry().width(), pos().y() + 30);
     m_toolForm->setVisible(show);
+    m_layout->addWidget(m_toolForm);
 }
 
 void VideoForm::moveCenter() {
@@ -287,7 +291,7 @@ void VideoForm::updateShowSize(const QSize &newSize) {
         m_frameSize = newSize;
 
         m_widthHeightRatio = 1.0f * newSize.width() / newSize.height();
-        ui->keepRatioWidget->setWidthHeightRatio(m_widthHeightRatio);
+        m_keepRatioWidget->setWidthHeightRatio(m_widthHeightRatio);
 
         bool vertical = m_widthHeightRatio < 1.0f ? true : false;
         QSize showSize = newSize;
@@ -323,7 +327,7 @@ void VideoForm::switchFullScreen() {
     if (isFullScreen()) {
         // 横屏全屏铺满全屏，恢复时，恢复保持宽高比
         if (m_widthHeightRatio > 1.0f) {
-            ui->keepRatioWidget->setWidthHeightRatio(m_widthHeightRatio);
+            m_keepRatioWidget->setWidthHeightRatio(m_widthHeightRatio);
         }
 
         showNormal();
@@ -343,7 +347,7 @@ void VideoForm::switchFullScreen() {
     } else {
         // 横屏全屏铺满全屏，不保持宽高比
         if (m_widthHeightRatio > 1.0f) {
-            ui->keepRatioWidget->setWidthHeightRatio(-1.0f);
+            m_keepRatioWidget->setWidthHeightRatio(-1.0f);
         }
 
         // record current size before fullscreen, it will be used to rollback size after exit
@@ -562,7 +566,7 @@ void VideoForm::showEvent(QShowEvent *event) {
 
 void VideoForm::resizeEvent(QResizeEvent *event) {
     Q_UNUSED(event)
-    QSize goodSize = ui->keepRatioWidget->goodSize();
+    QSize goodSize = m_keepRatioWidget->goodSize();
     if (goodSize.isEmpty()) {
         return;
     }

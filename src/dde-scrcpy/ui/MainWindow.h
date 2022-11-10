@@ -6,7 +6,12 @@
 
 #include "AdbProcess.h"
 
+#include "uibase/KeepRatioWidget.h"
 #include "ui/VideoForm.h"
+
+namespace qsc {
+class IDevice;
+}
 
 class MainWindow : public DTK_WIDGET_NAMESPACE::DMainWindow {
     Q_OBJECT
@@ -14,6 +19,13 @@ class MainWindow : public DTK_WIDGET_NAMESPACE::DMainWindow {
 public:
     MainWindow(const QString &ip, QWidget *parent = nullptr);
     ~MainWindow();
+
+protected slots:
+    void deviceConnected(bool success,
+                         const QString &serial,
+                         const QString &deviceName,
+                         const QSize &size);
+    void deviceDisconnected(const QString &serial);
 
 private:
     QString m_ip;
@@ -24,6 +36,8 @@ private:
 
     QStackedWidget *m_stackedWidget;
     VideoForm *m_videoForm;
+
+    qsc::IDevice *m_device;
 
     void handleAdbProcessResult(qsc::AdbProcess::ADB_EXEC_RESULT processResult);
     void listDevices();

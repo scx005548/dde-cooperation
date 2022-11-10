@@ -25,8 +25,6 @@ MainWindow::MainWindow(const QString &ip, QWidget *parent)
     , m_videoForm(new VideoForm(this)) {
     setCentralWidget(m_stackedWidget);
 
-    QLabel *connectingLabel = new QLabel("connecting", this);
-    m_stackedWidget->addWidget(connectingLabel);
     QLabel *failedLabel = new QLabel("failed", this);
     m_stackedWidget->addWidget(failedLabel);
     m_stackedWidget->addWidget(m_videoForm);
@@ -88,28 +86,33 @@ void MainWindow::connectTCPAdb() {
 void MainWindow::connectDevice() {
     DeviceParams params;
     params.serial = m_tcpSerial;
-    IDevice *device = IDevice::create(params, this);
-    device->connectDevice();
+    m_device = IDevice::create(params, this);
 
-    connect(device,
-            &IDevice::deviceConnected,
-            [this, device](bool success,
-                           const QString &serial,
-                           const QString &deviceName,
-                           const QSize &size) {
-                if (!success) {
-                    close();
-                    return;
-                }
-                device->registerDeviceObserver(m_videoForm);
+    connect(m_device, &IDevice::deviceConnected, this, &MainWindow::deviceConnected);
+    connect(m_device, &IDevice::deviceDisconnected, this, &MainWindow::deviceDisconnected);
 
-                m_videoForm->setDevice(device);
-                m_stackedWidget->setCurrentIndex(2);
+    m_device->connectDevice();
+}
 
-                m_videoForm->setWindowTitle(deviceName + " - " + serial);
-                m_videoForm->updateShowSize(size);
-            });
-    connect(device, &IDevice::deviceDisconnected, [this]([[maybe_unused]] const QString &serial) {
-        close();
-    });
+void MainWindow::deviceConnected(bool success,
+                                 const QString &serial,
+                                 const QString &deviceName,
+                                 const QSize &size) {
+    if (!success) {
+        return;
+    }
+
+    m_device->registerDeviceObserver(m_videoForm);
+
+    m_videoForm->setDevice(m_device);
+    m_stackedWidget->setCurrentIndex(1);
+
+    m_videoForm->setWindowTitle(deviceName + " - " + serial);
+    m_videoForm->updateShowSize(size);
+
+    show();
+}
+
+void MainWindow::deviceDisconnected([[maybe_unused]] const QString &serial) {
+    close();
 }

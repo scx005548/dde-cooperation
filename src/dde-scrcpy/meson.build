@@ -19,15 +19,11 @@ dde_scrcpy_moc_headers = files('''
   uibase/KeepRatioWidget.h
 '''.split())
 
-dde_scrcpy_ui_files = files('''
-  ui/VideoForm.ui
-  ui/ToolForm.ui
-'''.split())
-
 dde_scrcpy_sources += qt5.preprocess(
-  qresources: [],
+  qresources: [
+    'resources.qrc',
+  ],
   moc_headers: dde_scrcpy_moc_headers,
-  ui_files: dde_scrcpy_ui_files,
 )
 
 executable('dde-scrcpy',

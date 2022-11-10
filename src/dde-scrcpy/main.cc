@@ -1,8 +1,6 @@
 #include <DApplication>
 
 #include "ui/MainWindow.h"
-#include "ui/VideoForm.h"
-#include "QtScrcpyCore.h"
 
 DWIDGET_USE_NAMESPACE
 
@@ -24,7 +22,6 @@ int main(int argc, char *argv[]) {
     qDebug() << "IP:" << ip;
 
     MainWindow w(ip);
-    w.show();
 
     return app.exec();
 }

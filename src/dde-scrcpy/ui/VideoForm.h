@@ -6,14 +6,12 @@
 
 #include "QtScrcpyCore.h"
 
-namespace Ui {
-class VideoForm;
-}
-
+class KeepRatioWidget;
 class ToolForm;
 class FileHandler;
 class QYUVOpenGLWidget;
 class QLabel;
+class QVBoxLayout;
 class VideoForm : public QWidget, public qsc::DeviceObserver {
     Q_OBJECT
 public:
@@ -82,7 +80,8 @@ protected:
 
 private:
     // ui
-    Ui::VideoForm *ui;
+    QVBoxLayout *m_layout;
+    KeepRatioWidget *m_keepRatioWidget;
     QPointer<ToolForm> m_toolForm;
     QPointer<QWidget> m_loadingWidget;
     QPointer<QYUVOpenGLWidget> m_videoWidget;
