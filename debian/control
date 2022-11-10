@@ -30,6 +30,7 @@ Build-Depends:
  meson,
  protobuf-compiler,
  qtbase5-dev,
+ qtmultimedia5-dev,
  qttools5-dev-tools,
  systemd,
  uuid-dev,

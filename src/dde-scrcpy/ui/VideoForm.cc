@@ -15,10 +15,14 @@
 #include <QTimer>
 #include <QWindow>
 #include <QtWidgets/QHBoxLayout>
+#include <QDebug>
+#include <QVideoFrame>
+#include <QVideoWidget>
+#include <QVideoSurfaceFormat>
+#include <QAbstractVideoSurface>
 
 #include "ToolForm.h"
 #include "uibase/KeepRatioWidget.h"
-#include "render/QYUVOpenGLWidget.h"
 #include "util/mousetap/MouseTap.h"
 
 VideoForm::VideoForm(QWidget *parent)
@@ -37,8 +41,7 @@ void VideoForm::initUI() {
     setLayout(m_layout);
     m_layout->addWidget(m_keepRatioWidget);
 
-    m_videoWidget = new QYUVOpenGLWidget();
-    m_videoWidget->hide();
+    m_videoWidget = new QVideoWidget(this);
     m_keepRatioWidget->setWidget(m_videoWidget);
     m_keepRatioWidget->setWidthHeightRatio(m_widthHeightRatio);
 
@@ -118,26 +121,6 @@ void VideoForm::showFPS(bool show) {
         return;
     }
     m_fpsLabel->setVisible(show);
-}
-
-void VideoForm::updateRender(int width,
-                             int height,
-                             uint8_t *dataY,
-                             uint8_t *dataU,
-                             uint8_t *dataV,
-                             int linesizeY,
-                             int linesizeU,
-                             int linesizeV) {
-    if (m_videoWidget->isHidden()) {
-        if (m_loadingWidget) {
-            m_loadingWidget->close();
-        }
-        m_videoWidget->show();
-    }
-
-    updateShowSize(QSize(width, height));
-    m_videoWidget->setFrameSize(QSize(width, height));
-    m_videoWidget->updateTextures(dataY, dataU, dataV, linesizeY, linesizeU, linesizeV);
 }
 
 void VideoForm::setSerial(const QString &serial) {
@@ -387,15 +370,12 @@ void VideoForm::grabCursor(bool grab) {
     MouseTap::getInstance()->enableMouseEventTap(rc, grab);
 }
 
-void VideoForm::onFrame(int width,
-                        int height,
-                        uint8_t *dataY,
-                        uint8_t *dataU,
-                        uint8_t *dataV,
-                        int linesizeY,
-                        int linesizeU,
-                        int linesizeV) {
-    updateRender(width, height, dataY, dataU, dataV, linesizeY, linesizeU, linesizeV);
+void VideoForm::onFrame(const QVideoFrame &frame) {
+    QVideoSurfaceFormat format(frame.size(), QVideoFrame::Format_ARGB32);
+    m_videoWidget->videoSurface()->start(format);
+
+    m_videoWidget->videoSurface()->present(frame.image().convertToFormat(QImage::Format_ARGB32));
+    m_videoWidget->show();
 }
 
 void VideoForm::staysOnTop(bool top) {

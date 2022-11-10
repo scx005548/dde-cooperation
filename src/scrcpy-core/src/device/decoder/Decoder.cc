@@ -4,8 +4,15 @@
 #include "Decoder.h"
 #include "VideoBuffer.h"
 
+#include <QVideoFrame>
+#include <QVideoSurfaceFormat>
+
+extern "C" {
+#include <libavutil/imgutils.h>
+}
+
 Decoder::Decoder(
-    std::function<void(int, int, uint8_t *, uint8_t *, uint8_t *, int, int, int)> onFrame,
+    std::function<void(const QVideoFrame &frame)> onFrame,
     QObject *parent)
     : QObject(parent)
     , m_vb(new VideoBuffer())
@@ -142,6 +149,55 @@ void Decoder::pushFrame() {
     emit newFrame();
 }
 
+QVideoFrame::PixelFormat ffmpegPixFmtQtFmt(int pix_fmt) {
+    switch (pix_fmt) {
+    case AV_PIX_FMT_YUV420P:
+    case AV_PIX_FMT_YUVJ420P: {
+        return QVideoFrame::Format_YUV420P;
+    }
+    case AV_PIX_FMT_NV12: {
+        return QVideoFrame::Format_NV12;
+    }
+    default:
+        return QVideoFrame::Format_Invalid;
+    }
+}
+
+bool Decoder::renderFrame(const AVFrame *frame) {
+    auto format = QVideoSurfaceFormat(QSize(frame->width, frame->height),
+                                      ffmpegPixFmtQtFmt(frame->format));
+    if (!format.isValid()) {
+        qDebug() << "Unknown video format";
+        return false;
+    }
+
+    int nRet = 0;
+    int imageSize = av_image_get_buffer_size(static_cast<AVPixelFormat>(frame->format),
+                                             frame->width,
+                                             frame->height,
+                                             1);
+    QVideoFrame::PixelFormat fmt = format.pixelFormat();
+    QVideoFrame f(imageSize, QSize(frame->width, frame->height), frame->width, fmt);
+
+    if (f.map(QAbstractVideoBuffer::WriteOnly)) {
+        uchar *fdata = f.bits();
+        nRet = av_image_copy_to_buffer(fdata,
+                                       imageSize,
+                                       frame->data,
+                                       frame->linesize,
+                                       (AVPixelFormat)frame->format,
+                                       frame->width,
+                                       frame->height,
+                                       1);
+        f.unmap();
+        f.setStartTime(0);
+        // emit newVideoFrameReceived(f);
+        m_onFrame(f);
+    }
+
+    return true;
+}
+
 void Decoder::onNewFrame() {
     if (!m_onFrame) {
         return;
@@ -149,13 +205,14 @@ void Decoder::onNewFrame() {
 
     m_vb->lock();
     const AVFrame *frame = m_vb->consumeRenderedFrame();
-    m_onFrame(frame->width,
-              frame->height,
-              frame->data[0],
-              frame->data[1],
-              frame->data[2],
-              frame->linesize[0],
-              frame->linesize[1],
-              frame->linesize[2]);
+    renderFrame(frame);
+    // m_onFrame(frame->width,
+    //           frame->height,
+    //           frame->data[0],
+    //           frame->data[1],
+    //           frame->data[2],
+    //           frame->linesize[0],
+    //           frame->linesize[1],
+    //           frame->linesize[2]);
     m_vb->unLock();
 }

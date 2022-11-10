@@ -3,6 +3,8 @@
 
 #include "QtScrcpyCoreDef.h"
 
+class QVideoFrame;
+
 namespace qsc {
 
 class DeviceObserver {
@@ -11,23 +13,7 @@ protected:
     virtual ~DeviceObserver() {}
 
 public:
-    virtual void onFrame(int width,
-                         int height,
-                         uint8_t *dataY,
-                         uint8_t *dataU,
-                         uint8_t *dataV,
-                         int linesizeY,
-                         int linesizeU,
-                         int linesizeV) {
-        Q_UNUSED(width);
-        Q_UNUSED(height);
-        Q_UNUSED(dataY);
-        Q_UNUSED(dataU);
-        Q_UNUSED(dataV);
-        Q_UNUSED(linesizeY);
-        Q_UNUSED(linesizeU);
-        Q_UNUSED(linesizeV);
-    }
+    virtual void onFrame([[maybe_unused]] const QVideoFrame &frame) {}
     virtual void updateFPS(quint32 fps) { Q_UNUSED(fps); }
     virtual void grabCursor(bool grab) { Q_UNUSED(grab); }
 };

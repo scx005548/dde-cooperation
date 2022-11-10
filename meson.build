@@ -47,7 +47,7 @@ xcb_xfixes = dependency('xcb-xfixes', required: true)
 qrcodegencpp = dependency('qrcodegencpp', required: true)
 
 qt5 = import('qt5')
-qt5dep = dependency('qt5', modules: ['Core', 'Gui', 'Widgets', 'Network', 'DBus', 'X11Extras'])
+qt5dep = dependency('qt5', modules: ['Core', 'Gui', 'Widgets', 'Network', 'DBus', 'X11Extras', 'Multimedia', 'MultimediaWidgets'])
 dtk_widget = dependency('dtkwidget', required: true)
 
 libavcodec = dependency('libavcodec', required: true)

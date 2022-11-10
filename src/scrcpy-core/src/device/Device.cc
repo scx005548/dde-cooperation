@@ -21,16 +21,9 @@ Device::Device(DeviceParams params, QObject *parent)
     : IDevice(parent)
     , m_params(params) {
     m_decoder = new Decoder(
-        [this](int width,
-               int height,
-               uint8_t *dataY,
-               uint8_t *dataU,
-               uint8_t *dataV,
-               int linesizeY,
-               int linesizeU,
-               int linesizeV) {
+        [this](const QVideoFrame &frame) {
             for (const auto &item : m_deviceObservers) {
-                item->onFrame(width, height, dataY, dataU, dataV, linesizeY, linesizeU, linesizeV);
+                item->onFrame(frame);
             }
         },
         this);

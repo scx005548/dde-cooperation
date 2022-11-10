@@ -11,6 +11,7 @@ class ToolForm;
 class FileHandler;
 class QYUVOpenGLWidget;
 class QLabel;
+class QVideoWidget;
 class QVBoxLayout;
 class VideoForm : public QWidget, public qsc::DeviceObserver {
     Q_OBJECT
@@ -21,14 +22,6 @@ public:
     void setDevice(qsc::IDevice *device);
     void staysOnTop(bool top = true);
     void updateShowSize(const QSize &newSize);
-    void updateRender(int width,
-                      int height,
-                      uint8_t *dataY,
-                      uint8_t *dataU,
-                      uint8_t *dataV,
-                      int linesizeY,
-                      int linesizeU,
-                      int linesizeV);
     void setSerial(const QString &serial);
     QRect getGrabCursorRect();
     const QSize &frameSize();
@@ -40,14 +33,7 @@ public:
     bool isHost();
 
 private:
-    void onFrame(int width,
-                 int height,
-                 uint8_t *dataY,
-                 uint8_t *dataU,
-                 uint8_t *dataV,
-                 int linesizeY,
-                 int linesizeU,
-                 int linesizeV) override;
+    void onFrame(const QVideoFrame &frame) override;
     void updateFPS(quint32 fps) override;
     void grabCursor(bool grab) override;
 
@@ -82,9 +68,9 @@ private:
     // ui
     QVBoxLayout *m_layout;
     KeepRatioWidget *m_keepRatioWidget;
+    QVideoWidget *m_videoWidget;
     QPointer<ToolForm> m_toolForm;
     QPointer<QWidget> m_loadingWidget;
-    QPointer<QYUVOpenGLWidget> m_videoWidget;
     QPointer<QLabel> m_fpsLabel;
 
     // inside member

@@ -8,19 +8,13 @@ extern "C" {
 
 #include <functional>
 
+class QVideoFrame;
+
 class VideoBuffer;
 class Decoder : public QObject {
     Q_OBJECT
 public:
-    Decoder(std::function<void(int width,
-                               int height,
-                               uint8_t *dataY,
-                               uint8_t *dataU,
-                               uint8_t *dataV,
-                               int linesizeY,
-                               int linesizeU,
-                               int linesizeV)> onFrame,
-            QObject *parent = Q_NULLPTR);
+    Decoder(std::function<void(const QVideoFrame &frame)> onFrame, QObject *parent = Q_NULLPTR);
     virtual ~Decoder();
 
     bool open();
@@ -44,8 +38,9 @@ private:
     VideoBuffer *m_vb = Q_NULLPTR;
     AVCodecContext *m_codecCtx = Q_NULLPTR;
     bool m_isCodecCtxOpen = false;
-    std::function<void(int, int, uint8_t *, uint8_t *, uint8_t *, int, int, int)>
-        m_onFrame = Q_NULLPTR;
+    std::function<void(const QVideoFrame &frame)> m_onFrame = Q_NULLPTR;
+
+    bool renderFrame(const AVFrame *frame);
 };
 
 #endif // DECODER_H
