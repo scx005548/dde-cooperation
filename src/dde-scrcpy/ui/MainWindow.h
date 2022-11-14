@@ -6,8 +6,9 @@
 
 #include "AdbProcess.h"
 
-#include "uibase/KeepRatioWidget.h"
-#include "ui/VideoForm.h"
+class QQuickWidget;
+class DeviceProxy;
+class VideoFrameProvider;
 
 namespace qsc {
 class IDevice;
@@ -34,8 +35,9 @@ private:
 
     qsc::AdbProcess *m_adb;
 
-    QStackedWidget *m_stackedWidget;
-    VideoForm *m_videoForm;
+    QQuickWidget *m_view;
+    DeviceProxy *m_deviceProxy;
+    VideoFrameProvider *m_videoFrameProvider;
 
     qsc::IDevice *m_device;
 

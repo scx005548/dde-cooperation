@@ -5,7 +5,14 @@
 #include <QTimer>
 #include <QDebug>
 
+#include <QQuickWidget>
+#include <QQuickView>
+#include <QQmlEngine>
+#include <QQmlContext>
+
 #include "QtScrcpyCore.h"
+#include "DeviceProxy.h"
+#include "VideoFrameProvider.h"
 
 DTK_USE_NAMESPACE
 
@@ -21,13 +28,15 @@ MainWindow::MainWindow(const QString &ip, QWidget *parent)
     : DMainWindow(parent)
     , m_ip(ip)
     , m_adb(new AdbProcess(this))
-    , m_stackedWidget(new QStackedWidget(this))
-    , m_videoForm(new VideoForm(this)) {
-    setCentralWidget(m_stackedWidget);
+    , m_view(new QQuickWidget(this))
+    , m_deviceProxy(new DeviceProxy(this))
+    , m_videoFrameProvider(new VideoFrameProvider(this)) {
 
-    QLabel *failedLabel = new QLabel("failed", this);
-    m_stackedWidget->addWidget(failedLabel);
-    m_stackedWidget->addWidget(m_videoForm);
+    m_view->engine()->rootContext()->setContextProperty("device", m_deviceProxy);
+    m_view->engine()->rootContext()->setContextProperty("videoFrameProvider", m_videoFrameProvider);
+    m_view->setResizeMode(QQuickWidget::SizeRootObjectToView);
+    m_view->setSource(QUrl("qrc:/ui/VideoPlayer.qml"));
+    setCentralWidget(m_view);
 
     connect(m_adb, &AdbProcess::adbProcessResult, this, &MainWindow::handleAdbProcessResult);
 
@@ -63,7 +72,6 @@ void MainWindow::handleAdbProcessResult(qsc::AdbProcess::ADB_EXEC_RESULT process
         }
         break;
     case AdbProcess::AER_ERROR_EXEC:
-        m_stackedWidget->setCurrentIndex(1);
         break;
     case AdbProcess::AER_ERROR_MISSING_BINARY:
         break;
@@ -87,6 +95,7 @@ void MainWindow::connectDevice() {
     DeviceParams params;
     params.serial = m_tcpSerial;
     m_device = IDevice::create(params, this);
+    m_deviceProxy->setDevice(m_device);
 
     connect(m_device, &IDevice::deviceConnected, this, &MainWindow::deviceConnected);
     connect(m_device, &IDevice::deviceDisconnected, this, &MainWindow::deviceDisconnected);
@@ -102,13 +111,9 @@ void MainWindow::deviceConnected(bool success,
         return;
     }
 
-    m_device->registerDeviceObserver(m_videoForm);
+    m_device->registerDeviceObserver(m_videoFrameProvider);
 
-    m_videoForm->setDevice(m_device);
-    m_stackedWidget->setCurrentIndex(1);
-
-    m_videoForm->setWindowTitle(deviceName + " - " + serial);
-    m_videoForm->updateShowSize(size);
+    setWindowTitle(deviceName + " - " + serial);
 
     show();
 }

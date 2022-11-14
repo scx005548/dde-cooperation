@@ -1,20 +1,14 @@
 dde_scrcpy_sources = files('''
   main.cc
+  ui/DeviceProxy.cc
+  ui/VideoFrameProvider.cc
   ui/MainWindow.cc
-  ui/VideoForm.cc
-  ui/ToolForm.cc
-  uibase/MagneticWidget.cc
-  uibase/KeepRatioWidget.cc
-  util/mousetap/MouseTap.cc
-  util/mousetap/XMouseTap.cc
 '''.split())
 
 dde_scrcpy_moc_headers = files('''
+  ui/DeviceProxy.h
+  ui/VideoFrameProvider.h
   ui/MainWindow.h
-  ui/VideoForm.h
-  ui/ToolForm.h
-  uibase/MagneticWidget.h
-  uibase/KeepRatioWidget.h
 '''.split())
 
 dde_scrcpy_sources += qt5.preprocess(

@@ -5,11 +5,11 @@
 DWIDGET_USE_NAMESPACE
 
 int main(int argc, char *argv[]) {
+    QApplication::setAttribute(Qt::AA_UseOpenGLES);
+
     DApplication app(argc, argv);
     app.setOrganizationName("deepin");
     app.setApplicationName("dde-scrcpy");
-
-    QApplication::setAttribute(Qt::AA_UseOpenGLES);
 
     QStringList argList = app.arguments();
     if (argList.count() < 2) {
