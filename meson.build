@@ -75,3 +75,9 @@ configure_file(
   configuration: data,
   install_dir: systemd_user_unit_dir,
 )
+
+install_data('misc/config/compressor-singlefile.conf',
+             install_dir: '/usr/share/applications/context-menus')
+
+install_data('misc/sendfile/sendFiles.sh',
+             install_dir: executable_install_dir)
