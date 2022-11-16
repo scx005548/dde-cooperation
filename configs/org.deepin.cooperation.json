@@ -1,0 +1,50 @@
+{
+  "magic":"dsg.config.meta",
+  "version":"1.0",
+  "contents":{
+    "machineId":{
+      "value":"",
+      "serial":0,
+      "flags":["global"],
+      "name":"Machine id",
+      "name[zh_CN]":"设备id",
+      "description[zh_CN]":"跨端协同设备id",
+      "description":"store ",
+      "permissions":"readwrite",
+      "visibility":"public"
+    },
+    "storeReceivedFilesPath":{
+      "value":"",
+      "serial":0,
+      "flags":["global"],
+      "name":"StoreReceivedFilesPath",
+      "name[zh_CN]":"存储文件位置",
+      "description[zh_CN]":"跨端协同存储协同发送的文件路径",
+      "description":"store received files path",
+      "permissions":"readwrite",
+      "visibility":"public"
+    },
+    "shareClipboard": {
+      "value": true,
+      "serial": 0,
+      "flags": ["global"],
+      "name":"ShareClipboard",
+      "name[zh_CN]":"共享剪切板",
+      "description[zh_CN]":"跨端协同共享剪切板",
+      "description":"share clipboard",
+      "permissions":"readwrite",
+      "visibility":"public"
+    },
+    "shareDevices": {
+      "value": false,
+      "serial": 0,
+      "flags": ["global"],
+      "name":"ShareDevices",
+      "name[zh_CN]":"共享设备",
+      "description[zh_CN]":"跨端协同共享设备",
+      "description":"share devices",
+      "permissions":"readwrite",
+      "visibility":"public"
+    }
+  }
+}

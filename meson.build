@@ -49,6 +49,7 @@ qrcodegencpp = dependency('qrcodegencpp', required: true)
 qt5 = import('qt5')
 qt5dep = dependency('qt5', modules: ['Core', 'Gui', 'Widgets', 'Network', 'DBus', 'X11Extras', 'Multimedia', 'QuickWidgets'])
 dtk_widget = dependency('dtkwidget', required: true)
+dtk_core = dependency('dtkcore', required: true)
 
 libavcodec = dependency('libavcodec', required: true)
 libavformat = dependency('libavformat', required: true)
@@ -87,3 +88,6 @@ install_data('misc/config/compressor-singlefile.conf',
 
 install_data('misc/sendfile/sendFiles.sh',
              install_dir: executable_install_dir)
+
+install_data('configs/org.deepin.cooperation.json',
+             install_dir: '/usr/share/dsg/configs/org.deepin.cooperation')

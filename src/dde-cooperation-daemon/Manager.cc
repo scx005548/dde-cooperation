@@ -32,6 +32,8 @@
 namespace fs = std::filesystem;
 
 const static fs::path inputDevicePath = "/dev/input";
+const static QString dConfigAppID = "org.deepin.cooperation";
+const static QString dConfigName = "org.deepin.cooperation";
 
 static fs::path getExecutablePath(uint32_t pid) {
     fs::path exeFilePath = fmt::format("/proc/{}/exe", pid);
@@ -96,7 +98,8 @@ Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesyste
                                                              "org.freedesktop.ScreenSaver",
                                                              "/org/freedesktop/ScreenSaver",
                                                              "org.freedesktop.ScreenSaver"))
-    , m_keypair(m_dataDir, KeyPair::KeyType::ED25519) {
+    , m_keypair(m_dataDir, KeyPair::KeyType::ED25519)
+    , m_dConfig(DConfig::create(dConfigAppID, dConfigName)) {
     ensureDataDirExists();
     initUUID();
 
@@ -170,29 +173,29 @@ void Manager::ensureDataDirExists() {
 }
 
 void Manager::initUUID() {
-    uuid_t uuid;
-
-    fs::path uuidPath = m_dataDir / ".uuid";
-    if (fs::exists(uuidPath)) {
-        std::ifstream f;
-        f.open(uuidPath);
-        std::getline(f, m_uuid);
-        f.close();
-
-        if (uuid_parse(m_uuid.data(), uuid) == 0) {
-            return;
-        } // else regenerate uuid
+    if (!m_dConfig || !m_dConfig->isValid() || !m_dConfig->keyList().contains("machineId")) {
+        spdlog::warn("dConfig is invalid or does not has machineId key!");
+        m_uuid = newUUID();
+        return;
     }
 
+    QString existedUuid = m_dConfig->value("machineId").toString();
+    if (!existedUuid.isEmpty()) {
+        m_uuid = existedUuid.toStdString();
+        return;
+    }
+
+    m_uuid = newUUID();
+    m_dConfig->setValue("machineId", QString::fromStdString(m_uuid));
+}
+
+std::string Manager::newUUID() const {
+    uuid_t uuid;
     uuid_generate(uuid);
     char uuidStr[100];
     uuid_unparse(uuid, uuidStr);
 
-    m_uuid = uuidStr;
-    std::ofstream f;
-    f.open(uuidPath);
-    f << m_uuid;
-    f.close();
+    return uuidStr;
 }
 
 bool Manager::isValidUUID(const std::string &str) const noexcept {

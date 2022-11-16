@@ -21,6 +21,10 @@
 
 #include "uvxx/noncopyable.h"
 
+#include <DConfig>
+
+DCORE_USE_NAMESPACE
+
 namespace uvxx {
 class Loop;
 class Async;
@@ -124,10 +128,13 @@ private:
 
     KeyPair m_keypair;
 
+    std::shared_ptr<DConfig> m_dConfig;
+
     void scanAux() noexcept;
 
     void ensureDataDirExists();
     void initUUID();
+    std::string newUUID() const;
     bool isValidUUID(const std::string &str) const noexcept;
 
     void cooperationStatusChanged(bool enable);

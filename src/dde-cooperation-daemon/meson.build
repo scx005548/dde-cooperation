@@ -66,6 +66,8 @@ executable('dde-cooperation-daemon',
     glibmm,
     giomm,
     protobuf,
+    qt5dep,
+    dtk_core,
   ],
   link_with: [
     uvxx,
