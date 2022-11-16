@@ -5,6 +5,9 @@ import QtQuick.Layouts 1.15
 import QtMultimedia 5.8
  
 Rectangle {
+    property bool maximized: mainWindow.isMaximized || mainWindow.isFullScreen
+
+    id: window
     anchors.fill: parent
     color: 'black'
 
@@ -12,7 +15,7 @@ Rectangle {
         id: videoOutput
 
         property double  aimedRatio     : sourceRect.height/sourceRect.width
-        property double  marginBottom   : buttons.height
+        property double  marginBottom   : window.maximized ? 0 : buttons.height
 
         property double  availableWidth  : parent.width
         property double  availableHeight : parent.height - marginBottom
@@ -21,8 +24,8 @@ Rectangle {
 
         property double  parentRatio     : availableHeight / availableWidth
 
-        height : parentIsLarge ? width * aimedRatio :  availableHeight
-        width  : parentIsLarge ? availableWidth     :  height / aimedRatio
+        height : parentIsLarge ? availableWidth * aimedRatio :  availableHeight
+        width  : parentIsLarge ? availableWidth     :  availableHeight / aimedRatio
 
         anchors.horizontalCenter: parent.horizontalCenter
 
@@ -73,15 +76,19 @@ Rectangle {
 
     Rectangle {
         id: buttons
-        height: 56
-        width: parent.width
-        anchors.top: videoOutput.bottom
 
-        RowLayout {
+        width: window.maximized ? 56 : parent.width
+        height: window.maximized ? parent.height : 56
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
+
+        GridLayout {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
 
-            spacing: 10
+            flow:  window.maximized ? GridLayout.TopToBottom : GridLayout.LeftToRight
+
+            // spacing: 10
 
             RoundButton {
                 width: 36

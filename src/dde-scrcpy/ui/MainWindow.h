@@ -16,10 +16,15 @@ class IDevice;
 
 class MainWindow : public DTK_WIDGET_NAMESPACE::DMainWindow {
     Q_OBJECT
+    Q_PROPERTY(bool isMaximized MEMBER m_isMaximized NOTIFY windowStateChanged)
+    Q_PROPERTY(bool isFullScreen MEMBER m_isFullScreen NOTIFY windowStateChanged)
 
 public:
     MainWindow(const QString &ip, QWidget *parent = nullptr);
     ~MainWindow();
+
+signals:
+    void windowStateChanged();
 
 protected slots:
     void deviceConnected(bool success,
@@ -27,6 +32,9 @@ protected slots:
                          const QString &deviceName,
                          const QSize &size);
     void deviceDisconnected(const QString &serial);
+
+protected:
+    virtual void changeEvent(QEvent *event) override;
 
 private:
     QString m_ip;
@@ -40,6 +48,9 @@ private:
     VideoFrameProvider *m_videoFrameProvider;
 
     qsc::IDevice *m_device;
+
+    bool m_isMaximized;
+    bool m_isFullScreen;
 
     void handleAdbProcessResult(qsc::AdbProcess::ADB_EXEC_RESULT processResult);
     void listDevices();

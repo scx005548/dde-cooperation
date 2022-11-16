@@ -4,6 +4,7 @@
 #include <QLabel>
 #include <QTimer>
 #include <QDebug>
+#include <QMainWindow>
 
 #include <QQuickWidget>
 #include <QQuickView>
@@ -32,6 +33,10 @@ MainWindow::MainWindow(const QString &ip, QWidget *parent)
     , m_deviceProxy(new DeviceProxy(this))
     , m_videoFrameProvider(new VideoFrameProvider(this)) {
 
+    m_isMaximized = windowState() & Qt::WindowMaximized;
+    m_isFullScreen = windowState() & Qt::WindowFullScreen;
+
+    m_view->engine()->rootContext()->setContextProperty("mainWindow", this);
     m_view->engine()->rootContext()->setContextProperty("device", m_deviceProxy);
     m_view->engine()->rootContext()->setContextProperty("videoFrameProvider", m_videoFrameProvider);
     m_view->setResizeMode(QQuickWidget::SizeRootObjectToView);
@@ -46,6 +51,18 @@ MainWindow::MainWindow(const QString &ip, QWidget *parent)
 }
 
 MainWindow::~MainWindow() {
+}
+
+void MainWindow::changeEvent(QEvent *event) {
+    DMainWindow::changeEvent(event);
+
+    if (event->type() != QEvent::WindowStateChange) {
+        return;
+    }
+
+    m_isMaximized = windowState() & Qt::WindowMaximized;
+    m_isFullScreen = windowState() & Qt::WindowFullScreen;
+    emit windowStateChanged();
 }
 
 void MainWindow::handleAdbProcessResult(qsc::AdbProcess::ADB_EXEC_RESULT processResult) {
