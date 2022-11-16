@@ -613,14 +613,14 @@ void Machine::handleFsSendFileRequest(const FsSendFileRequest &req) {
     fssendfileresponse->set_accepted(true);
     sendMessage(msg);
 
-    std::string home = getenv("HOME");
+    std::string storagePath = m_manager->fileStoragePath();
     std::string reqPath = req.path();
     if (!reqPath.empty() && reqPath[0] != '/') {
         reqPath = "/" + reqPath;
     }
     std::string filePath = m_mountpoint.string() + reqPath;
     auto process = std::make_shared<uvxx::Process>(m_uvLoop, "/bin/cp");
-    process->args = {"-r", filePath, home};
+    process->args = {"-r", filePath, storagePath};
     process->onExit([this, serial = req.serial(), path = req.path(), process](
                         int64_t exit_status,
                         [[maybe_unused]] int term_signal) {

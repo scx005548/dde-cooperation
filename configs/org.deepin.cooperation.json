@@ -13,14 +13,14 @@
       "permissions":"readwrite",
       "visibility":"public"
     },
-    "storeReceivedFilesPath":{
+    "filesStoragePath":{
       "value":"",
       "serial":0,
       "flags":["global"],
-      "name":"StoreReceivedFilesPath",
-      "name[zh_CN]":"存储文件位置",
-      "description[zh_CN]":"跨端协同存储协同发送的文件路径",
-      "description":"store received files path",
+      "name":"filesStoragePath",
+      "name[zh_CN]":"存放文件位置",
+      "description[zh_CN]":"跨端协同存放协同发送文件的位置",
+      "description":"store received files location",
       "permissions":"readwrite",
       "visibility":"public"
     },

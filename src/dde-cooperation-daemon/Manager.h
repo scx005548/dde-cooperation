@@ -48,6 +48,7 @@ public:
     ~Manager();
 
     std::string uuid() const noexcept { return m_uuid; }
+    std::string fileStoragePath() const noexcept { return m_fileStoragePath; }
     bool tryFlowOut(uint16_t direction, uint16_t x, uint16_t y);
     bool hasPcMachinePaired() const;
     bool hasAndroidPaired() const;
@@ -75,6 +76,8 @@ protected:
                const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
     void sendFile(const Glib::VariantContainerBase &args,
                   const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
+    void setFileStoragePath(const Glib::VariantContainerBase &args,
+                          const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
 
     // DBus property handlers
     void getMachines(Glib::VariantBase &property, const Glib::ustring &propertyName) const noexcept;
@@ -82,6 +85,7 @@ protected:
                                 const Glib::ustring &propertyName) const noexcept;
     bool setDeviceSharingSwitch(const Glib::ustring &propertyName,
                                 const Glib::VariantBase &value) noexcept;
+    void getFileStoragePath(Glib::VariantBase &property, const Glib::ustring &propertyName) const noexcept;
 
 private:
     const std::filesystem::path m_dataDir;
@@ -105,6 +109,7 @@ private:
     std::shared_ptr<uvxx::Addr> m_scanAddr;
 
     std::string m_uuid;
+    Glib::ustring m_fileStoragePath;
 
     Glib::RefPtr<Gio::DBus::Connection> m_bus;
     Glib::RefPtr<DBus::Service> m_service;
@@ -116,10 +121,12 @@ private:
     Glib::RefPtr<DBus::Method> m_methodScan;
     Glib::RefPtr<DBus::Method> m_methodKnock;
     Glib::RefPtr<DBus::Method> m_methodSendFile;
+    Glib::RefPtr<DBus::Method> m_methodSetFileStoragePath;
 
     // DBus properties
     Glib::RefPtr<DBus::Property> m_propertyMachines;
     Glib::RefPtr<DBus::Property> m_propertyDeviceSharingSwitch;
+    Glib::RefPtr<DBus::Property> m_propertyFileStoragePath;
 
     Glib::RefPtr<Gio::DBus::Proxy> m_dbusProxy;
     Glib::RefPtr<Gio::DBus::Proxy> m_powersaverProxy;
@@ -136,6 +143,8 @@ private:
     void initUUID();
     std::string newUUID() const;
     bool isValidUUID(const std::string &str) const noexcept;
+
+    void initFileStoragePath();
 
     void cooperationStatusChanged(bool enable);
     void updateMachine(const std::string &ip, uint16_t port, const DeviceInfo &devInfo);

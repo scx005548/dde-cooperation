@@ -83,6 +83,9 @@ Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesyste
     , m_methodSendFile(new DBus::Method("SendFile",
                                         DBus::Method::warp(this, &Manager::sendFile),
                                         {{"filePath", "as"}, {"osType", "i"}}))
+    , m_methodSetFileStoragePath(new DBus::Method("SetFilesStoragePath",
+                                                DBus::Method::warp(this, &Manager::setFileStoragePath),
+                                                {{"path", "s"}}))
     , m_propertyMachines(
           new DBus::Property("Machines", "ao", DBus::Property::warp(this, &Manager::getMachines)))
     , m_propertyDeviceSharingSwitch(
@@ -90,6 +93,8 @@ Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesyste
                              "b",
                              DBus::Property::warp(this, &Manager::getDeviceSharingSwitch),
                              DBus::Property::warp(this, &Manager::setDeviceSharingSwitch)))
+    , m_propertyFileStoragePath(new DBus::Property("FilesStoragePath", "s",
+                                                   DBus::Property::warp(this, &Manager::getFileStoragePath)))
     , m_dbusProxy(Gio::DBus::Proxy::Proxy::create_sync(m_bus,
                                                        "org.freedesktop.DBus",
                                                        "/org/freedesktop/DBus",
@@ -102,6 +107,7 @@ Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesyste
     , m_dConfig(DConfig::create(dConfigAppID, dConfigName)) {
     ensureDataDirExists();
     initUUID();
+    initFileStoragePath();
 
     m_keypair.load();
 
@@ -110,8 +116,10 @@ Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesyste
     m_interface->exportMethod(m_methodScan);
     m_interface->exportMethod(m_methodKnock);
     m_interface->exportMethod(m_methodSendFile);
+    m_interface->exportMethod(m_methodSetFileStoragePath);
     m_interface->exportProperty(m_propertyMachines);
     m_interface->exportProperty(m_propertyDeviceSharingSwitch);
+    m_interface->exportProperty(m_propertyFileStoragePath);
     m_object->exportInterface(m_interface);
     m_service->exportObject(m_object);
 
@@ -228,6 +236,22 @@ void Manager::getUUID([[maybe_unused]] const Glib::VariantContainerBase &args,
     }));
 }
 
+void Manager::initFileStoragePath() {
+    if (!m_dConfig || !m_dConfig->isValid() || !m_dConfig->keyList().contains("filesStoragePath")) {
+        spdlog::warn("dConfig is invalid or does not has filesStoragePath key!");
+        m_fileStoragePath = getenv("HOME"); // default
+        return;
+    }
+
+    QString existedPath = m_dConfig->value("filesStoragePath").toString();
+    if (!existedPath.isEmpty()) {
+        m_fileStoragePath = existedPath.toStdString();
+        return;
+    }
+
+    m_fileStoragePath = getenv("HOME");
+}
+
 void Manager::scan([[maybe_unused]] const Glib::VariantContainerBase &args,
                    const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
     if (!m_deviceSharingSwitch) {
@@ -296,6 +320,31 @@ void Manager::sendFile(const Glib::VariantContainerBase &args,
     }
 }
 
+void Manager::setFileStoragePath(const Glib::VariantContainerBase &args,
+                               const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
+    Glib::Variant<Glib::ustring> path;
+    args.get_child(path, 0);
+
+    std::string filePath = std::string(path.get());
+    if (filePath.empty() || !std::filesystem::exists(filePath)
+        || !std::filesystem::is_directory(filePath)) {
+        invocation->return_error(
+            Gio::DBus::Error{Gio::DBus::Error::FAILED, "filepath param has error, maybe not a directory!"});
+        return;
+    }
+
+    m_fileStoragePath = filePath;
+
+    if (!m_dConfig || !m_dConfig->isValid() || !m_dConfig->keyList().contains("filesStoragePath")) {
+        spdlog::warn("dConfig is invalid or does not has filesStoragePath key!");
+        invocation->return_value(Glib::VariantContainerBase{});
+        return;
+    }
+
+    m_dConfig->setValue("filesStoragePath", QString::fromStdString(filePath));
+    invocation->return_value(Glib::VariantContainerBase{});
+}
+
 std::vector<Glib::DBusObjectPathString> Manager::getMachinePaths() const noexcept {
     std::vector<Glib::DBusObjectPathString> machines;
     machines.reserve(m_machines.size());
@@ -325,6 +374,11 @@ bool Manager::setDeviceSharingSwitch([[maybe_unused]] const Glib::ustring &prope
     m_propertyDeviceSharingSwitch->emitChanged(Glib::Variant<bool>::create(m_deviceSharingSwitch));
     cooperationStatusChanged(m_deviceSharingSwitch);
     return true;
+}
+
+void Manager::getFileStoragePath(Glib::VariantBase &property,
+                                [[maybe_unused]] const Glib::ustring &propertyName) const noexcept {
+    property = Glib::Variant<Glib::ustring>::create(m_fileStoragePath);
 }
 
 bool Manager::hasPcMachinePaired() const {
