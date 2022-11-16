@@ -43,9 +43,13 @@ void VideoFrameProvider::setVideoSurface(QAbstractVideoSurface *surface) {
 
 void VideoFrameProvider::onFrame(const QVideoFrame &frame) {
     if (m_surface) {
+        QVideoSurfaceFormat format(frame.size(), frame.pixelFormat());
+        m_format = m_surface->nearestFormat(format);
+        if (m_surface->surfaceFormat() != m_format) {
+            m_surface->stop();
+        }
+
         if (!m_surface->isActive()) {
-            QVideoSurfaceFormat format(frame.size(), frame.pixelFormat());
-            m_format = m_surface->nearestFormat(format);
             m_surface->start(m_format);
         }
 
