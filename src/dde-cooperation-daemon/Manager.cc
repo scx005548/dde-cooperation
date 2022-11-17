@@ -484,6 +484,7 @@ void Manager::cooperationStatusChanged(bool enable) {
             const std::shared_ptr<Machine> &machine = v.second;
             if (machine->m_paired) {
                 machine->m_conn->close();
+                sendServiceStoppedNotification();
             }
         }
         m_machines.clear();
