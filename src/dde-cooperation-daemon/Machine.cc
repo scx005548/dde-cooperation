@@ -82,6 +82,8 @@ Machine::Machine(Manager *manager,
     , m_direction(FLOW_DIRECTION_RIGHT)
     , m_propertyDirection(
           new DBus::Property("Direction", "q", DBus::Property::warp(this, &Machine::getDirection)))
+    , m_propertySharedClipboard(
+          new DBus::Property("SharedClipboard", "b", DBus::Property::warp(this, &Machine::getSharedClipboardStatus)))
     , m_pingTimer(std::make_shared<uvxx::Timer>(uvLoop, uvxx::memFunc(this, &Machine::ping)))
     , m_offlineTimer(
           std::make_shared<uvxx::Timer>(uvLoop, uvxx::memFunc(this, &Machine::onOffline)))
@@ -105,6 +107,7 @@ Machine::Machine(Manager *manager,
     m_interface->exportProperty(m_propertyCompositor);
     m_interface->exportProperty(m_propertyCooperating);
     m_interface->exportProperty(m_propertyDirection);
+    m_interface->exportProperty(m_propertySharedClipboard);
     m_object->exportInterface(m_interface);
 
     m_inputEmittors.emplace(
@@ -355,6 +358,11 @@ void Machine::getDirection(Glib::VariantBase &property,
     property = Glib::Variant<uint16_t>::create(m_direction);
 }
 
+void Machine::getSharedClipboardStatus(Glib::VariantBase &property,
+                                       [[maybe_unused]] const Glib::ustring &propertyName) const {
+    property = Glib::Variant<bool>::create(m_sharedClipboard);
+}
+
 void Machine::handleDisconnectedAux() {
     spdlog::info("disconnected");
 
@@ -403,6 +411,11 @@ void Machine::dispatcher(uvxx::Buffer &buff) noexcept {
         switch (msg.payload_case()) {
         case Message::PayloadCase::kPairResponse: {
             handlePairResponseAux(msg.pairresponse());
+            break;
+        }
+
+        case Message::PayloadCase::kServiceOnOffNotification: {
+            handleServiceOnOffMsg(msg.serviceonoffnotification());
             break;
         }
 
@@ -502,7 +515,12 @@ void Machine::handlePairResponseAux(const PairResponse &resp) {
     m_paired = true;
     m_propertyPaired->emitChanged(Glib::Variant<bool>::create(m_paired));
 
+    sendServiceStatusNotification();
     handleConnected();
+}
+
+void Machine::handleServiceOnOffMsg(const ServiceOnOffNotification &notification) {
+    m_sharedClipboard = notification.sharedclipboardon();
 }
 
 void Machine::handleDeviceSharingStartRequest() {
@@ -734,6 +752,11 @@ void Machine::onInputGrabberEvent(uint8_t deviceType,
 }
 
 void Machine::onClipboardTargetsChanged(const std::vector<std::string> &targets) {
+    // sharedClipboard off, not send msg
+    if (!m_manager->isSharedClipboard()) {
+        return;
+    }
+
     Message msg;
     auto *clipboardNotify = msg.mutable_clipboardnotify();
     *(clipboardNotify->mutable_targets()) = {targets.cbegin(), targets.cend()};
@@ -826,6 +849,7 @@ void Machine::receivedUserConfirm(uvxx::Buffer &buff) {
         m_paired = true;
         m_propertyPaired->emitChanged(Glib::Variant<bool>::create(m_paired));
 
+        sendServiceStatusNotification();
         handleConnected();
     }
 }
@@ -848,4 +872,13 @@ void Machine::sendMessage(const Message &msg) {
     }
 
     m_conn->write(MessageHelper::genMessage(msg));
+}
+
+void Machine::sendServiceStatusNotification() {
+    Message msg;
+    auto *notification = msg.mutable_serviceonoffnotification();
+    notification->set_sharedclipboardon(m_manager->isSharedClipboard());
+    notification->set_shareddeviceson(true); // TODO
+
+    sendMessage(msg);
 }

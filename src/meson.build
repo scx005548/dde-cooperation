@@ -6,6 +6,7 @@ protocol = protoc.process(
     'protocol/fs.proto',
     'protocol/clipboard.proto',
     'protocol/remote_display.proto',
+    'protocol/service_status.proto',
   ],
   preserve_path_from: meson.current_source_dir(),
 )

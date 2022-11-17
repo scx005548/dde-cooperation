@@ -49,6 +49,8 @@ public:
 
     std::string uuid() const noexcept { return m_uuid; }
     std::string fileStoragePath() const noexcept { return m_fileStoragePath; }
+    bool isSharedClipboard() const noexcept { return m_sharedClipboard; }
+
     bool tryFlowOut(uint16_t direction, uint16_t x, uint16_t y);
     bool hasPcMachinePaired() const;
     bool hasAndroidPaired() const;
@@ -78,6 +80,8 @@ protected:
                   const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
     void setFileStoragePath(const Glib::VariantContainerBase &args,
                           const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
+    void openSharedClipboard(const Glib::VariantContainerBase &args,
+                             const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
 
     // DBus property handlers
     void getMachines(Glib::VariantBase &property, const Glib::ustring &propertyName) const noexcept;
@@ -86,6 +90,7 @@ protected:
     bool setDeviceSharingSwitch(const Glib::ustring &propertyName,
                                 const Glib::VariantBase &value) noexcept;
     void getFileStoragePath(Glib::VariantBase &property, const Glib::ustring &propertyName) const noexcept;
+    void getSharedClipboardStatus(Glib::VariantBase &property, const Glib::ustring &propertyName) const noexcept;
 
 private:
     const std::filesystem::path m_dataDir;
@@ -122,11 +127,13 @@ private:
     Glib::RefPtr<DBus::Method> m_methodKnock;
     Glib::RefPtr<DBus::Method> m_methodSendFile;
     Glib::RefPtr<DBus::Method> m_methodSetFileStoragePath;
+    Glib::RefPtr<DBus::Method> m_methodOpenSharedClipboard;
 
     // DBus properties
     Glib::RefPtr<DBus::Property> m_propertyMachines;
     Glib::RefPtr<DBus::Property> m_propertyDeviceSharingSwitch;
     Glib::RefPtr<DBus::Property> m_propertyFileStoragePath;
+    Glib::RefPtr<DBus::Property> m_propertySharedClipboard;
 
     Glib::RefPtr<Gio::DBus::Proxy> m_dbusProxy;
     Glib::RefPtr<Gio::DBus::Proxy> m_powersaverProxy;
@@ -135,6 +142,7 @@ private:
 
     KeyPair m_keypair;
 
+    bool m_sharedClipboard;
     std::shared_ptr<DConfig> m_dConfig;
 
     void scanAux() noexcept;
@@ -145,6 +153,7 @@ private:
     bool isValidUUID(const std::string &str) const noexcept;
 
     void initFileStoragePath();
+    void initSharedClipboardStatus();
 
     void cooperationStatusChanged(bool enable);
     void updateMachine(const std::string &ip, uint16_t port, const DeviceInfo &devInfo);
@@ -160,6 +169,7 @@ private:
                                   bool partial) noexcept;
     void handleNewConnection(bool) noexcept;
     void sendServiceStoppedNotification() const;
+    void serviceStatusChanged();
 };
 
 #endif // !DDE_COOPERATION_DAEMON_MANAGER_H

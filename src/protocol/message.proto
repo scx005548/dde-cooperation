@@ -4,6 +4,7 @@ import "protocol/pair.proto";
 import "protocol/device_sharing.proto";
 import "protocol/clipboard.proto";
 import "protocol/fs.proto";
+import "protocol/service_status.proto";
 
 message Message {
   oneof payload {
@@ -14,6 +15,7 @@ message Message {
     StopPairRequest stopPairRequest = 1004;
     StopPairResponse stopPairResponse = 1005;
     ServiceStoppedNotification serviceStoppedNotification = 1100;
+    ServiceOnOffNotification serviceOnOffNotification = 1200;
 
     DeviceSharingStartRequest deviceSharingStartRequest = 2000;
     DeviceSharingStartResponse deviceSharingStartResponse = 2001;

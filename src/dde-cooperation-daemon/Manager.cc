@@ -86,6 +86,9 @@ Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesyste
     , m_methodSetFileStoragePath(new DBus::Method("SetFilesStoragePath",
                                                 DBus::Method::warp(this, &Manager::setFileStoragePath),
                                                 {{"path", "s"}}))
+    , m_methodOpenSharedClipboard(new DBus::Method("OpenSharedClipboard",
+                                                   DBus::Method::warp(this, &Manager::openSharedClipboard),
+                                                   {{"on", "b"}}))
     , m_propertyMachines(
           new DBus::Property("Machines", "ao", DBus::Property::warp(this, &Manager::getMachines)))
     , m_propertyDeviceSharingSwitch(
@@ -95,6 +98,8 @@ Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesyste
                              DBus::Property::warp(this, &Manager::setDeviceSharingSwitch)))
     , m_propertyFileStoragePath(new DBus::Property("FilesStoragePath", "s",
                                                    DBus::Property::warp(this, &Manager::getFileStoragePath)))
+    , m_propertySharedClipboard(new DBus::Property("SharedClipboard", "b",
+                                                   DBus::Property::warp(this, &Manager::getSharedClipboardStatus)))
     , m_dbusProxy(Gio::DBus::Proxy::Proxy::create_sync(m_bus,
                                                        "org.freedesktop.DBus",
                                                        "/org/freedesktop/DBus",
@@ -108,6 +113,7 @@ Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesyste
     ensureDataDirExists();
     initUUID();
     initFileStoragePath();
+    initSharedClipboardStatus();
 
     m_keypair.load();
 
@@ -117,9 +123,11 @@ Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesyste
     m_interface->exportMethod(m_methodKnock);
     m_interface->exportMethod(m_methodSendFile);
     m_interface->exportMethod(m_methodSetFileStoragePath);
+    m_interface->exportMethod(m_methodOpenSharedClipboard);
     m_interface->exportProperty(m_propertyMachines);
     m_interface->exportProperty(m_propertyDeviceSharingSwitch);
     m_interface->exportProperty(m_propertyFileStoragePath);
+    m_interface->exportProperty(m_propertySharedClipboard);
     m_object->exportInterface(m_interface);
     m_service->exportObject(m_object);
 
@@ -252,6 +260,16 @@ void Manager::initFileStoragePath() {
     m_fileStoragePath = getenv("HOME");
 }
 
+void Manager::initSharedClipboardStatus() {
+    if (!m_dConfig || !m_dConfig->isValid() || !m_dConfig->keyList().contains("shareClipboard")) {
+        spdlog::warn("dConfig is invalid or does not has shareClipboard key!");
+        m_sharedClipboard = false;
+        return;
+    }
+
+    m_sharedClipboard = m_dConfig->value("shareClipboard").toBool();
+}
+
 void Manager::scan([[maybe_unused]] const Glib::VariantContainerBase &args,
                    const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
     if (!m_deviceSharingSwitch) {
@@ -345,6 +363,27 @@ void Manager::setFileStoragePath(const Glib::VariantContainerBase &args,
     invocation->return_value(Glib::VariantContainerBase{});
 }
 
+void Manager::openSharedClipboard(const Glib::VariantContainerBase &args,
+                                  const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
+    Glib::Variant<bool> on;
+    args.get_child(on, 0);
+
+    bool isOn = on.get();
+    if (isOn != m_sharedClipboard) {
+        m_sharedClipboard = isOn;
+        serviceStatusChanged();
+    }
+
+    if (!m_dConfig || !m_dConfig->isValid() || !m_dConfig->keyList().contains("shareClipboard")) {
+        spdlog::warn("dConfig is invalid or does not has shareClipboard key!");
+        invocation->return_value(Glib::VariantContainerBase{});
+        return;
+    }
+
+    m_dConfig->setValue("shareClipboard", m_sharedClipboard);
+    invocation->return_value(Glib::VariantContainerBase{});
+}
+
 std::vector<Glib::DBusObjectPathString> Manager::getMachinePaths() const noexcept {
     std::vector<Glib::DBusObjectPathString> machines;
     machines.reserve(m_machines.size());
@@ -379,6 +418,11 @@ bool Manager::setDeviceSharingSwitch([[maybe_unused]] const Glib::ustring &prope
 void Manager::getFileStoragePath(Glib::VariantBase &property,
                                 [[maybe_unused]] const Glib::ustring &propertyName) const noexcept {
     property = Glib::Variant<Glib::ustring>::create(m_fileStoragePath);
+}
+
+void Manager::getSharedClipboardStatus(Glib::VariantBase &property,
+                                       [[maybe_unused]] const Glib::ustring &propertyName) const noexcept {
+    property = Glib::Variant<bool>::create(m_sharedClipboard);
 }
 
 bool Manager::hasPcMachinePaired() const {
@@ -787,5 +831,14 @@ void Manager::sendServiceStoppedNotification() const {
         notification->set_deviceuuid(machine->m_uuid);
 
         m_socketScan->send(uvxx::IPv4Addr::create(machine->ip(),m_scanPort), MessageHelper::genMessage(base));
+    }
+}
+
+void Manager::serviceStatusChanged() {
+    for (const auto &v : m_machines) {
+        const std::shared_ptr<Machine> &machine = v.second;
+        if (machine->m_paired) {
+            machine->sendServiceStatusNotification();
+        }
     }
 }

@@ -64,6 +64,7 @@ public:
 
 protected:
     void init();
+    void sendServiceStatusNotification();
 
     void pair(const Glib::VariantContainerBase &args,
               const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
@@ -85,6 +86,7 @@ protected:
     void getCompositor(Glib::VariantBase &property, const Glib::ustring &propertyName) const;
     void getCooperating(Glib::VariantBase &property, const Glib::ustring &propertyName) const;
     void getDirection(Glib::VariantBase &property, const Glib::ustring &propertyName) const;
+    void getSharedClipboardStatus(Glib::VariantBase &property, const Glib::ustring &propertyName) const;
 
 private:
     Manager *m_manager;
@@ -129,6 +131,9 @@ private:
     uint16_t m_direction;
     Glib::RefPtr<DBus::Property> m_propertyDirection;
 
+    bool m_sharedClipboard = false;
+    Glib::RefPtr<DBus::Property> m_propertySharedClipboard;
+
     std::shared_ptr<uvxx::Timer> m_pingTimer;
     std::shared_ptr<uvxx::Timer> m_offlineTimer;
     std::unique_ptr<ConfirmDialogWrapper> m_confirmDialog;
@@ -148,6 +153,7 @@ private:
     void handleDisconnectedAux();
     void dispatcher(uvxx::Buffer &buff) noexcept;
     void handlePairResponseAux(const PairResponse &resp);
+    void handleServiceOnOffMsg(const ServiceOnOffNotification &notification);
     void handleDeviceSharingStartRequest();
     void handleDeviceSharingStartResponse(const DeviceSharingStartResponse &resp);
     void handleDeviceSharingStopRequest();
