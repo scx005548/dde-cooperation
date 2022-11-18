@@ -2,6 +2,7 @@
 #define MACHINE_ANDROIDMACHINE_H
 
 #include "Machine.h"
+#include "SendTransfer.h"
 
 class AndroidMachine : public Machine {
 public:
@@ -18,6 +19,13 @@ protected:
     virtual void handleConnected() override;
     virtual void handleDisconnected() override;
     virtual void handleCaseRequest(const CastRequest &req) override;
+    virtual void handleTransferResponse(const TransferResponse &resp) override;
+    virtual void sendFiles(const QStringList &filePaths) override;
+
+private:
+    uint32_t m_currentTransferId;
+
+    std::unordered_map<uint32_t, std::unique_ptr<SendTransfer>> m_sendTransfers;
 };
 
 #endif // !MACHINE_ANDROIDMACHINE_H

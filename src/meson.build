@@ -4,6 +4,7 @@ protocol = protoc.process(
     'protocol/pair.proto',
     'protocol/device_sharing.proto',
     'protocol/fs.proto',
+    'protocol/file_transfer.proto',
     'protocol/clipboard.proto',
     'protocol/remote_display.proto',
     'protocol/service_status.proto',

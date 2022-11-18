@@ -15,6 +15,8 @@ dde_cooperation_daemon_sources = files('''
   Wrappers/InputGrabberWrapper.cc
   Fuse/FuseClient.cc
   Fuse/FuseServer.cc
+  SendTransfer.cc
+  ReceiveTransfer.cc
   DisplayBase.h
   DisplayBase.cc
   ClipboardBase.h
@@ -40,6 +42,8 @@ dde_cooperation_daemon_moc_headers = files('''
   Wrappers/InputGrabberWrapper.h
   Fuse/FuseClient.h
   Fuse/FuseServer.h
+  SendTransfer.h
+  ReceiveTransfer.h
   X11/X11.h
   Android/QrCodeProxy.h
   Android/DeviceProxy.h

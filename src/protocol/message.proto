@@ -6,6 +6,7 @@ import "protocol/clipboard.proto";
 import "protocol/service_status.proto";
 import "protocol/fs.proto";
 import "protocol/screencast.proto";
+import "protocol/file_transfer.proto";
 
 message Message {
   oneof payload {
@@ -41,6 +42,19 @@ message Message {
     FsMethodOpenResponse fsMethodOpenResponse = 3107;
     FsMethodReleaseRequest fsMethodReleaseRequest = 3108;
     FsMethodReleaseResponse fsMethodReleaseResponse = 3109;
+
+    TransferRequest transferRequest = 3200;
+    TransferResponse transferResponse = 3201;
+    StopTransferRequest stopTransferRequest = 3202;
+    StopTransferResponse stopTransferResponse = 3203;
+    SendFileRequest sendFileRequest = 3204;
+    SendFileResponse sendFileResponse = 3205;
+    SendFileChunkRequest sendFileChunkRequest = 3206;
+    SendFileChunkResponse sendFileChunkResponse = 3207;
+    StopSendFileRequest stopSendFileRequest = 3208;
+    StopSendFileResponse stopSendFileResponse = 3209;
+    SendDirRequest sendDirRequest = 3210;
+    SendDirResponse sendDirResponse = 3211;
 
     InputEventRequest inputEventRequest = 4000;
     InputEventResponse inputEventResponse = 4001;

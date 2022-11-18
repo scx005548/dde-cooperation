@@ -734,15 +734,6 @@ void Machine::sendReceivedFilesSystemNtf(const std::string &path, bool isSuccess
         .call();
 }
 
-void Machine::sendFiles(const QStringList &filePaths) {
-    for (const QString &filePath : filePaths) {
-        Message msg;
-        FsSendFileRequest *send = msg.mutable_fssendfilerequest();
-        send->set_path(filePath.toStdString());
-        sendMessage(msg);
-    }
-}
-
 void Machine::sendMessage(const Message &msg) {
     if (!m_conn) {
         qWarning() << fmt::format("connection reset but still want to send msg: {}",

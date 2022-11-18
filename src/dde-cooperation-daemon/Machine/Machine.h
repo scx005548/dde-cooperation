@@ -120,6 +120,8 @@ private:
     void sendFlowDirectionNtf();
     void sendReceivedFilesSystemNtf(const std::string &path, bool isSuccess);
 
+    virtual void handleTransferResponse(const TransferResponse &resp) = 0;
+
 protected:
     QTcpSocket *m_conn;
 
@@ -130,12 +132,12 @@ protected:
     void requestDeviceSharing();
     void stopDeviceSharing();
     void setFlowDirection(FlowDirection direction);
-    void sendFiles(const QStringList &filePaths);
     void sendMessage(const Message &msg);
 
     virtual void handleConnected() = 0;
     virtual void handleDisconnected() = 0;
     virtual void handleCaseRequest(const CastRequest &req) = 0;
+    virtual void sendFiles(const QStringList &filePaths) = 0;
 };
 
 #endif // !MACHINE_MACHINE_H

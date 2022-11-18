@@ -14,7 +14,8 @@ AndroidMachine::AndroidMachine(Manager *manager,
                                const std::string &ip,
                                uint16_t port,
                                const DeviceInfo &sp)
-    : Machine(manager, clipboard, service, id, dataDir, ip, port, sp) {
+    : Machine(manager, clipboard, service, id, dataDir, ip, port, sp)
+    , m_currentTransferId(0) {
 }
 
 void AndroidMachine::handleConnected() {
@@ -34,4 +35,35 @@ void AndroidMachine::handleCaseRequest(const CastRequest &req) {
         androidMainWindow->setWirelessDbgAddress(QString::fromStdString(m_ip), 5545);
         androidMainWindow->openTCPAdb();
     }
+}
+
+void AndroidMachine::handleTransferResponse(const TransferResponse &resp) {
+    uint32_t transferId = resp.transferid();
+
+    if (!resp.accepted()) {
+        // TODO:
+        m_sendTransfers.erase(transferId);
+        return;
+    }
+
+    auto iter = m_sendTransfers.find(transferId);
+    if (iter == m_sendTransfers.end()) {
+        return;
+    }
+
+    auto &[_, transfer] = *iter;
+
+    transfer->send(m_ip, resp.port());
+}
+
+void AndroidMachine::sendFiles(const QStringList &filePaths) {
+    m_currentTransferId++;
+    uint32_t transferId = m_currentTransferId;
+    m_sendTransfers.emplace(transferId, std::make_unique<SendTransfer>(filePaths));
+
+    Message msg;
+    auto *transferRequest = msg.mutable_transferrequest();
+    transferRequest->set_transferid(transferId);
+
+    sendMessage(msg);
 }

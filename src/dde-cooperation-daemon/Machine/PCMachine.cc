@@ -21,6 +21,15 @@ void PCMachine::handleConnected() {
 void PCMachine::handleDisconnected() {
 }
 
+void PCMachine::sendFiles(const QStringList &filePaths) {
+    for (const QString &filePath : filePaths) {
+        Message msg;
+        FsSendFileRequest *send = msg.mutable_fssendfilerequest();
+        send->set_path(filePath.toStdString());
+        sendMessage(msg);
+    }
+}
+
 void PCMachine::mountFs(const std::string &path) {
     Message msg;
     auto *request = msg.mutable_fsrequest();
