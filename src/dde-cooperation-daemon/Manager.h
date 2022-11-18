@@ -50,8 +50,9 @@ public:
     std::string uuid() const noexcept { return m_uuid; }
     std::string fileStoragePath() const noexcept { return m_fileStoragePath; }
     bool isSharedClipboard() const noexcept { return m_sharedClipboard; }
+    bool isSharedDevices() const noexcept { return m_sharedDevices; }
 
-    bool tryFlowOut(uint16_t direction, uint16_t x, uint16_t y);
+    bool tryFlowOut(uint16_t direction, uint16_t x, uint16_t y, bool evFromPeer);
     bool hasPcMachinePaired() const;
     bool hasAndroidPaired() const;
     void removeInputGrabber(const std::filesystem::path &path);
@@ -82,6 +83,8 @@ protected:
                           const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
     void openSharedClipboard(const Glib::VariantContainerBase &args,
                              const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
+    void openSharedDevices(const Glib::VariantContainerBase &args,
+                           const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
 
     // DBus property handlers
     void getMachines(Glib::VariantBase &property, const Glib::ustring &propertyName) const noexcept;
@@ -91,6 +94,7 @@ protected:
                                 const Glib::VariantBase &value) noexcept;
     void getFileStoragePath(Glib::VariantBase &property, const Glib::ustring &propertyName) const noexcept;
     void getSharedClipboardStatus(Glib::VariantBase &property, const Glib::ustring &propertyName) const noexcept;
+    void getSharedDevicesStatus(Glib::VariantBase &property, const Glib::ustring &propertyName) const noexcept;
 
 private:
     const std::filesystem::path m_dataDir;
@@ -128,12 +132,14 @@ private:
     Glib::RefPtr<DBus::Method> m_methodSendFile;
     Glib::RefPtr<DBus::Method> m_methodSetFileStoragePath;
     Glib::RefPtr<DBus::Method> m_methodOpenSharedClipboard;
+    Glib::RefPtr<DBus::Method> m_methodOpenSharedDevices;
 
     // DBus properties
     Glib::RefPtr<DBus::Property> m_propertyMachines;
     Glib::RefPtr<DBus::Property> m_propertyDeviceSharingSwitch;
     Glib::RefPtr<DBus::Property> m_propertyFileStoragePath;
     Glib::RefPtr<DBus::Property> m_propertySharedClipboard;
+    Glib::RefPtr<DBus::Property> m_propertySharedDevices;
 
     Glib::RefPtr<Gio::DBus::Proxy> m_dbusProxy;
     Glib::RefPtr<Gio::DBus::Proxy> m_powersaverProxy;
@@ -143,6 +149,7 @@ private:
     KeyPair m_keypair;
 
     bool m_sharedClipboard;
+    bool m_sharedDevices;
     std::shared_ptr<DConfig> m_dConfig;
 
     void scanAux() noexcept;
@@ -154,6 +161,7 @@ private:
 
     void initFileStoragePath();
     void initSharedClipboardStatus();
+    void initSharedDevicesStatus();
 
     void cooperationStatusChanged(bool enable);
     void updateMachine(const std::string &ip, uint16_t port, const DeviceInfo &devInfo);

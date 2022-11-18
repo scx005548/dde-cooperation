@@ -533,7 +533,7 @@ void Machine::handleDeviceSharingStartRequest() {
 
         if (accepted) {
             auto wptr = weak_from_this();
-            m_manager->onStartDeviceSharing(wptr, false);
+            m_manager->onStartDeviceSharing(wptr, true);
 
             m_deviceSharing = true;
             m_propertyCooperating->emitChanged(Glib::Variant<bool>::create(m_deviceSharing));
@@ -878,7 +878,7 @@ void Machine::sendServiceStatusNotification() {
     Message msg;
     auto *notification = msg.mutable_serviceonoffnotification();
     notification->set_sharedclipboardon(m_manager->isSharedClipboard());
-    notification->set_shareddeviceson(true); // TODO
+    notification->set_shareddeviceson(m_manager->isSharedDevices());
 
     sendMessage(msg);
 }
