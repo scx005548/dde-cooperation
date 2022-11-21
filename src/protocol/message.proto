@@ -21,6 +21,7 @@ message Message {
     DeviceSharingStartResponse deviceSharingStartResponse = 2001;
     DeviceSharingStopRequest deviceSharingStopRequest = 2002;
     DeviceSharingStopResponse deviceSharingStopResponse = 2003;
+    FlowDirectionNtf flowDirectionNtf = 2010;
     FlowRequest flowRequest = 2100;
     FlowResponse flowResponse = 2101;
 

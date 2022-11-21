@@ -76,6 +76,8 @@ protected:
                           const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
     void stopCooperation(const Glib::VariantContainerBase &args,
                          const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
+    void setFlowDirection(const Glib::VariantContainerBase &args,
+                          const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
 
     void getIP(Glib::VariantBase &property, const Glib::ustring &propertyName) const;
     void getPort(Glib::VariantBase &property, const Glib::ustring &propertyName) const;
@@ -104,6 +106,7 @@ private:
     Glib::RefPtr<DBus::Method> m_methodSendFile;
     Glib::RefPtr<DBus::Method> m_methodRequestCooperate;
     Glib::RefPtr<DBus::Method> m_methodStopCooperation;
+    Glib::RefPtr<DBus::Method> m_methodSetFlowDirection;
 
     Glib::RefPtr<DBus::Property> m_propertyIP;
 
@@ -158,6 +161,7 @@ private:
     void handleDeviceSharingStartResponse(const DeviceSharingStartResponse &resp);
     void handleDeviceSharingStopRequest();
     void handleInputEventRequest(const InputEventRequest &req);
+    void handleFlowDirectionNtf(const FlowDirectionNtf &ntf);
     void handleFlowRequest(const FlowRequest &req);
     void handleFsRequest(const FsRequest &req);
     void handleFsResponse(const FsResponse &resp);
@@ -175,6 +179,7 @@ private:
 
     void stopDeviceSharingAux();
     void receivedUserConfirm(uvxx::Buffer &buff);
+    void sendFlowDirectionNtf();
 
 protected:
     std::shared_ptr<uvxx::Loop> m_uvLoop;

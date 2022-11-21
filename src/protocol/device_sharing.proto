@@ -53,3 +53,7 @@ message FlowResponse {
     int64 serial = 1; // 序号
     bool success = 2; // 是否成功
 }
+
+message FlowDirectionNtf {
+    FlowDirection direction = 1;
+}

@@ -58,6 +58,9 @@ Machine::Machine(Manager *manager,
                            DBus::Method::warp(this, &Machine::requestCooperate)))
     , m_methodStopCooperation(
           new DBus::Method("StopCooperation", DBus::Method::warp(this, &Machine::stopCooperation)))
+    , m_methodSetFlowDirection(new DBus::Method("SetFlowDirection",
+                                                DBus::Method::warp(this, &Machine::setFlowDirection),
+                                                {{"direction", "q"}}))
     , m_propertyIP(new DBus::Property("IP", "s", DBus::Property::warp(this, &Machine::getIP)))
     , m_port(port)
     , m_propertyPort(new DBus::Property("Port", "q", DBus::Property::warp(this, &Machine::getPort)))
@@ -98,6 +101,7 @@ Machine::Machine(Manager *manager,
     m_interface->exportMethod(m_methodSendFile);
     m_interface->exportMethod(m_methodRequestCooperate);
     m_interface->exportMethod(m_methodStopCooperation);
+    m_interface->exportMethod(m_methodSetFlowDirection);
     m_interface->exportProperty(m_propertyIP);
     m_interface->exportProperty(m_propertyPort);
     m_interface->exportProperty(m_propertyUUID);
@@ -298,6 +302,25 @@ void Machine::stopCooperation(
     stopDeviceSharingAux();
 }
 
+void Machine::setFlowDirection(const Glib::VariantContainerBase &args,
+                               const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
+    Glib::Variant<uint16_t> direction;
+    args.get_child(direction, 0);
+
+    int iDirection = direction.get();
+    if (iDirection > FLOW_DIRECTION_LEFT || iDirection < 0) {
+        invocation->return_error(
+            Gio::DBus::Error{Gio::DBus::Error::FAILED, "direction param has error, top-0,right-1,bottom-2,left-3."});
+    }
+
+    if (m_direction != iDirection) {
+        m_direction = (FlowDirection)iDirection;
+        sendFlowDirectionNtf();
+    }
+
+    invocation->return_value(Glib::VariantContainerBase{});
+}
+
 void Machine::ping() {
     m_manager->ping(m_ip);
 }
@@ -447,6 +470,11 @@ void Machine::dispatcher(uvxx::Buffer &buff) noexcept {
             break;
         }
 
+        case Message::PayloadCase::kFlowDirectionNtf: {
+            handleFlowDirectionNtf(msg.flowdirectionntf());
+            break;
+        }
+
         case Message::PayloadCase::kFlowRequest: {
             handleFlowRequest(msg.flowrequest());
             break;
@@ -555,6 +583,8 @@ void Machine::handleDeviceSharingStartResponse(const DeviceSharingStartResponse 
     m_direction = FLOW_DIRECTION_RIGHT;
     m_propertyDirection->emitChanged(Glib::Variant<uint16_t>::create(m_direction));
 
+    sendFlowDirectionNtf();
+
     m_manager->onStartDeviceSharing(weak_from_this(), true);
 }
 
@@ -583,6 +613,24 @@ void Machine::handleInputEventRequest(const InputEventRequest &req) {
     response->set_success(success);
 
     m_conn->write(MessageHelper::genMessage(resp));
+}
+
+void Machine::handleFlowDirectionNtf(const FlowDirectionNtf &ntf) {
+    FlowDirection peerFlowDirection = ntf.direction();
+    switch ((int)peerFlowDirection) {
+    case FLOW_DIRECTION_TOP:
+        m_direction = FLOW_DIRECTION_BOTTOM;
+        break;
+    case FLOW_DIRECTION_BOTTOM:
+        m_direction = FLOW_DIRECTION_TOP;
+        break;
+    case FLOW_DIRECTION_LEFT:
+        m_direction = FLOW_DIRECTION_RIGHT;
+        break;
+    case FLOW_DIRECTION_RIGHT:
+        m_direction = FLOW_DIRECTION_LEFT;
+        break;
+    }
 }
 
 void Machine::handleFlowRequest(const FlowRequest &req) {
@@ -852,6 +900,13 @@ void Machine::receivedUserConfirm(uvxx::Buffer &buff) {
         sendServiceStatusNotification();
         handleConnected();
     }
+}
+
+void Machine::sendFlowDirectionNtf() {
+    Message msg;
+    auto *notification = msg.mutable_flowdirectionntf();
+    notification->set_direction((FlowDirection)m_direction);
+    sendMessage(msg);
 }
 
 void Machine::sendFiles(const std::vector<Glib::ustring> &filePaths) {
