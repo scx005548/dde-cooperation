@@ -534,6 +534,9 @@ void Machine::handlePairResponseAux(const PairResponse &resp) {
     if (!agree) {
         // handle not agree
         m_conn->close();
+        // rejected, need notify,ui can reset connecting status
+        m_paired = false;
+        m_propertyPaired->emitChanged(Glib::Variant<bool>::create(m_paired));
         return;
     }
 

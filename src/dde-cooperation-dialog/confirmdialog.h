@@ -14,6 +14,9 @@ public:
     explicit ConfirmDialog(const QString &ip, const QString &machineName, int pipeFd);
 
 private:
+    void writeBackResult(int pipeFd, bool isAccepted);
+
+private:
     QLabel *m_titleLabel;
     QLabel *m_contentLabel;
 };

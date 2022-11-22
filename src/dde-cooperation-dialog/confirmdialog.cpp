@@ -11,8 +11,7 @@ const char Reject = 0x00;
 ConfirmDialog::ConfirmDialog(const QString &ip, const QString &machineName, int pipeFd)
     : DDialog()
     , m_titleLabel(new QLabel(this))
-    , m_contentLabel(new QLabel(this))
-{
+    , m_contentLabel(new QLabel(this)) {
     setAttribute(Qt::WA_QuitOnClose);
     setFocus(Qt::MouseFocusReason);
 
@@ -31,21 +30,26 @@ ConfirmDialog::ConfirmDialog(const QString &ip, const QString &machineName, int 
     btnTexts << tr("reject") << tr("accept");
     addButtons(btnTexts);
 
-    connect(this, &ConfirmDialog::buttonClicked, this, [pipeFd](int index, const QString &text) {
+    connect(this, &ConfirmDialog::buttonClicked, this, [=](int index, const QString &text) {
         Q_UNUSED(text);
-        QFile writePipe;
-        if (!writePipe.open(pipeFd, QIODevice::WriteOnly)) {
-            qWarning() << "Cooperation open pipeFd has error!";
-            return;
-        }
-
-        char data = index == 1 ? Accept : Reject;
-        writePipe.write(&data, 1);
-        writePipe.close();
+        bool isAccepted = index == 1;
+        writeBackResult(pipeFd, isAccepted);
     });
 
-    connect(this, &ConfirmDialog::closed, this, [](){
+    connect(this, &ConfirmDialog::closed, this, [=]() {
+        writeBackResult(pipeFd, false);
         qApp->quit();
     });
+}
 
+void ConfirmDialog::writeBackResult(int pipeFd, bool isAccepted) {
+    QFile writePipe;
+    if (!writePipe.open(pipeFd, QIODevice::WriteOnly)) {
+        qWarning() << "Cooperation open pipeFd has error!";
+        return;
+    }
+
+    char data = isAccepted ? Accept : Reject;
+    writePipe.write(&data, 1);
+    writePipe.close();
 }
