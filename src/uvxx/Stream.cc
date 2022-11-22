@@ -51,6 +51,11 @@ void Stream::readCb([[maybe_unused]] uv_stream_t *stream,
         return;
     }
 
+    if (nread < 0) {
+        close();
+        return;
+    }
+
     buff_.writed(nread);
     if (receivedCb_) {
         receivedCb_(buff_);
