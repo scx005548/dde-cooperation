@@ -4,11 +4,9 @@
 
 #include "Manager.h"
 #include "ClipboardBase.h"
-#include "Request.h"
 #include "InputEmittorWrapper.h"
 #include "FuseServer.h"
 #include "FuseClient.h"
-#include "utils/net.h"
 #include "utils/message_helper.h"
 #include "ConfirmDialogWrapper.h"
 
@@ -20,7 +18,6 @@
 #include "uvxx/Addr.h"
 #include "uvxx/Async.h"
 #include "uvxx/Process.h"
-#include "uvxx/Signal.h"
 
 namespace fs = std::filesystem;
 
@@ -137,7 +134,9 @@ Machine::~Machine() {
     m_offlineTimer->close();
     m_async->close();
     if (m_conn) {
+        m_conn->onClosed(nullptr);
         m_conn->close();
+        m_manager->onStopDeviceSharing();
     }
 
     m_service->unexportObject(m_object->path());
@@ -222,10 +221,6 @@ void Machine::receivedPing() {
 void Machine::onPair(const std::shared_ptr<uvxx::TCP> &sock) {
     spdlog::info("request onPair");
     m_conn = sock;
-    initConnection();
-
-    m_pingTimer->stop();
-    m_offlineTimer->stop();
 
     m_confirmDialog = std::make_unique<ConfirmDialogWrapper>(
         m_ip,
@@ -389,12 +384,14 @@ void Machine::getSharedClipboardStatus(Glib::VariantBase &property,
 void Machine::handleDisconnectedAux() {
     spdlog::info("disconnected");
 
-    m_manager->onStopDeviceSharing();
+    if (m_paired) {
+        m_manager->onStopDeviceSharing();
 
-    m_deviceSharing = false;
-    m_propertyCooperating->emitChanged(Glib::Variant<bool>::create(m_deviceSharing));
-    m_paired = false;
-    m_propertyPaired->emitChanged(Glib::Variant<bool>::create(m_paired));
+        m_deviceSharing = false;
+        m_propertyCooperating->emitChanged(Glib::Variant<bool>::create(m_deviceSharing));
+        m_paired = false;
+        m_propertyPaired->emitChanged(Glib::Variant<bool>::create(m_paired));
+    }
 
     if (m_fuseClient) {
         m_fuseClient->exit();
@@ -894,11 +891,18 @@ void Machine::receivedUserConfirm(uvxx::Buffer &buff) {
     sendMessage(msg);
 
     if (isAccept) {
+        initConnection();
+
+        m_pingTimer->stop();
+        m_offlineTimer->stop();
+
         m_paired = true;
         m_propertyPaired->emitChanged(Glib::Variant<bool>::create(m_paired));
 
         sendServiceStatusNotification();
         handleConnected();
+    } else {
+        m_conn->close();
     }
 }
 
