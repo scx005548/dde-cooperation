@@ -11,6 +11,18 @@ Rectangle {
     anchors.fill: parent
     color: 'black'
 
+    focus: true
+
+    Keys.onPressed: function(event) {
+        console.log("key pressed: " + event.key)
+        device.onKeyPressed(event.key, event.modifiers, event.text, event.isAutoRepeat, event.count)
+    }
+
+    Keys.onReleased: function(event) {
+        console.log("key released: " + event.key)
+        device.onKeyReleased(event.key, event.modifiers, event.text, event.isAutoRepeat, event.count)
+    }
+
     VideoOutput {
         id: videoOutput
 
@@ -38,7 +50,7 @@ Rectangle {
 
             onPressed: function (mouse) {
                 console.log("pressed")
-                device.onPressed(mouse.x,
+                device.onMouseButtonPressed(mouse.x,
                                  mouse.y,
                                  mouse.button,
                                  mouse.buttons,
@@ -49,7 +61,7 @@ Rectangle {
 
             onReleased: function (mouse) {
                 console.log("released")
-                device.onReleased(mouse.x,
+                device.onMouseButtonReleased(mouse.x,
                                   mouse.y,
                                   mouse.button,
                                   mouse.buttons,

@@ -11,6 +11,34 @@ void DeviceProxy::setDevice(qsc::IDevice *device) {
     m_device = device;
 }
 
+void DeviceProxy::onKeyPressed(int key,
+                               int modifiers,
+                               const QString &text,
+                               bool autorep,
+                               ushort count) {
+    QKeyEvent event(QKeyEvent::KeyPress,
+                    key,
+                    static_cast<Qt::KeyboardModifiers>(modifiers),
+                    text,
+                    autorep,
+                    count);
+    m_device->keyEvent(&event, QSize{}, QSize{});
+}
+
+void DeviceProxy::onKeyReleased(int key,
+                                int modifiers,
+                                const QString &text,
+                                bool autorep,
+                                ushort count) {
+    QKeyEvent event(QKeyEvent::KeyRelease,
+                    key,
+                    static_cast<Qt::KeyboardModifiers>(modifiers),
+                    text,
+                    autorep,
+                    count);
+    m_device->keyEvent(&event, QSize{}, QSize{});
+}
+
 void DeviceProxy::onMouseMove(qreal x,
                               qreal y,
                               int button,
@@ -26,13 +54,13 @@ void DeviceProxy::onMouseMove(qreal x,
     m_device->mouseEvent(&event, frameSize.toSize(), showSize.toSize());
 }
 
-void DeviceProxy::onPressed(qreal x,
-                            qreal y,
-                            int button,
-                            int buttons,
-                            int modifiers,
-                            const QSizeF &frameSize,
-                            const QSizeF &showSize) {
+void DeviceProxy::onMouseButtonPressed(qreal x,
+                                       qreal y,
+                                       int button,
+                                       int buttons,
+                                       int modifiers,
+                                       const QSizeF &frameSize,
+                                       const QSizeF &showSize) {
     QMouseEvent event(QEvent::MouseButtonPress,
                       QPointF{x, y},
                       static_cast<Qt::MouseButton>(button),
@@ -41,13 +69,13 @@ void DeviceProxy::onPressed(qreal x,
     m_device->mouseEvent(&event, frameSize.toSize(), showSize.toSize());
 }
 
-void DeviceProxy::onReleased(qreal x,
-                             qreal y,
-                             int button,
-                             int buttons,
-                             int modifiers,
-                             const QSizeF &frameSize,
-                             const QSizeF &showSize) {
+void DeviceProxy::onMouseButtonReleased(qreal x,
+                                        qreal y,
+                                        int button,
+                                        int buttons,
+                                        int modifiers,
+                                        const QSizeF &frameSize,
+                                        const QSizeF &showSize) {
     QMouseEvent event(QEvent::MouseButtonRelease,
                       QPointF{x, y},
                       static_cast<Qt::MouseButton>(button),

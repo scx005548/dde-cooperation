@@ -17,6 +17,16 @@ public:
 
     void setDevice(qsc::IDevice *device);
 
+    Q_INVOKABLE void onKeyPressed(int key,
+                                  int modifiers,
+                                  const QString &text,
+                                  bool autorep,
+                                  ushort count);
+    Q_INVOKABLE void onKeyReleased(int key,
+                                   int modifiers,
+                                   const QString &text,
+                                   bool autorep,
+                                   ushort count);
     Q_INVOKABLE void onMouseMove(qreal x,
                                  qreal y,
                                  int button,
@@ -24,20 +34,20 @@ public:
                                  int modifiers,
                                  const QSizeF &frameSize,
                                  const QSizeF &showSize);
-    Q_INVOKABLE void onPressed(qreal x,
-                                 qreal y,
-                                 int button,
-                                 int buttons,
-                                 int modifiers,
-                                 const QSizeF &frameSize,
-                                 const QSizeF &showSize);
-    Q_INVOKABLE void onReleased(qreal x,
-                                 qreal y,
-                                 int button,
-                                 int buttons,
-                                 int modifiers,
-                                 const QSizeF &frameSize,
-                                 const QSizeF &showSize);
+    Q_INVOKABLE void onMouseButtonPressed(qreal x,
+                                          qreal y,
+                                          int button,
+                                          int buttons,
+                                          int modifiers,
+                                          const QSizeF &frameSize,
+                                          const QSizeF &showSize);
+    Q_INVOKABLE void onMouseButtonReleased(qreal x,
+                                           qreal y,
+                                           int button,
+                                           int buttons,
+                                           int modifiers,
+                                           const QSizeF &frameSize,
+                                           const QSizeF &showSize);
     Q_INVOKABLE void onBackButtonClicked();
     Q_INVOKABLE void onHomeButtonClicked();
     Q_INVOKABLE void onOverviewButtonClicked();
