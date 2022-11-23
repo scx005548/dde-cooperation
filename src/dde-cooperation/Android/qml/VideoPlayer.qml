@@ -13,12 +13,12 @@ Rectangle {
     focus: true
 
     Keys.onPressed: function(event) {
-        console.log("key pressed: " + event.key)
+        console.debug("key pressed: " + event.key)
         device.onKeyPressed(event.key, event.modifiers, event.text, event.isAutoRepeat, event.count)
     }
 
     Keys.onReleased: function(event) {
-        console.log("key released: " + event.key)
+        console.debug("key released: " + event.key)
         device.onKeyReleased(event.key, event.modifiers, event.text, event.isAutoRepeat, event.count)
     }
 
@@ -105,6 +105,7 @@ Rectangle {
                 width: 36
                 height: 36
                 radius: 8
+                activeFocusOnTab: false
                 icon.source: "qrc:///icons/back.svg"
                 icon.width: 16
                 icon.height: 16
@@ -115,6 +116,7 @@ Rectangle {
                 width: 36
                 height: 36
                 radius: 8
+                activeFocusOnTab: false
                 icon.source: "qrc:///icons/overview.svg"
                 icon.width: 16
                 icon.height: 16
@@ -125,6 +127,7 @@ Rectangle {
                 width: 36
                 height: 36
                 radius: 8
+                activeFocusOnTab: false
                 icon.source: "qrc:///icons/home.svg"
                 icon.width: 16
                 icon.height: 16
@@ -135,6 +138,7 @@ Rectangle {
                 width: 36
                 height: 36
                 radius: 8
+                activeFocusOnTab: false
                 icon.source: "qrc:///icons/switch_screen.svg"
                 icon.width: 16
                 icon.height: 16

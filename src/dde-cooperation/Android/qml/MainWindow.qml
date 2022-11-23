@@ -12,6 +12,7 @@ Window {
 
     Loader {
         id: loader
+        focus: true
         anchors.fill: parent
 
         source: getSource()
