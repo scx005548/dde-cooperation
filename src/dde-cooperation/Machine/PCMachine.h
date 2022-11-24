@@ -4,6 +4,8 @@
 #include "Machine.h"
 
 class PCMachine : public Machine {
+    Q_OBJECT
+
 public:
     PCMachine(Manager *manager,
               ClipboardBase *clipboard,

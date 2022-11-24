@@ -154,4 +154,14 @@ Rectangle {
 
         onActivated: device.getClipboard()
     }
+
+    DropArea {
+        id: dropArea;
+        anchors.fill: parent
+
+        onDropped: {
+            console.log(drop.urls)
+            backend.sendFiles(drop.urls)
+        }
+    }
 }

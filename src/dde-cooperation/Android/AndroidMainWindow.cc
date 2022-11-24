@@ -53,6 +53,20 @@ void AndroidMainWindow::showConnectDevice() {
     setStage(STAGE_SHOW_QR_CODE);
 }
 
+void AndroidMainWindow::sendFiles(const QList<QUrl> &urls) {
+    qInfo() << "urls:" << urls;
+    QStringList paths;
+    paths.reserve(urls.size());
+
+    for (const auto &url : urls) {
+        if (url.isLocalFile()) {
+            paths.append(url.toLocalFile());
+        }
+    }
+
+    emit requestSendFiles(paths);
+}
+
 QStringList AndroidMainWindow::getIPs() {
     QStringList ips;
     for (const QHostAddress &address : QNetworkInterface::allAddresses()) {

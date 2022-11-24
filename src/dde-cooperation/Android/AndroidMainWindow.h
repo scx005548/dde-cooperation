@@ -34,6 +34,8 @@ public:
     AndroidMainWindow(const QString &uuid, QObject *parent = nullptr);
     ~AndroidMainWindow();
 
+    Q_INVOKABLE void sendFiles(const QList<QUrl> &urls);
+
     void showConnectDevice();
     void setWirelessDbgAddress(const QString &ip, uint16_t port);
     void openTCPAdb();
@@ -44,6 +46,7 @@ public:
 signals:
     void stageChanged(quint16 stage);
     void tcpAdbConnected();
+    void requestSendFiles(const QStringList &urls);
 
 protected slots:
     void deviceConnected(bool success,

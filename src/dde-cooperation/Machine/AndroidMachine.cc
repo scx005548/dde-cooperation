@@ -57,6 +57,10 @@ void AndroidMachine::handleCastRequest(const CastRequest &req) {
     QObject::connect(m_mainWindow, &AndroidMainWindow::destroyed, this, [this]() {
         m_mainWindow = nullptr;
     });
+    QObject::connect(m_mainWindow,
+                     &AndroidMainWindow::requestSendFiles,
+                     this,
+                     &AndroidMachine::sendFiles);
 
     if (rStage & ANDROID_STAGE_TCPIP) {
         m_mainWindow->setWirelessDbgAddress(QString::fromStdString(m_ip), 5545);

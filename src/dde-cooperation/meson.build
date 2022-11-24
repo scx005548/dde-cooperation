@@ -7,9 +7,7 @@ dde_cooperation_sources = files('''
   KeyPair.cc
   Machine/Machine.cc
   Machine/MachineDBusAdaptor.cc
-  Machine/PCMachine.h
   Machine/PCMachine.cc
-  Machine/AndroidMachine.h
   Machine/AndroidMachine.cc
   Machine/AndroidMachineDBusAdaptor.cc
   Wrappers/InputEmitterWrapper.cc
@@ -39,6 +37,8 @@ dde_cooperation_moc_headers = files('''
   ManagerDBusAdaptor.h
   ConfirmDialog.h
   Machine/Machine.h
+  Machine/PCMachine.h
+  Machine/AndroidMachine.h
   Machine/MachineDBusAdaptor.h
   Machine/AndroidMachineDBusAdaptor.h
   Wrappers/InputEmitterWrapper.h

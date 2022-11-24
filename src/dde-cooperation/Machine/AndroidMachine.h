@@ -8,6 +8,8 @@ class AndroidMainWindow;
 class SendTransfer;
 
 class AndroidMachine : public Machine {
+    Q_OBJECT
+
 public:
     AndroidMachine(Manager *manager,
                    ClipboardBase *clipboard,
