@@ -26,20 +26,20 @@ Rectangle {
     VideoOutput {
         id: videoOutput
 
-        property double  aimedRatio     : sourceRect.height/sourceRect.width
-        property double  marginBottom   : window.maximized ? 0 : buttons.height
+        property double aimedRatio: sourceRect.width / sourceRect.height
+        property double marginBottom: window.maximized ? 0 : buttons.height
 
-        property double  availableWidth  : parent.width
-        property double  availableHeight : parent.height - marginBottom
+        property double availableWidth: parent.width
+        property double availableHeight: parent.height - marginBottom
 
-        property bool    parentIsLarge   : parentRatio > aimedRatio
+        property double parentRatio: availableWidth / availableHeight
+        property bool parentIsLarge: parentRatio > aimedRatio
 
-        property double  parentRatio     : availableHeight / availableWidth
-
-        height : parentIsLarge ? availableWidth * aimedRatio :  availableHeight
-        width  : parentIsLarge ? availableWidth     :  availableHeight / aimedRatio
+        width: parentIsLarge ? availableHeight * aimedRatio : availableWidth 
+        height: parentIsLarge ? availableHeight : availableWidth / aimedRatio
 
         anchors.horizontalCenter: parent.horizontalCenter
+        anchors.verticalCenter: maximized ? parent.verticalCenter : undefined
 
         source: videoFrameProvider
 
@@ -141,7 +141,6 @@ Rectangle {
                 icon.height: 16
                 onClicked: device.onSwitchScreenButtonClicked()
             }
-
         }
     }
 
