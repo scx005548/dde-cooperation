@@ -54,7 +54,7 @@ message PairRequest
     DeviceInfo deviceInfo = 2;
 }
 
-// 仅在同意配对时返回
+// 配对时返回
 message PairResponse
 {
     string key = 1;             // 固定值 "UOS-COOPERATION"
