@@ -100,3 +100,11 @@ void DeviceProxy::onSwitchScreenButtonClicked() {
     m_screenOpen = !m_screenOpen;
     m_device->setScreenPowerMode(m_screenOpen);
 }
+
+void DeviceProxy::setClipboard() {
+    m_device->setDeviceClipboard();
+}
+
+void DeviceProxy::getClipboard() {
+    m_device->requestDeviceClipboard();
+}

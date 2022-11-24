@@ -53,6 +53,9 @@ public:
     Q_INVOKABLE void onOverviewButtonClicked();
     Q_INVOKABLE void onSwitchScreenButtonClicked();
 
+    Q_INVOKABLE void setClipboard();
+    Q_INVOKABLE void getClipboard();
+
 signals:
 
 private:

@@ -144,4 +144,16 @@ Rectangle {
 
         }
     }
+
+    Shortcut {
+        sequence: StandardKey.Paste
+
+        onActivated: device.setClipboard();
+    }
+
+    Shortcut {
+        sequence: [StandardKey.Copy, StandardKey.Cut]
+
+        onActivated: device.getClipboard()
+    }
 }
