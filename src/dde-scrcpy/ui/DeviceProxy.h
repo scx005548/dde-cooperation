@@ -57,7 +57,7 @@ signals:
 
 private:
     qsc::IDevice *m_device;
-    bool m_screenClosed;
+    bool m_screenOpen;
 };
 
 #endif // BACKEND_H

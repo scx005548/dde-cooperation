@@ -4,7 +4,7 @@
 
 DeviceProxy::DeviceProxy(QObject *parent)
     : QObject(parent)
-    , m_screenClosed(false) {
+    , m_screenOpen(true) {
 }
 
 void DeviceProxy::setDevice(qsc::IDevice *device) {
@@ -97,6 +97,6 @@ void DeviceProxy::onOverviewButtonClicked() {
 }
 
 void DeviceProxy::onSwitchScreenButtonClicked() {
-    m_screenClosed = !m_screenClosed;
-    m_device->setScreenPowerMode(m_screenClosed);
+    m_screenOpen = !m_screenOpen;
+    m_device->setScreenPowerMode(m_screenOpen);
 }
