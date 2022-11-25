@@ -1,27 +1,23 @@
-#ifndef DDE_COOPERATION_DAEMON_MANAGER_H
-#define DDE_COOPERATION_DAEMON_MANAGER_H
+#ifndef MANAGER_H
+#define MANAGER_H
 
 #include <unordered_map>
 #include <filesystem>
 #include <memory>
 #include <thread>
 
-#include <glibmm.h>
-#include <giomm.h>
 #include <arpa/inet.h>
 
-#include "KeyPair.h"
-#include "InputGrabberWrapper.h"
-#include "dbus/dbus.h"
-#include "utils/net.h"
-#include "ClipboardBase.h"
-
-#include "protocol/pair.pb.h"
-#include "protocol/device_sharing.pb.h"
-
-#include "uvxx/noncopyable.h"
+#include <QtDBus>
 
 #include <DConfig>
+
+#include "KeyPair.h"
+#include "Wrappers/InputGrabberWrapper.h"
+#include "ClipboardBase.h"
+#include "ManagerDBusAdaptor.h"
+
+#include "protocol/pair.pb.h"
 
 DCORE_USE_NAMESPACE
 
@@ -35,6 +31,7 @@ class Pipe;
 class Process;
 } // namespace uvxx
 
+class ManagerDBusAdaptor;
 class FsSendFileRequest;
 class FsRequest;
 class FsResponse;
@@ -42,13 +39,18 @@ class Machine;
 class DisplayBase;
 class ClipboardBase;
 
-class Manager : public ClipboardObserver, public noncopyable {
+class Manager : public QObject, public ClipboardObserver {
+    friend class ManagerDBusAdaptor;
+
+    Q_OBJECT
+    Q_DISABLE_COPY(Manager)
+
 public:
-    Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesystem::path &dataDir);
+    Manager(const std::filesystem::path &dataDir);
     ~Manager();
 
     std::string uuid() const noexcept { return m_uuid; }
-    std::string fileStoragePath() const noexcept { return m_fileStoragePath; }
+    QString fileStoragePath() const noexcept { return m_fileStoragePath; }
     bool isSharedClipboard() const noexcept { return m_sharedClipboard; }
     bool isSharedDevices() const noexcept { return m_sharedDevices; }
 
@@ -71,34 +73,17 @@ public:
     void onInputEvent();
 
 protected:
-    // DBus method handlers
-    void getUUID(const Glib::VariantContainerBase &args,
-                 const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
-    void scan(const Glib::VariantContainerBase &args,
-              const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
-    void knock(const Glib::VariantContainerBase &args,
-               const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
-    void sendFile(const Glib::VariantContainerBase &args,
-                  const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
-    void setFileStoragePath(const Glib::VariantContainerBase &args,
-                          const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
-    void openSharedClipboard(const Glib::VariantContainerBase &args,
-                             const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
-    void openSharedDevices(const Glib::VariantContainerBase &args,
-                           const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept;
+    bool sendFile(const QStringList &files, int osType) noexcept;
+    void setFileStoragePath(const QString &path) noexcept;
+    void openSharedClipboard(bool on) noexcept;
+    void openSharedDevices(bool on) noexcept;
 
-    // DBus property handlers
-    void getMachines(Glib::VariantBase &property, const Glib::ustring &propertyName) const noexcept;
-    void getDeviceSharingSwitch(Glib::VariantBase &property,
-                                const Glib::ustring &propertyName) const noexcept;
-    bool setDeviceSharingSwitch(const Glib::ustring &propertyName,
-                                const Glib::VariantBase &value) noexcept;
-    void getFileStoragePath(Glib::VariantBase &property, const Glib::ustring &propertyName) const noexcept;
-    void getSharedClipboardStatus(Glib::VariantBase &property, const Glib::ustring &propertyName) const noexcept;
-    void getSharedDevicesStatus(Glib::VariantBase &property, const Glib::ustring &propertyName) const noexcept;
-    void getCooperatedMachines(Glib::VariantBase &property, const Glib::ustring &propertyName) const noexcept;
+    bool setDeviceSharingSwitch(bool value) noexcept;
 
 private:
+    QDBusConnection m_bus;
+    ManagerDBusAdaptor *m_dbusAdaptor;
+
     const std::filesystem::path m_dataDir;
     const std::filesystem::path m_mountRoot;
 
@@ -111,6 +96,7 @@ private:
     uint32_t m_lastRequestId;
     std::unordered_map<std::string, std::shared_ptr<InputGrabberWrapper>> m_inputGrabbers;
 
+    std::thread m_uvThread;
     std::shared_ptr<uvxx::Loop> m_uvLoop;
     std::shared_ptr<uvxx::Async> m_async;
     std::shared_ptr<uvxx::UDP> m_socketScan;
@@ -120,32 +106,10 @@ private:
     std::shared_ptr<uvxx::Addr> m_scanAddr;
 
     std::string m_uuid;
-    Glib::ustring m_fileStoragePath;
+    QString m_fileStoragePath;
 
-    Glib::RefPtr<Gio::DBus::Connection> m_bus;
-    Glib::RefPtr<DBus::Service> m_service;
-    Glib::RefPtr<DBus::Object> m_object;
-    Glib::RefPtr<DBus::Interface> m_interface;
+    QDBusInterface m_powersaverProxy;
 
-    // DBus methods
-    Glib::RefPtr<DBus::Method> m_methodGetUUID;
-    Glib::RefPtr<DBus::Method> m_methodScan;
-    Glib::RefPtr<DBus::Method> m_methodKnock;
-    Glib::RefPtr<DBus::Method> m_methodSendFile;
-    Glib::RefPtr<DBus::Method> m_methodSetFileStoragePath;
-    Glib::RefPtr<DBus::Method> m_methodOpenSharedClipboard;
-    Glib::RefPtr<DBus::Method> m_methodOpenSharedDevices;
-
-    // DBus properties
-    Glib::RefPtr<DBus::Property> m_propertyMachines;
-    Glib::RefPtr<DBus::Property> m_propertyDeviceSharingSwitch;
-    Glib::RefPtr<DBus::Property> m_propertyFileStoragePath;
-    Glib::RefPtr<DBus::Property> m_propertySharedClipboard;
-    Glib::RefPtr<DBus::Property> m_propertySharedDevices;
-    Glib::RefPtr<DBus::Property> m_propertyCooperatedMachines;
-
-    Glib::RefPtr<Gio::DBus::Proxy> m_dbusProxy;
-    Glib::RefPtr<Gio::DBus::Proxy> m_powersaverProxy;
     int m_deviceSharingCnt;
     uint32_t m_inhibitCookie;
 
@@ -156,7 +120,7 @@ private:
     QStringList m_cooperatedMachines;
     std::shared_ptr<DConfig> m_dConfig;
 
-    void scanAux() noexcept;
+    void scan() noexcept;
 
     void ensureDataDirExists();
     void initUUID();
@@ -171,7 +135,7 @@ private:
     void cooperationStatusChanged(bool enable);
     void updateMachine(const std::string &ip, uint16_t port, const DeviceInfo &devInfo);
     void addMachine(const std::string &ip, uint16_t port, const DeviceInfo &devInfo);
-    std::vector<Glib::DBusObjectPathString> getMachinePaths() const noexcept;
+    QVector<QDBusObjectPath> getMachinePaths() const noexcept;
     void inhibitScreensaver();
     void unInhibitScreensaver();
 
@@ -185,4 +149,4 @@ private:
     void serviceStatusChanged();
 };
 
-#endif // !DDE_COOPERATION_DAEMON_MANAGER_H
+#endif // !MANAGER_H

@@ -1,5 +1,5 @@
-#ifndef DDE_COOPERATION_DAEMON_FUSE_H
-#define DDE_COOPERATION_DAEMON_FUSE_H
+#ifndef FUSE_FUSECLIENT_H
+#define FUSE_FUSECLIENT_H
 
 #include <filesystem>
 #include <thread>
@@ -11,9 +11,6 @@
 #include <fuse3/fuse.h>
 
 #include <google/protobuf/message.h>
-
-#include <glibmm.h>
-#include <giomm.h>
 
 namespace uvxx {
 class Loop;
@@ -67,4 +64,4 @@ private:
     std::shared_ptr<google::protobuf::Message> waitForServerReply();
 };
 
-#endif // !DDE_COOPERATION_DAEMON_FUSE_H
+#endif // !FUSE_FUSECLIENT_H

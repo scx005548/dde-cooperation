@@ -1,27 +1,25 @@
 dde_cooperation_daemon_sources = files('''
   main.cc
-  Manager.h
   Manager.cc
+  ManagerDBusAdaptor.cc
   KeyPair.h
   KeyPair.cc
-  Machine.h
-  Machine.cc
-  PCMachine.h
-  PCMachine.cc
-  AndroidMachine.h
-  AndroidMachine.cc
-  Request.h
-  Request.cc
-  InputEmittorWrapper.h
-  InputEmittorWrapper.cc
-  InputGrabberWrapper.h
-  InputGrabberWrapper.cc
-  ConfirmDialogWrapper.h
-  ConfirmDialogWrapper.cc
-  FuseClient.h
-  FuseClient.cc
-  FuseServer.h
-  FuseServer.cc
+  Machine/Machine.cc
+  Machine/MachineDBusAdaptor.cc
+  Machine/PCMachine.h
+  Machine/PCMachine.cc
+  Machine/AndroidMachine.h
+  Machine/AndroidMachine.cc
+  Wrappers/InputEmittorWrapper.h
+  Wrappers/InputEmittorWrapper.cc
+  Wrappers/InputGrabberWrapper.h
+  Wrappers/InputGrabberWrapper.cc
+  Wrappers/ConfirmDialogWrapper.h
+  Wrappers/ConfirmDialogWrapper.cc
+  Fuse/FuseClient.h
+  Fuse/FuseClient.cc
+  Fuse/FuseServer.h
+  Fuse/FuseServer.cc
   DisplayBase.h
   DisplayBase.cc
   ClipboardBase.h
@@ -33,6 +31,18 @@ dde_cooperation_daemon_sources = files('''
   X11/Clipboard.h
   X11/Clipboard.cc
 '''.split())
+
+dde_cooperation_daemon_moc_headers = files('''
+  Manager.h
+  ManagerDBusAdaptor.h
+  Machine/Machine.h
+  Machine/MachineDBusAdaptor.h
+'''.split())
+
+dde_cooperation_daemon_sources += qt5.preprocess(
+  qresources: [],
+  moc_headers: dde_cooperation_daemon_moc_headers,
+)
 
 dde_cooperation_daemon_sources += common_sources + [protocol] + [ipc_protocol]
 
@@ -63,8 +73,6 @@ executable('dde-cooperation-daemon',
     xcb_randr,
     xcb_xinput,
     xcb_xfixes,
-    glibmm,
-    giomm,
     protobuf,
     qt5dep,
     dtk_core,

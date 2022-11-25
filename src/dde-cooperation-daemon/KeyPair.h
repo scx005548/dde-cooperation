@@ -1,5 +1,5 @@
-#ifndef DDE_COOPERATION_DAEMON_KEY_PAIR_H
-#define DDE_COOPERATION_DAEMON_KEY_PAIR_H
+#ifndef KEYPAIR_H
+#define KEYPAIR_H
 
 #include <filesystem>
 
@@ -26,4 +26,4 @@ private:
     bool generateNewKey();
 };
 
-#endif // !DDE_COOPERATION_DAEMON_KEY_PAIR_H
+#endif // !KEYPAIR_H

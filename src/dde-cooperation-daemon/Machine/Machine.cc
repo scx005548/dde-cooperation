@@ -5,12 +5,13 @@
 #include <DDBusSender>
 
 #include "Manager.h"
+#include "MachineDBusAdaptor.h"
 #include "ClipboardBase.h"
-#include "InputEmittorWrapper.h"
-#include "FuseServer.h"
-#include "FuseClient.h"
+#include "Wrappers/InputEmittorWrapper.h"
+#include "Wrappers/ConfirmDialogWrapper.h"
+#include "Fuse/FuseServer.h"
+#include "Fuse/FuseClient.h"
 #include "utils/message_helper.h"
-#include "ConfirmDialogWrapper.h"
 
 #include "protocol/message.pb.h"
 
@@ -20,6 +21,8 @@
 #include "uvxx/Addr.h"
 #include "uvxx/Async.h"
 #include "uvxx/Process.h"
+
+#include "utils/net.h"
 
 namespace fs = std::filesystem;
 
@@ -33,85 +36,36 @@ static const uint64_t U25s = 25 * 1000;
 Machine::Machine(Manager *manager,
                  ClipboardBase *clipboard,
                  const std::shared_ptr<uvxx::Loop> &uvLoop,
-                 Glib::RefPtr<DBus::Service> service,
+                 QDBusConnection bus,
                  uint32_t id,
                  const fs::path &dataDir,
-                 const Glib::ustring &ip,
+                 const std::string &ip,
                  uint16_t port,
                  const DeviceInfo &sp)
-    : m_manager(manager)
+    : m_bus(bus)
+    , m_manager(manager)
+    , m_dbusAdaptor(new MachineDBusAdaptor(m_manager, this, m_bus, uvLoop))
     , m_clipboard(clipboard)
     , m_dataDir(dataDir)
     , m_mountpoint(m_dataDir / "mp")
-    , m_path(Glib::ustring::compose("/com/deepin/Cooperation/Machine/%1", id))
-    , m_service(service)
-    , m_interface(new DBus::Interface("com.deepin.Cooperation.Machine"))
-    , m_methodPair(new DBus::Method("Pair", DBus::Method::warp(this, &Machine::pair)))
-    , m_methodDisconnect(
-          new DBus::Method("Disconnect", DBus::Method::warp(this, &Machine::disconnect)))
-    , m_methodSendFile(new DBus::Method("SendFile",
-                                        DBus::Method::warp(this, &Machine::sendFile),
-                                        {{"filepath", "s"}}))
-    , m_methodRequestCooperate(
-          new DBus::Method("RequestCooperate",
-                           DBus::Method::warp(this, &Machine::requestCooperate)))
-    , m_methodStopCooperation(
-          new DBus::Method("StopCooperation", DBus::Method::warp(this, &Machine::stopCooperation)))
-    , m_methodSetFlowDirection(new DBus::Method("SetFlowDirection",
-                                                DBus::Method::warp(this, &Machine::setFlowDirection),
-                                                {{"direction", "q"}}))
-    , m_propertyIP(new DBus::Property("IP", "s", DBus::Property::warp(this, &Machine::getIP)))
+    , m_path(QString("/org/deepin/dde/Cooperation1/Machine/%1").arg(id))
     , m_port(port)
-    , m_propertyPort(new DBus::Property("Port", "q", DBus::Property::warp(this, &Machine::getPort)))
     , m_uuid(sp.uuid())
-    , m_propertyUUID(new DBus::Property("UUID", "s", DBus::Property::warp(this, &Machine::getUUID)))
     , m_name(sp.name())
-    , m_propertyName(new DBus::Property("Name", "s", DBus::Property::warp(this, &Machine::getName)))
-    , m_paired(false)
-    , m_propertyPaired(
-          new DBus::Property("Paired", "b", DBus::Property::warp(this, &Machine::getPaired)))
+    , m_connected(false)
     , m_os(sp.os())
-    , m_propertyOS(new DBus::Property("OS", "u", DBus::Property::warp(this, &Machine::getOS)))
     , m_compositor(sp.compositor())
-    , m_propertyCompositor(new DBus::Property("Compositor",
-                                              "u",
-                                              DBus::Property::warp(this, &Machine::getCompositor)))
     , m_deviceSharing(false)
-    , m_propertyCooperating(
-          new DBus::Property("Cooperating",
-                             "b",
-                             DBus::Property::warp(this, &Machine::getCooperating)))
     , m_direction(FLOW_DIRECTION_RIGHT)
-    , m_propertyDirection(
-          new DBus::Property("Direction", "q", DBus::Property::warp(this, &Machine::getDirection)))
-    , m_propertySharedClipboard(
-          new DBus::Property("SharedClipboard", "b", DBus::Property::warp(this, &Machine::getSharedClipboardStatus)))
     , m_pingTimer(std::make_shared<uvxx::Timer>(uvLoop, uvxx::memFunc(this, &Machine::ping)))
     , m_offlineTimer(
           std::make_shared<uvxx::Timer>(uvLoop, uvxx::memFunc(this, &Machine::onOffline)))
     , m_mounted(false)
     , m_uvLoop(uvLoop)
     , m_async(std::make_shared<uvxx::Async>(uvLoop))
-    , m_object(new DBus::Object(m_path))
     , m_ip(ip) {
 
-    m_interface->exportMethod(m_methodPair);
-    m_interface->exportMethod(m_methodDisconnect);
-    m_interface->exportMethod(m_methodSendFile);
-    m_interface->exportMethod(m_methodRequestCooperate);
-    m_interface->exportMethod(m_methodStopCooperation);
-    m_interface->exportMethod(m_methodSetFlowDirection);
-    m_interface->exportProperty(m_propertyIP);
-    m_interface->exportProperty(m_propertyPort);
-    m_interface->exportProperty(m_propertyUUID);
-    m_interface->exportProperty(m_propertyName);
-    m_interface->exportProperty(m_propertyPaired);
-    m_interface->exportProperty(m_propertyOS);
-    m_interface->exportProperty(m_propertyCompositor);
-    m_interface->exportProperty(m_propertyCooperating);
-    m_interface->exportProperty(m_propertyDirection);
-    m_interface->exportProperty(m_propertySharedClipboard);
-    m_object->exportInterface(m_interface);
+    QDBusConnection::sessionBus();
 
     m_inputEmittors.emplace(
         std::make_pair(InputDeviceType::KEYBOARD,
@@ -129,6 +83,9 @@ Machine::Machine(Manager *manager,
 
     m_pingTimer->start(U10s);
     m_offlineTimer->oneshot(U25s);
+
+    m_bus.registerObject(m_path, this);
+    m_dbusAdaptor->updateUUID(QString::fromStdString(m_uuid));
 }
 
 Machine::~Machine() {
@@ -141,74 +98,51 @@ Machine::~Machine() {
         m_manager->onStopDeviceSharing();
     }
 
-    m_service->unexportObject(m_object->path());
-}
-
-void Machine::init() {
-    m_service->exportObject(m_object);
+    m_bus.unregisterObject(m_path);
 }
 
 bool Machine::isPcMachine() const {
-    return m_os == DEVICE_OS_UOS || m_os == DEVICE_OS_LINUX
-           || m_os == DEVICE_OS_WINDOWS || m_os == DEVICE_OS_MACOS;
+    return m_os == DEVICE_OS_UOS || m_os == DEVICE_OS_LINUX || m_os == DEVICE_OS_WINDOWS ||
+           m_os == DEVICE_OS_MACOS;
 }
 
 bool Machine::isAndroid() const {
     return m_os == DEVICE_OS_ANDROID;
 }
 
-void Machine::pair([[maybe_unused]] const Glib::VariantContainerBase &args,
-                   const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
-    if (m_paired) {
-        invocation->return_value(Glib::VariantContainerBase{});
-        return;
-    }
+void Machine::connect() {
+    m_conn = std::make_shared<uvxx::TCP>(m_uvLoop);
 
-    if ((isPcMachine() && m_manager->hasPcMachinePaired())
-        || (isAndroid() && m_manager->hasAndroidPaired())) {
-        // TODO tips
-        invocation->return_error(
-            Gio::DBus::Error{Gio::DBus::Error::ACCESS_DENIED, "This machine is cooperating with another machine!"});
-        return;
-    }
+    m_conn->onConnected([this]() {
+        spdlog::info("connected");
 
-    m_async->wake([this, invocation]() {
-        m_conn = std::make_shared<uvxx::TCP>(m_uvLoop);
+        initConnection();
+        m_conn->startRead();
 
-        m_conn->onConnected([this, invocation]() {
-            spdlog::info("connected");
+        m_pingTimer->stop();
+        m_offlineTimer->stop();
 
-            initConnection();
-            m_conn->startRead();
+        Message msg;
+        auto *request = msg.mutable_pairrequest();
+        request->set_key(SCAN_KEY);
+        request->mutable_deviceinfo()->set_uuid(m_manager->uuid());
+        request->mutable_deviceinfo()->set_name(Net::getHostname());
+        request->mutable_deviceinfo()->set_os(DEVICE_OS_LINUX);
+        request->mutable_deviceinfo()->set_compositor(COMPOSITOR_X11);
 
-            m_pingTimer->stop();
-            m_offlineTimer->stop();
-
-            Message msg;
-            auto *request = msg.mutable_pairrequest();
-            request->set_key(SCAN_KEY);
-            request->mutable_deviceinfo()->set_uuid(m_manager->uuid());
-            request->mutable_deviceinfo()->set_name(Net::getHostname());
-            request->mutable_deviceinfo()->set_os(DEVICE_OS_LINUX);
-            request->mutable_deviceinfo()->set_compositor(COMPOSITOR_X11);
-
-            sendMessage(msg);
-
-            invocation->return_value(Glib::VariantContainerBase{});
-        });
-        m_conn->onConnectFailed(
-            [this, invocation]([[maybe_unused]] const std::string &title, const std::string &msg) {
-                spdlog::info("connect failed: {}", msg);
-                invocation->return_error(Gio::DBus::Error{Gio::DBus::Error::FAILED, msg});
-
-                // TODO tips and send scan
-                m_manager->ping(m_ip);
-            });
-        m_conn->connect(uvxx::IPv4Addr::create(m_ip, m_port));
+        sendMessage(msg);
     });
+    m_conn->onConnectFailed(
+        [this]([[maybe_unused]] const std::string &title, const std::string &msg) {
+            spdlog::info("connect failed: {}", msg);
+
+            // TODO tips and send scan
+            m_manager->ping(m_ip);
+        });
+    m_conn->connect(uvxx::IPv4Addr::create(m_ip, m_port));
 }
 
-void Machine::updateMachineInfo(const Glib::ustring &ip, uint16_t port, const DeviceInfo &devInfo) {
+void Machine::updateMachineInfo(const std::string &ip, uint16_t port, const DeviceInfo &devInfo) {
     m_ip = ip;
     m_port = port;
     m_name = devInfo.name();
@@ -231,91 +165,29 @@ void Machine::onPair(const std::shared_ptr<uvxx::TCP> &sock) {
         uvxx::memFunc(this, &Machine::receivedUserConfirm));
 }
 
-void Machine::disconnect([[maybe_unused]] const Glib::VariantContainerBase &args,
-                         const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
-    if (!m_conn) {
-        invocation->return_error(
-            Gio::DBus::Error{Gio::DBus::Error::ACCESS_DENIED, "not connected"});
-        return;
-    }
-
-    m_async->wake([this, &invocation]() {
-        m_conn->close();
-
-        invocation->return_value(Glib::VariantContainerBase{});
-    });
+void Machine::disconnect() {
+    m_conn->close();
 }
 
-void Machine::sendFile(const Glib::VariantContainerBase &args,
-                       const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
-    Glib::Variant<Glib::ustring> filepath;
-    args.get_child(filepath, 0);
-
-    std::vector<Glib::ustring> files;
-    files.push_back(filepath.get());
-    sendFiles(files);
-
-    invocation->return_value(Glib::VariantContainerBase{});
+void Machine::requestDeviceSharing() {
+    Message msg;
+    msg.mutable_devicesharingstartrequest();
+    sendMessage(msg);
 }
 
-void Machine::requestCooperate(
-    [[maybe_unused]] const Glib::VariantContainerBase &args,
-    const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
-    if (m_deviceSharing) {
-        invocation->return_value(Glib::VariantContainerBase{});
-        return;
-    }
-
-    if (!m_conn) {
-        invocation->return_error(
-            Gio::DBus::Error{Gio::DBus::Error::ACCESS_DENIED, "connect first"});
-        return;
-    }
-
-    m_async->wake([this]() {
-        Message msg;
-        msg.mutable_devicesharingstartrequest();
-        sendMessage(msg);
-    });
-
-    invocation->return_value(Glib::VariantContainerBase{});
-}
-
-void Machine::stopCooperation(
-    [[maybe_unused]] const Glib::VariantContainerBase &args,
-    const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
-    invocation->return_value(Glib::VariantContainerBase{});
-
-    if (!m_deviceSharing) {
-        return;
-    }
-
-    m_async->wake([this]() {
-        Message msg;
-        msg.mutable_devicesharingstoprequest();
-        sendMessage(msg);
-    });
+void Machine::stopDeviceSharing() {
+    Message msg;
+    msg.mutable_devicesharingstoprequest();
+    sendMessage(msg);
 
     stopDeviceSharingAux();
 }
 
-void Machine::setFlowDirection(const Glib::VariantContainerBase &args,
-                               const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
-    Glib::Variant<uint16_t> direction;
-    args.get_child(direction, 0);
-
-    int iDirection = direction.get();
-    if (iDirection > FLOW_DIRECTION_LEFT || iDirection < 0) {
-        invocation->return_error(
-            Gio::DBus::Error{Gio::DBus::Error::FAILED, "direction param has error, top-0,right-1,bottom-2,left-3."});
-    }
-
-    if (m_direction != iDirection) {
-        m_direction = (FlowDirection)iDirection;
+void Machine::setFlowDirection(FlowDirection direction) {
+    if (m_direction != direction) {
+        m_direction = (FlowDirection)direction;
         sendFlowDirectionNtf();
     }
-
-    invocation->return_value(Glib::VariantContainerBase{});
 }
 
 void Machine::ping() {
@@ -333,66 +205,16 @@ void Machine::initConnection() {
     m_conn->keepalive(true, 20);
 }
 
-void Machine::getIP(Glib::VariantBase &property,
-                    [[maybe_unused]] const Glib::ustring &propertyName) const {
-    property = Glib::Variant<Glib::ustring>::create(m_ip);
-}
-
-void Machine::getPort(Glib::VariantBase &property,
-                      [[maybe_unused]] const Glib::ustring &propertyName) const {
-    property = Glib::Variant<uint16_t>::create(m_port);
-}
-
-void Machine::getUUID(Glib::VariantBase &property,
-                      [[maybe_unused]] const Glib::ustring &propertyName) const {
-    property = Glib::Variant<Glib::ustring>::create(m_uuid);
-}
-
-void Machine::getName(Glib::VariantBase &property,
-                      [[maybe_unused]] const Glib::ustring &propertyName) const {
-    property = Glib::Variant<Glib::ustring>::create(m_name);
-}
-
-void Machine::getPaired(Glib::VariantBase &property,
-                        [[maybe_unused]] const Glib::ustring &propertyName) const {
-    property = Glib::Variant<bool>::create(m_paired);
-}
-
-void Machine::getOS(Glib::VariantBase &property,
-                    [[maybe_unused]] const Glib::ustring &propertyName) const {
-    property = Glib::Variant<uint32_t>::create(m_os);
-}
-
-void Machine::getCompositor(Glib::VariantBase &property,
-                            [[maybe_unused]] const Glib::ustring &propertyName) const {
-    property = Glib::Variant<uint32_t>::create(m_compositor);
-}
-
-void Machine::getCooperating(Glib::VariantBase &property,
-                             [[maybe_unused]] const Glib::ustring &propertyName) const {
-    property = Glib::Variant<bool>::create(m_deviceSharing);
-}
-
-void Machine::getDirection(Glib::VariantBase &property,
-                           [[maybe_unused]] const Glib::ustring &propertyName) const {
-    property = Glib::Variant<uint16_t>::create(m_direction);
-}
-
-void Machine::getSharedClipboardStatus(Glib::VariantBase &property,
-                                       [[maybe_unused]] const Glib::ustring &propertyName) const {
-    property = Glib::Variant<bool>::create(m_sharedClipboard);
-}
-
 void Machine::handleDisconnectedAux() {
     spdlog::info("disconnected");
 
-    if (m_paired) {
+    if (m_connected) {
         m_manager->onStopDeviceSharing();
 
         m_deviceSharing = false;
-        m_propertyCooperating->emitChanged(Glib::Variant<bool>::create(m_deviceSharing));
-        m_paired = false;
-        m_propertyPaired->emitChanged(Glib::Variant<bool>::create(m_paired));
+        m_dbusAdaptor->updateDeviceSharing(m_deviceSharing);
+        m_connected = false;
+        m_dbusAdaptor->updateConnected(m_connected);
     }
 
     if (m_fuseClient) {
@@ -537,13 +359,13 @@ void Machine::handlePairResponseAux(const PairResponse &resp) {
         // handle not agree
         m_conn->close();
         // rejected, need notify,ui can reset connecting status
-        m_paired = false;
-        m_propertyPaired->emitChanged(Glib::Variant<bool>::create(m_paired));
+        m_connected = false;
+        m_dbusAdaptor->updateConnected(m_connected);
         return;
     }
 
-    m_paired = true;
-    m_propertyPaired->emitChanged(Glib::Variant<bool>::create(m_paired));
+    m_connected = true;
+    m_dbusAdaptor->updateConnected(m_connected);
 
     sendServiceStatusNotification();
     handleConnected();
@@ -566,12 +388,12 @@ void Machine::handleDeviceSharingStartRequest() {
             m_manager->onStartDeviceSharing(wptr, true);
 
             m_deviceSharing = true;
-            m_propertyCooperating->emitChanged(Glib::Variant<bool>::create(m_deviceSharing));
+            m_dbusAdaptor->updateDeviceSharing(m_deviceSharing);
 
             m_manager->machineCooperated(m_uuid);
 
             m_direction = FLOW_DIRECTION_LEFT;
-            m_propertyDirection->emitChanged(Glib::Variant<uint16_t>::create(m_direction));
+            m_dbusAdaptor->updateDirection(m_direction);
         }
     });
 }
@@ -582,12 +404,12 @@ void Machine::handleDeviceSharingStartResponse(const DeviceSharingStartResponse 
     }
 
     m_deviceSharing = true;
-    m_propertyCooperating->emitChanged(Glib::Variant<bool>::create(m_deviceSharing));
+    m_dbusAdaptor->updateDeviceSharing(m_deviceSharing);
 
     m_manager->machineCooperated(m_uuid);
 
     m_direction = FLOW_DIRECTION_RIGHT;
-    m_propertyDirection->emitChanged(Glib::Variant<uint16_t>::create(m_direction));
+    m_dbusAdaptor->updateDirection(m_direction);
 
     sendFlowDirectionNtf();
 
@@ -685,15 +507,14 @@ void Machine::handleFsSendFileRequest(const FsSendFileRequest &req) {
     fssendfileresponse->set_accepted(true);
     sendMessage(msg);
 
-    std::string storagePath = m_manager->fileStoragePath();
+    QString storagePath = m_manager->fileStoragePath();
     std::string reqPath = req.path();
     if (!reqPath.empty() && reqPath[0] != '/') {
         reqPath = "/" + reqPath;
     }
     std::string filePath = m_mountpoint.string() + reqPath;
     auto process = std::make_shared<uvxx::Process>(m_uvLoop, "/bin/cp");
-    process->args = {"-r", filePath, storagePath};
-    process->onExit([this, storagePath, serial = req.serial(), path = req.path(), process](
+    process->onExit([this, storagePath = storagePath.toStdString(), serial = req.serial(), path = req.path(), process](
                         int64_t exit_status,
                         [[maybe_unused]] int term_signal) {
         Message msg;
@@ -724,7 +545,8 @@ void Machine::handleClipboardNotify(const ClipboardNotify &notify) {
     std::vector<std::string> targets{targetsp.cbegin(), targetsp.cend()};
 
     // other pc machine need fill up text/uri-list target
-    if (m_os != DEVICE_OS_UOS && std::find(targets.begin(), targets.end(), clipboardFileTarget) != targets.end()) {
+    if (m_os != DEVICE_OS_UOS &&
+        std::find(targets.begin(), targets.end(), clipboardFileTarget) != targets.end()) {
         targets.emplace_back(uriListTarget);
     }
 
@@ -782,14 +604,16 @@ void Machine::handleClipboardGetContentResponse(const ClipboardGetContentRespons
         while (!tempStream.eof()) {
             std::getline(tempStream, filePath, '\n');
             if (!filePath.empty() && filePath.rfind(fileSchema, 0) == 0) { // starts with 'file://'
-                filePath = std::string(filePath.data() + fileSchema.size(), filePath.size() - fileSchema.size());
+                filePath = std::string(filePath.data() + fileSchema.size(),
+                                       filePath.size() - fileSchema.size());
                 break;
             }
         }
 
         if (!filePath.empty()) {
             spdlog::info("pc machine fill up text/uri-list target:{}", filePath);
-            m_clipboard->updateTargetContent(uriListTarget, std::vector<char>(filePath.begin(), filePath.end()));
+            m_clipboard->updateTargetContent(uriListTarget,
+                                             std::vector<char>(filePath.begin(), filePath.end()));
         }
     }
 
@@ -837,48 +661,11 @@ void Machine::readTarget(const std::string &target) {
     sendMessage(msg);
 }
 
-void Machine::handleAcceptSendFile(
-    bool accepted,
-    [[maybe_unused]] const std::map<Glib::ustring, Glib::VariantBase> &hint,
-    [[maybe_unused]] uint32_t serial) {
-
-    m_async->wake([this, accepted, hint, serial]() {
-        Message msg;
-
-        FsSendFileResponse *resp = msg.mutable_fssendfileresponse();
-        resp->set_accepted(accepted);
-        resp->set_serial(serial);
-        sendMessage(msg);
-
-        if (!m_mounted) {
-            FsRequest *req = msg.mutable_fsrequest();
-            req->set_path("/");
-            sendMessage(msg);
-        }
-    });
-}
-
-void Machine::handleAcceptFilesystem(bool accepted,
-                                     const std::map<Glib::ustring, Glib::VariantBase> &hint,
-                                     uint32_t serial) {
-    m_async->wake([this, accepted, hint, serial]() {
-        auto port = *static_cast<const uint16_t *>(hint.at("port").get_data());
-
-        Message msg;
-        FsResponse *resp = msg.mutable_fsresponse();
-        resp->set_accepted(accepted);
-        resp->set_port(port);
-        resp->set_serial(serial);
-
-        sendMessage(msg);
-    });
-}
-
 void Machine::stopDeviceSharingAux() {
     m_manager->onStopDeviceSharing();
 
     m_deviceSharing = false;
-    m_propertyCooperating->emitChanged(Glib::Variant<bool>::create(m_deviceSharing));
+    m_dbusAdaptor->updateDeviceSharing(m_deviceSharing);
 }
 
 void Machine::receivedUserConfirm(uvxx::Buffer &buff) {
@@ -909,8 +696,8 @@ void Machine::receivedUserConfirm(uvxx::Buffer &buff) {
         m_pingTimer->stop();
         m_offlineTimer->stop();
 
-        m_paired = true;
-        m_propertyPaired->emitChanged(Glib::Variant<bool>::create(m_paired));
+        m_connected = true;
+        m_dbusAdaptor->updateConnected(m_connected);
 
         sendServiceStatusNotification();
         handleConnected();
@@ -945,12 +732,12 @@ void Machine::sendReceivedFilesSystemNtf(const std::string &path, bool isSuccess
         .call();
 }
 
-void Machine::sendFiles(const std::vector<Glib::ustring> &filePaths) {
+void Machine::sendFiles(const QStringList &filePaths) {
     m_async->wake([this, filePaths]() {
-        for (const Glib::ustring &filePath : filePaths) {
+        for (const QString &filePath : filePaths) {
             Message msg;
             FsSendFileRequest *send = msg.mutable_fssendfilerequest();
-            send->set_path(std::string(filePath));
+            send->set_path(filePath.toStdString());
             sendMessage(msg);
         }
     });

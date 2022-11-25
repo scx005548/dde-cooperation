@@ -1,11 +1,8 @@
-#ifndef DDE_COOPERATION_DAEMON_FUSE_SERVER_H
-#define DDE_COOPERATION_DAEMON_FUSE_SERVER_H
+#ifndef FUSE_FUSESERVER_H
+#define FUSE_FUSESERVER_H
 
 #include <filesystem>
 #include <thread>
-
-#include <glibmm.h>
-#include <giomm.h>
 
 #include "protocol/fs.pb.h"
 
@@ -43,4 +40,4 @@ private:
     void methodReaddir(const FsMethodReadDirRequest &req, FsMethodReadDirResponse *resp);
 };
 
-#endif // !DDE_COOPERATION_DAEMON_FUSE_SERVER_H
+#endif // !FUSE_FUSESERVER_H

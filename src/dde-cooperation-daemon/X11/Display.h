@@ -1,5 +1,5 @@
-#ifndef DDE_COOPERATION_DEAMON_X11_DISPLAY_H
-#define DDE_COOPERATION_DEAMON_X11_DISPLAY_H
+#ifndef X11_DISPLAY_H
+#define X11_DISPLAY_H
 
 #include <memory>
 
@@ -32,4 +32,4 @@ private:
 
 } // namespace X11
 
-#endif // !DDE_COOPERATION_DEAMON_X11_DISPLAY_H
+#endif // !X11_DISPLAY_H

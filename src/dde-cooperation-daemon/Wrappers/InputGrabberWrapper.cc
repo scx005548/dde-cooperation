@@ -4,9 +4,9 @@
 #include "uvxx/Pipe.h"
 
 #include "config.h"
-#include "utils/message_helper.h"
 #include "Manager.h"
-#include "Machine.h"
+#include "Machine/Machine.h"
+#include "utils/message_helper.h"
 #include "protocol/ipc_message.pb.h"
 
 InputGrabberWrapper::InputGrabberWrapper(Manager *manager,

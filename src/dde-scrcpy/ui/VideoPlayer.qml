@@ -151,7 +151,7 @@ Rectangle {
     }
 
     Shortcut {
-        sequence: [StandardKey.Copy, StandardKey.Cut]
+        sequences: [StandardKey.Copy, StandardKey.Cut]
 
         onActivated: device.getClipboard()
     }

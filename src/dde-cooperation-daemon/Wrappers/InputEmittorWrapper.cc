@@ -2,11 +2,11 @@
 
 #include "config.h"
 #include "utils/message_helper.h"
+#include "protocol/ipc_message.pb.h"
 
 #include "uvxx/Pipe.h"
 #include "uvxx/Process.h"
 
-#include "protocol/ipc_message.pb.h"
 
 InputEmittorWrapper::InputEmittorWrapper(const std::weak_ptr<Machine> &machine,
                                          const std::shared_ptr<uvxx::Loop> &uvLoop,

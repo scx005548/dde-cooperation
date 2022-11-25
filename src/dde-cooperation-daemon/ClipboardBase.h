@@ -1,5 +1,5 @@
-#ifndef DDE_COOPERATION_DAEMON_CLIPBOARDBASE_H
-#define DDE_COOPERATION_DAEMON_CLIPBOARDBASE_H
+#ifndef CLIPBOARDBASE_H
+#define CLIPBOARDBASE_H
 
 #include <string>
 #include <vector>
@@ -34,4 +34,4 @@ protected:
 private:
 };
 
-#endif // !DDE_COOPERATION_DAEMON_CLIPBOARDBASE_H
+#endif // !CLIPBOARDBASE_H

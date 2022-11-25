@@ -9,25 +9,22 @@
 #include <fmt/core.h>
 #include <spdlog/spdlog.h>
 
+#include <QDebug>
+
 #include "uvxx/Loop.h"
 #include "uvxx/TCP.h"
 #include "uvxx/UDP.h"
 #include "uvxx/Addr.h"
 #include "uvxx/Async.h"
-#include "uvxx/Process.h"
-#include "uvxx/Pipe.h"
-#include "uvxx/Pipe.h"
 
-#include "config.h"
-#include "Machine.h"
-#include "PCMachine.h"
-#include "AndroidMachine.h"
-#include "Request.h"
+#include "Machine/Machine.h"
+#include "Machine/PCMachine.h"
+#include "Machine/AndroidMachine.h"
 #include "X11/Display.h"
 #include "X11/Clipboard.h"
 #include "utils/message_helper.h"
+#include "utils/net.h"
 #include "protocol/message.pb.h"
-#include "protocol/ipc_message.pb.h"
 
 namespace fs = std::filesystem;
 
@@ -35,86 +32,21 @@ const static fs::path inputDevicePath = "/dev/input";
 const static QString dConfigAppID = "org.deepin.cooperation";
 const static QString dConfigName = "org.deepin.cooperation";
 
-static fs::path getExecutablePath(uint32_t pid) {
-    fs::path exeFilePath = fmt::format("/proc/{}/exe", pid);
-    if (!fs::exists(exeFilePath) || !fs::is_symlink(exeFilePath)) {
-        return "";
-    }
-
-    return fs::read_symlink(exeFilePath);
-}
-
-static bool isSubDir(fs::path p, fs::path root) {
-    for (;;) {
-        if (p == root) {
-            return true;
-        }
-        if (!p.has_parent_path()) {
-            return false;
-        }
-        p = p.parent_path();
-    }
-
-    return false;
-}
-
-Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesystem::path &dataDir)
-    : m_dataDir(dataDir)
+Manager::Manager(const std::filesystem::path &dataDir)
+    : m_bus(QDBusConnection::sessionBus())
+    , m_dbusAdaptor(new ManagerDBusAdaptor(this, m_bus))
+    , m_dataDir(dataDir)
     , m_mountRoot(m_dataDir / "mr")
     , m_lastMachineIndex(0)
     , m_deviceSharingSwitch(true)
     , m_lastRequestId(0)
-    , m_uvLoop(uvLoop)
+    , m_uvLoop(uvxx::Loop::defaultLoop())
     , m_async(std::make_shared<uvxx::Async>(m_uvLoop))
     , m_socketScan(std::make_shared<uvxx::UDP>(m_uvLoop))
     , m_listenPair(std::make_shared<uvxx::TCP>(m_uvLoop))
-    , m_bus(Gio::DBus::Connection::get_sync(Gio::DBus::BusType::BUS_TYPE_SESSION))
-    , m_service(new DBus::Service{"com.deepin.Cooperation", Gio::DBus::BusType::BUS_TYPE_SESSION})
-    , m_object(new DBus::Object("/com/deepin/Cooperation"))
-    , m_interface(new DBus::Interface("com.deepin.Cooperation"))
-    , m_methodGetUUID(new DBus::Method("GetUUID",
-                                       DBus::Method::warp(this, &Manager::getUUID),
-                                       {},
-                                       {{"uuid", "s"}}))
-    , m_methodScan(new DBus::Method("Scan", DBus::Method::warp(this, &Manager::scan)))
-    , m_methodKnock(new DBus::Method("Knock",
-                                     DBus::Method::warp(this, &Manager::knock),
-                                     {{"ip", "s"}, {"port", "i"}}))
-    , m_methodSendFile(new DBus::Method("SendFile",
-                                        DBus::Method::warp(this, &Manager::sendFile),
-                                        {{"filePath", "as"}, {"osType", "i"}}))
-    , m_methodSetFileStoragePath(new DBus::Method("SetFilesStoragePath",
-                                                DBus::Method::warp(this, &Manager::setFileStoragePath),
-                                                {{"path", "s"}}))
-    , m_methodOpenSharedClipboard(new DBus::Method("OpenSharedClipboard",
-                                                   DBus::Method::warp(this, &Manager::openSharedClipboard),
-                                                   {{"on", "b"}}))
-    , m_methodOpenSharedDevices(new DBus::Method("OpenSharedDevices",
-                                                 DBus::Method::warp(this, &Manager::openSharedDevices),
-                                                 {{"on", "b"}}))
-    , m_propertyMachines(
-          new DBus::Property("Machines", "ao", DBus::Property::warp(this, &Manager::getMachines)))
-    , m_propertyDeviceSharingSwitch(
-          new DBus::Property("DeviceSharingSwitch",
-                             "b",
-                             DBus::Property::warp(this, &Manager::getDeviceSharingSwitch),
-                             DBus::Property::warp(this, &Manager::setDeviceSharingSwitch)))
-    , m_propertyFileStoragePath(new DBus::Property("FilesStoragePath", "s",
-                                                   DBus::Property::warp(this, &Manager::getFileStoragePath)))
-    , m_propertySharedClipboard(new DBus::Property("SharedClipboard", "b",
-                                                   DBus::Property::warp(this, &Manager::getSharedClipboardStatus)))
-    , m_propertySharedDevices(new DBus::Property("SharedDevices", "b",
-                                                 DBus::Property::warp(this, &Manager::getSharedDevicesStatus)))
-    , m_propertyCooperatedMachines(new DBus::Property("CooperatedMachines", "ao",
-                                                      DBus::Property::warp(this, &Manager::getCooperatedMachines)))
-    , m_dbusProxy(Gio::DBus::Proxy::Proxy::create_sync(m_bus,
-                                                       "org.freedesktop.DBus",
-                                                       "/org/freedesktop/DBus",
-                                                       "org.freedesktop.DBus"))
-    , m_powersaverProxy(Gio::DBus::Proxy::Proxy::create_sync(m_bus,
-                                                             "org.freedesktop.ScreenSaver",
-                                                             "/org/freedesktop/ScreenSaver",
-                                                             "org.freedesktop.ScreenSaver"))
+    , m_powersaverProxy("org.freedesktop.ScreenSaver",
+                        "/org/freedesktop/ScreenSaver",
+                        "org.freedesktop.ScreenSaver")
     , m_keypair(m_dataDir, KeyPair::KeyType::ED25519)
     , m_dConfig(DConfig::create(dConfigAppID, dConfigName)) {
     ensureDataDirExists();
@@ -125,23 +57,6 @@ Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesyste
     initCooperatedMachines();
 
     m_keypair.load();
-
-    m_service->registerService();
-    m_interface->exportMethod(m_methodGetUUID);
-    m_interface->exportMethod(m_methodScan);
-    m_interface->exportMethod(m_methodKnock);
-    m_interface->exportMethod(m_methodSendFile);
-    m_interface->exportMethod(m_methodSetFileStoragePath);
-    m_interface->exportMethod(m_methodOpenSharedClipboard);
-    m_interface->exportMethod(m_methodOpenSharedDevices);
-    m_interface->exportProperty(m_propertyMachines);
-    m_interface->exportProperty(m_propertyDeviceSharingSwitch);
-    m_interface->exportProperty(m_propertyFileStoragePath);
-    m_interface->exportProperty(m_propertySharedClipboard);
-    m_interface->exportProperty(m_propertySharedDevices);
-    m_interface->exportProperty(m_propertyCooperatedMachines);
-    m_object->exportInterface(m_interface);
-    m_service->exportObject(m_object);
 
     m_socketScan->onSendFailed(uvxx::memFunc(this, &Manager::handleSocketError));
     m_socketScan->onReceived(uvxx::memFunc(this, &Manager::handleReceivedSocketScan));
@@ -175,13 +90,22 @@ Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesyste
                            std::make_shared<InputGrabberWrapper>(this, m_uvLoop, entry.path())));
     }
 
-    scanAux();
+    m_uvThread = std::thread([this] () {
+        m_uvLoop->run();
+    });
+
+    scan();
+
+    m_bus.registerService(QStringLiteral("org.deepin.dde.Cooperation1"));
+    m_bus.registerObject(QStringLiteral("/org/deepin/dde/Cooperation1"), this);
 }
 
 Manager::~Manager() {
     m_async->close();
     m_socketScan->close();
     m_listenPair->close();
+
+    m_uvLoop->stop();
 }
 
 void Manager::ensureDataDirExists() {
@@ -232,30 +156,6 @@ bool Manager::isValidUUID(const std::string &str) const noexcept {
     return res == 0;
 }
 
-void Manager::getUUID([[maybe_unused]] const Glib::VariantContainerBase &args,
-                      const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
-    Glib::ustring sender = invocation->get_sender();
-
-    auto params = Glib::Variant<std::vector<Glib::VariantBase>>::create_tuple({
-        Glib::Variant<Glib::ustring>::create(sender),
-    });
-    auto res = m_dbusProxy->call_sync("GetConnectionUnixProcessID", params);
-    Glib::Variant<uint32_t> vpid;
-    res.get_child(vpid);
-    uint32_t pid = vpid.get();
-
-    auto callerPath = getExecutablePath(pid);
-    if (!isSubDir(callerPath, EXECUTABLE_INSTALL_DIR)) {
-        invocation->return_error(
-            Gio::DBus::Error{Gio::DBus::Error::ACCESS_DENIED, "Access Denied"});
-        return;
-    }
-
-    invocation->return_value(Glib::Variant<std::vector<Glib::VariantBase>>::create_tuple({
-        Glib::Variant<Glib::ustring>::create(m_uuid),
-    }));
-}
-
 void Manager::initFileStoragePath() {
     if (!m_dConfig || !m_dConfig->isValid() || !m_dConfig->keyList().contains("filesStoragePath")) {
         spdlog::warn("dConfig is invalid or does not has filesStoragePath key!");
@@ -265,7 +165,7 @@ void Manager::initFileStoragePath() {
 
     QString existedPath = m_dConfig->value("filesStoragePath").toString();
     if (!existedPath.isEmpty()) {
-        m_fileStoragePath = existedPath.toStdString();
+        m_fileStoragePath = existedPath;
         return;
     }
 
@@ -293,7 +193,8 @@ void Manager::initSharedDevicesStatus() {
 }
 
 void Manager::initCooperatedMachines() {
-    if (!m_dConfig || !m_dConfig->isValid() || !m_dConfig->keyList().contains("cooperatedMachineIds")) {
+    if (!m_dConfig || !m_dConfig->isValid() ||
+        !m_dConfig->keyList().contains("cooperatedMachineIds")) {
         spdlog::warn("dConfig is invalid or does not has cooperatedMachineIds key!");
         return;
     }
@@ -301,105 +202,42 @@ void Manager::initCooperatedMachines() {
     m_cooperatedMachines = m_dConfig->value("cooperatedMachineIds").toStringList();
 }
 
-void Manager::scan([[maybe_unused]] const Glib::VariantContainerBase &args,
-                   const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
-    if (!m_deviceSharingSwitch) {
-        invocation->return_error(
-            Gio::DBus::Error{Gio::DBus::Error::FAILED, "DeviceSharing Switch close!"});
-        spdlog::debug("DeviceSharing Switch close");
-        return;
-    }
-
-    m_async->wake([this]() { scanAux(); });
-
-    invocation->return_value(Glib::VariantContainerBase{});
-}
-
-void Manager::knock(const Glib::VariantContainerBase &args,
-                    const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
-    Glib::Variant<Glib::ustring> ip;
-    Glib::Variant<int> port;
-
-    args.get_child(ip, 0);
-    args.get_child(port, 1);
-
-    m_async->wake([this, ip = std::string(ip.get()), port = port.get()]() { ping(ip, port); });
-
-    invocation->return_value(Glib::VariantContainerBase{});
-}
-
-void Manager::sendFile(const Glib::VariantContainerBase &args,
-                       const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
-    Glib::Variant<std::vector<Glib::ustring>> files;
-    Glib::Variant<int> osType;
-
-    args.get_child(files, 0);
-    args.get_child(osType, 1);
-
-    if (files.get().empty()) {
-        invocation->return_error(
-            Gio::DBus::Error{Gio::DBus::Error::FAILED, "filepath param has error!"});
-        return;
-    }
-
-    int dstOs = osType.get();
-    bool dstIsPcMachine = dstOs == DEVICE_OS_UOS || dstOs == DEVICE_OS_LINUX
-                          || dstOs == DEVICE_OS_WINDOWS || dstOs == DEVICE_OS_MACOS;
+bool Manager::sendFile(const QStringList &files, int osType) noexcept {
+    int dstOs = osType;
+    bool dstIsPcMachine = dstOs == DEVICE_OS_UOS || dstOs == DEVICE_OS_LINUX ||
+                          dstOs == DEVICE_OS_WINDOWS || dstOs == DEVICE_OS_MACOS;
     bool dstIsAndroid = dstOs == DEVICE_OS_ANDROID;
 
     bool hasSend = false;
     for (const auto &v : m_machines) {
         const std::shared_ptr<Machine> &machine = v.second;
-        if (!machine->m_paired) {
+        if (!machine->m_connected) {
             continue;
         }
 
         if ((dstIsPcMachine && machine->isPcMachine()) || (dstIsAndroid && machine->isAndroid())) {
-            machine->sendFiles(files.get());
+            machine->sendFiles(files);
             hasSend = true;
             break;
         }
     }
 
-    if (hasSend) {
-        invocation->return_value(Glib::VariantContainerBase{});
-    } else {
-        invocation->return_error(
-            Gio::DBus::Error{Gio::DBus::Error::FAILED, "Target machine not found!"});
-    }
+    return hasSend;
 }
 
-void Manager::setFileStoragePath(const Glib::VariantContainerBase &args,
-                               const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
-    Glib::Variant<Glib::ustring> path;
-    args.get_child(path, 0);
-
-    std::string filePath = std::string(path.get());
-    if (filePath.empty() || !std::filesystem::exists(filePath)
-        || !std::filesystem::is_directory(filePath)) {
-        invocation->return_error(
-            Gio::DBus::Error{Gio::DBus::Error::FAILED, "filepath param has error, maybe not a directory!"});
-        return;
-    }
-
-    m_fileStoragePath = filePath;
+void Manager::setFileStoragePath(const QString &path) noexcept {
+    m_fileStoragePath = path;
 
     if (!m_dConfig || !m_dConfig->isValid() || !m_dConfig->keyList().contains("filesStoragePath")) {
         spdlog::warn("dConfig is invalid or does not has filesStoragePath key!");
-        invocation->return_value(Glib::VariantContainerBase{});
         return;
     }
 
-    m_dConfig->setValue("filesStoragePath", QString::fromStdString(filePath));
-    invocation->return_value(Glib::VariantContainerBase{});
+    m_dConfig->setValue("filesStoragePath", path);
 }
 
-void Manager::openSharedClipboard(const Glib::VariantContainerBase &args,
-                                  const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
-    Glib::Variant<bool> on;
-    args.get_child(on, 0);
-
-    bool isOn = on.get();
+void Manager::openSharedClipboard(bool on) noexcept {
+    bool isOn = on;
     if (isOn != m_sharedClipboard) {
         m_sharedClipboard = isOn;
         serviceStatusChanged();
@@ -407,99 +245,51 @@ void Manager::openSharedClipboard(const Glib::VariantContainerBase &args,
 
     if (!m_dConfig || !m_dConfig->isValid() || !m_dConfig->keyList().contains("shareClipboard")) {
         spdlog::warn("dConfig is invalid or does not has shareClipboard key!");
-        invocation->return_value(Glib::VariantContainerBase{});
         return;
     }
 
     m_dConfig->setValue("shareClipboard", m_sharedClipboard);
-    invocation->return_value(Glib::VariantContainerBase{});
 }
 
-void Manager::openSharedDevices(const Glib::VariantContainerBase &args,
-                                const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) noexcept {
-    Glib::Variant<bool> on;
-    args.get_child(on, 0);
-
-    bool isOn = on.get();
+void Manager::openSharedDevices(bool on) noexcept {
+    bool isOn = on;
     if (isOn != m_sharedDevices) {
         m_sharedDevices = isOn;
         serviceStatusChanged();
     } else {
-        invocation->return_value(Glib::VariantContainerBase{});
         return;
     }
 
     if (!m_dConfig || !m_dConfig->isValid() || !m_dConfig->keyList().contains("shareDevices")) {
         spdlog::warn("dConfig is invalid or does not has shareDevices key!");
-        invocation->return_value(Glib::VariantContainerBase{});
         return;
     }
 
     m_dConfig->setValue("shareDevices", m_sharedDevices);
-    invocation->return_value(Glib::VariantContainerBase{});
 }
 
-std::vector<Glib::DBusObjectPathString> Manager::getMachinePaths() const noexcept {
-    std::vector<Glib::DBusObjectPathString> machines;
+QVector<QDBusObjectPath> Manager::getMachinePaths() const noexcept {
+    QVector<QDBusObjectPath> machines;
     machines.reserve(m_machines.size());
 
-    std::transform(m_machines.begin(), m_machines.end(), std::back_inserter(machines), [](auto &i) {
-        return Glib::DBusObjectPathString(i.second->path());
-    });
+    for (auto &[_, machine] : m_machines) {
+        machines.append(QDBusObjectPath(machine->path()));
+    }
 
     return machines;
 }
 
-void Manager::getMachines(Glib::VariantBase &property,
-                          [[maybe_unused]] const Glib::ustring &propertyName) const noexcept {
-    property = Glib::Variant<std::vector<Glib::DBusObjectPathString>>::create(getMachinePaths());
-}
-
-void Manager::getDeviceSharingSwitch(
-    Glib::VariantBase &property,
-    [[maybe_unused]] const Glib::ustring &propertyName) const noexcept {
-    property = Glib::Variant<bool>::create(m_deviceSharingSwitch);
-}
-
-bool Manager::setDeviceSharingSwitch([[maybe_unused]] const Glib::ustring &propertyName,
-                                     const Glib::VariantBase &value) noexcept {
-    Glib::Variant<bool> v = Glib::VariantBase::cast_dynamic<Glib::Variant<bool>>(value);
-    m_deviceSharingSwitch = v.get();
-    m_propertyDeviceSharingSwitch->emitChanged(Glib::Variant<bool>::create(m_deviceSharingSwitch));
+bool Manager::setDeviceSharingSwitch(bool value) noexcept {
+    m_deviceSharingSwitch = value;
     cooperationStatusChanged(m_deviceSharingSwitch);
+    m_dbusAdaptor->updateDeviceSharingSwitch(value);
     return true;
-}
-
-void Manager::getFileStoragePath(Glib::VariantBase &property,
-                                [[maybe_unused]] const Glib::ustring &propertyName) const noexcept {
-    property = Glib::Variant<Glib::ustring>::create(m_fileStoragePath);
-}
-
-void Manager::getSharedClipboardStatus(Glib::VariantBase &property,
-                                       [[maybe_unused]] const Glib::ustring &propertyName) const noexcept {
-    property = Glib::Variant<bool>::create(m_sharedClipboard);
-}
-
-void Manager::getSharedDevicesStatus(Glib::VariantBase &property,
-                                     [[maybe_unused]] const Glib::ustring &propertyName) const noexcept {
-    property = Glib::Variant<bool>::create(m_sharedDevices);
-}
-
-void Manager::getCooperatedMachines(Glib::VariantBase &property,
-                                    [[maybe_unused]] const Glib::ustring &propertyName) const noexcept {
-    std::vector<Glib::ustring> machineIds;
-    machineIds.reserve(m_cooperatedMachines.count());
-    for (const QString& id : m_cooperatedMachines) {
-        machineIds.emplace_back(id.toStdString());
-    }
-
-    property = Glib::Variant<std::vector<Glib::ustring>>::create(machineIds);
 }
 
 bool Manager::hasPcMachinePaired() const {
     for (const auto &v : m_machines) {
         const std::shared_ptr<Machine> &machine = v.second;
-        if (machine->m_paired && machine->isPcMachine()) {
+        if (machine->m_connected && machine->isPcMachine()) {
             return true;
         }
     }
@@ -510,7 +300,7 @@ bool Manager::hasPcMachinePaired() const {
 bool Manager::hasAndroidPaired() const {
     for (const auto &v : m_machines) {
         const std::shared_ptr<Machine> &machine = v.second;
-        if (machine->m_paired && machine->isAndroid()) {
+        if (machine->m_connected && machine->isAndroid()) {
             return true;
         }
     }
@@ -529,18 +319,12 @@ void Manager::machineCooperated(const std::string &machineId) {
     }
     m_cooperatedMachines.append(machineID);
 
-    std::vector<Glib::ustring> machineIds;
-    machineIds.reserve(m_cooperatedMachines.count());
-    for (const QString& id : m_cooperatedMachines) {
-        machineIds.emplace_back(id.toStdString());
-    }
-    m_propertyCooperatedMachines->emitChanged(
-        Glib::Variant<std::vector<Glib::ustring>>::create(machineIds));
+    m_dbusAdaptor->updateCooperatedMachines(m_cooperatedMachines);
 
     m_dConfig->setValue("cooperatedMachineIds", m_cooperatedMachines);
 }
 
-void Manager::scanAux() noexcept {
+void Manager::scan() noexcept {
     Message base;
     ScanRequest *request = base.mutable_scanrequest();
     request->set_key(SCAN_KEY);
@@ -575,18 +359,17 @@ bool Manager::tryFlowOut(uint16_t direction, uint16_t x, uint16_t y, bool evFrom
 
 void Manager::cooperationStatusChanged(bool enable) {
     if (enable) {
-        scanAux();
+        scan();
     } else {
         for (const auto &v : m_machines) {
             const std::shared_ptr<Machine> &machine = v.second;
-            if (machine->m_paired) {
+            if (machine->m_connected) {
                 machine->m_conn->close();
                 sendServiceStoppedNotification();
             }
         }
         m_machines.clear();
-        m_propertyMachines->emitChanged(
-            Glib::Variant<std::vector<Glib::DBusObjectPathString>>::create(getMachinePaths()));
+        m_dbusAdaptor->updateMachines(getMachinePaths());
     }
 }
 
@@ -611,7 +394,7 @@ void Manager::addMachine(const std::string &ip, uint16_t port, const DeviceInfo 
         auto m = std::make_shared<AndroidMachine>(this,
                                                   m_clipboard.get(),
                                                   m_uvLoop,
-                                                  m_service,
+                                                  m_bus,
                                                   m_lastMachineIndex,
                                                   dataPath,
                                                   ip,
@@ -622,7 +405,7 @@ void Manager::addMachine(const std::string &ip, uint16_t port, const DeviceInfo 
         auto m = std::make_shared<PCMachine>(this,
                                              m_clipboard.get(),
                                              m_uvLoop,
-                                             m_service,
+                                             m_bus,
                                              m_lastMachineIndex,
                                              dataPath,
                                              ip,
@@ -631,9 +414,7 @@ void Manager::addMachine(const std::string &ip, uint16_t port, const DeviceInfo 
         m_machines.insert(std::pair(devInfo.uuid(), m));
     }
     m_lastMachineIndex++;
-
-    m_propertyMachines->emitChanged(
-        Glib::Variant<std::vector<Glib::DBusObjectPathString>>::create(getMachinePaths()));
+    m_dbusAdaptor->updateMachines(getMachinePaths());
 }
 
 void Manager::handleSocketError(const std::string &title, const std::string &msg) {
@@ -716,17 +497,16 @@ void Manager::handleReceivedSocketScan(std::shared_ptr<uvxx::Addr> addr,
     }
     case Message::PayloadCase::kServiceStoppedNotification: {
         const auto &notification = base.servicestoppednotification();
-        const auto& uuid = notification.deviceuuid();
+        const auto &uuid = notification.deviceuuid();
 
         auto iter = m_machines.find(uuid);
         if (iter != m_machines.end()) {
-            if (iter->second->m_paired) {
+            if (iter->second->m_connected) {
                 iter->second->m_conn->close();
             }
 
             m_machines.erase(uuid);
-            m_propertyMachines->emitChanged(
-                Glib::Variant<std::vector<Glib::DBusObjectPathString>>::create(getMachinePaths()));
+            m_dbusAdaptor->updateMachines(getMachinePaths());
         }
         break;
     }
@@ -773,8 +553,8 @@ void Manager::handleNewConnection(bool) noexcept {
         }
 
         auto machine = i->second;
-        if ((machine->isPcMachine() && hasPcMachinePaired())
-            || (machine->isAndroid() && hasAndroidPaired())) {
+        if ((machine->isPcMachine() && hasPcMachinePaired()) ||
+            (machine->isAndroid() && hasAndroidPaired())) {
             // TODO tips
             spdlog::error("cannot pair this device, this machine is paired with other machine");
             socketConnected->close();
@@ -805,8 +585,7 @@ void Manager::ping(const std::string &ip, uint16_t port) {
 void Manager::onMachineOffline(const std::string &uuid) {
     m_machines.erase(m_machines.find(uuid));
 
-    m_propertyMachines->emitChanged(
-        Glib::Variant<std::vector<Glib::DBusObjectPathString>>::create(getMachinePaths()));
+    m_dbusAdaptor->updateMachines(getMachinePaths());
 }
 
 void Manager::onStartDeviceSharing(const std::weak_ptr<Machine> &machine, bool proactively) {
@@ -850,7 +629,7 @@ void Manager::onFlowOut(const std::weak_ptr<Machine> &machine) {
 
 void Manager::onClipboardTargetsChanged(const std::vector<std::string> &targets) {
     for (auto &[uuid, machine] : m_machines) {
-        if (!machine->m_paired) {
+        if (!machine->m_connected) {
             continue;
         }
 
@@ -874,8 +653,8 @@ void Manager::onMachineOwnClipboard(const std::weak_ptr<Machine> &machine,
     m_clipboard->newClipboardOwnerTargets(targets);
 }
 
-static const std::string applicationName = "DDE Cooperation";
-static const std::string inhibitReason = "cooperating";
+static const QString applicationName = "DDE Cooperation";
+static const QString inhibitReason = "cooperating";
 
 void Manager::inhibitScreensaver() {
     if (m_deviceSharingCnt == 0) {
@@ -886,18 +665,12 @@ void Manager::inhibitScreensaver() {
         return;
     }
 
-    try {
-        auto params = Glib::Variant<std::vector<Glib::VariantBase>>::create_tuple({
-            Glib::Variant<Glib::ustring>::create(applicationName),
-            Glib::Variant<Glib::ustring>::create(inhibitReason),
-        });
-        auto res = m_powersaverProxy->call_sync("Inhibit", params);
-        Glib::Variant<uint32_t> cookie;
-        res.get_child(cookie);
-        m_inhibitCookie = cookie.get();
-    } catch (Glib::Error &e) {
-        spdlog::error("failed to inhibit screensaver: {}", std::string(e.what()));
+    QDBusReply<uint32_t> reply = m_powersaverProxy.call("Inhibit", applicationName, inhibitReason);
+    if (!reply.isValid()) {
+        qWarning() << "Inhibit:" << reply.error();
+        return;
     }
+    m_inhibitCookie = reply.value();
 }
 
 void Manager::unInhibitScreensaver() {
@@ -909,14 +682,9 @@ void Manager::unInhibitScreensaver() {
         return;
     }
 
-    try {
-        auto params = Glib::Variant<std::vector<Glib::VariantBase>>::create_tuple({
-            Glib::Variant<uint32_t>::create(m_inhibitCookie),
-        });
-        m_powersaverProxy->call_sync("UnInhibit", params);
-        m_inhibitCookie = 0;
-    } catch (Glib::Error &e) {
-        spdlog::error("failed to uninhibit screensaver: {}", std::string(e.what()));
+    QDBusReply<void> reply = m_powersaverProxy.call("UnInhibit", m_inhibitCookie);
+    if (!reply.isValid()) {
+        qWarning() << "UnInhibit:" << reply.error();
     }
 }
 
@@ -928,14 +696,15 @@ void Manager::sendServiceStoppedNotification() const {
         ServiceStoppedNotification *notification = base.mutable_servicestoppednotification();
         notification->set_deviceuuid(machine->m_uuid);
 
-        m_socketScan->send(uvxx::IPv4Addr::create(machine->ip(),m_scanPort), MessageHelper::genMessage(base));
+        m_socketScan->send(uvxx::IPv4Addr::create(machine->ip(), m_scanPort),
+                           MessageHelper::genMessage(base));
     }
 }
 
 void Manager::serviceStatusChanged() {
     for (const auto &v : m_machines) {
         const std::shared_ptr<Machine> &machine = v.second;
-        if (machine->m_paired) {
+        if (machine->m_connected) {
             machine->sendServiceStatusNotification();
         }
     }

@@ -19,19 +19,6 @@ ipc_protocol = protoc.process(
 )
 
 common_sources = files('''
-  dbus/dbus.h
-  dbus/Method.h
-  dbus/Method.cc
-  dbus/Property.h
-  dbus/Property.cc
-  dbus/Signal.h
-  dbus/Signal.cc
-  dbus/Interface.h
-  dbus/Interface.cc
-  dbus/Service.h
-  dbus/Service.cc
-  dbus/Object.h
-  dbus/Object.cc
   utils/message_helper.h
   utils/net.h
   utils/ptr.h

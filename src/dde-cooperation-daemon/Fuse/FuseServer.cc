@@ -10,16 +10,13 @@
 
 #include <google/protobuf/util/time_util.h>
 
-#include "utils/net.h"
-#include "utils/message_helper.h"
-#include "protocol/message.pb.h"
-
-#include "Machine.h"
-
 #include "uvxx/Loop.h"
 #include "uvxx/TCP.h"
-#include "uvxx/UDP.h"
 #include "uvxx/Addr.h"
+
+#include "Machine/Machine.h"
+#include "utils/message_helper.h"
+#include "protocol/message.pb.h"
 
 namespace fs = std::filesystem;
 

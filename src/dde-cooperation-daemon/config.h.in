@@ -1,5 +1,5 @@
-#ifndef DDE_COOPERATION_DAEMON_CONFIG_H
-#define DDE_COOPERATION_DAEMON_CONFIG_H
+#ifndef CONFIG_H
+#define CONFIG_H
 
 #define EXECUTABLE_INSTALL_DIR "@executable_install_dir@"
 #define INPUT_EMITTOR_PATH "@executable_install_dir@/input-emittor"
@@ -7,4 +7,4 @@
 #define CONFIRM_DIALOG_PATH "@executable_install_dir@/dde-cooperation-dialog"
 #define DDE_SCRCPY_PATH "@executable_install_dir@/dde-scrcpy"
 
-#endif // !DDE_COOPERATION_DAEMON_CONFIG_H
+#endif // !CONFIG_H

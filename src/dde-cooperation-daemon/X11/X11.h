@@ -1,5 +1,5 @@
-#ifndef DDE_COOPERATION_DEAMON_X11_X11_H
-#define DDE_COOPERATION_DEAMON_X11_X11_H
+#ifndef X11_X11_H
+#define X11_X11_H
 
 #include <memory>
 
@@ -38,4 +38,4 @@ protected:
 
 } // namespace X11
 
-#endif // !DDE_COOPERATION_DEAMON_X11_X11_H
+#endif // !X11_X11_H
