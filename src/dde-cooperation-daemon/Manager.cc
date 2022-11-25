@@ -105,6 +105,8 @@ Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesyste
                                                    DBus::Property::warp(this, &Manager::getSharedClipboardStatus)))
     , m_propertySharedDevices(new DBus::Property("SharedDevices", "b",
                                                  DBus::Property::warp(this, &Manager::getSharedDevicesStatus)))
+    , m_propertyCooperatedMachines(new DBus::Property("CooperatedMachines", "ao",
+                                                      DBus::Property::warp(this, &Manager::getCooperatedMachines)))
     , m_dbusProxy(Gio::DBus::Proxy::Proxy::create_sync(m_bus,
                                                        "org.freedesktop.DBus",
                                                        "/org/freedesktop/DBus",
@@ -120,6 +122,7 @@ Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesyste
     initFileStoragePath();
     initSharedClipboardStatus();
     initSharedDevicesStatus();
+    initCooperatedMachines();
 
     m_keypair.load();
 
@@ -136,6 +139,7 @@ Manager::Manager(const std::shared_ptr<uvxx::Loop> &uvLoop, const std::filesyste
     m_interface->exportProperty(m_propertyFileStoragePath);
     m_interface->exportProperty(m_propertySharedClipboard);
     m_interface->exportProperty(m_propertySharedDevices);
+    m_interface->exportProperty(m_propertyCooperatedMachines);
     m_object->exportInterface(m_interface);
     m_service->exportObject(m_object);
 
@@ -286,6 +290,15 @@ void Manager::initSharedDevicesStatus() {
     }
 
     m_sharedDevices = m_dConfig->value("shareDevices").toBool();
+}
+
+void Manager::initCooperatedMachines() {
+    if (!m_dConfig || !m_dConfig->isValid() || !m_dConfig->keyList().contains("cooperatedMachineIds")) {
+        spdlog::warn("dConfig is invalid or does not has cooperatedMachineIds key!");
+        return;
+    }
+
+    m_cooperatedMachines = m_dConfig->value("cooperatedMachineIds").toStringList();
 }
 
 void Manager::scan([[maybe_unused]] const Glib::VariantContainerBase &args,
@@ -472,6 +485,17 @@ void Manager::getSharedDevicesStatus(Glib::VariantBase &property,
     property = Glib::Variant<bool>::create(m_sharedDevices);
 }
 
+void Manager::getCooperatedMachines(Glib::VariantBase &property,
+                                    [[maybe_unused]] const Glib::ustring &propertyName) const noexcept {
+    std::vector<Glib::ustring> machineIds;
+    machineIds.reserve(m_cooperatedMachines.count());
+    for (const QString& id : m_cooperatedMachines) {
+        machineIds.emplace_back(id.toStdString());
+    }
+
+    property = Glib::Variant<std::vector<Glib::ustring>>::create(machineIds);
+}
+
 bool Manager::hasPcMachinePaired() const {
     for (const auto &v : m_machines) {
         const std::shared_ptr<Machine> &machine = v.second;
@@ -492,6 +516,28 @@ bool Manager::hasAndroidPaired() const {
     }
 
     return false;
+}
+
+void Manager::machineCooperated(const std::string &machineId) {
+    QString machineID = QString::fromStdString(machineId);
+    if (m_cooperatedMachines.contains(machineID)) {
+        return;
+    }
+
+    if (m_cooperatedMachines.count() == 5) {
+        m_cooperatedMachines.removeFirst();
+    }
+    m_cooperatedMachines.append(machineID);
+
+    std::vector<Glib::ustring> machineIds;
+    machineIds.reserve(m_cooperatedMachines.count());
+    for (const QString& id : m_cooperatedMachines) {
+        machineIds.emplace_back(id.toStdString());
+    }
+    m_propertyCooperatedMachines->emitChanged(
+        Glib::Variant<std::vector<Glib::ustring>>::create(machineIds));
+
+    m_dConfig->setValue("cooperatedMachineIds", m_cooperatedMachines);
 }
 
 void Manager::scanAux() noexcept {

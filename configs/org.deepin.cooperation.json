@@ -45,6 +45,17 @@
       "description":"share devices",
       "permissions":"readwrite",
       "visibility":"public"
+    },
+    "cooperatedMachineIds":{
+      "value":[],
+      "serial":0,
+      "flags":["global"],
+      "name":"cooperated Machine ids",
+      "name[zh_CN]":"已协同过的设备ids",
+      "description[zh_CN]":"跨端协同后端记录已经协同过的设备ids，默认记录最新的5个",
+      "description":"save has cooperated machine ids",
+      "permissions":"readwrite",
+      "visibility":"public"
     }
   }
 }

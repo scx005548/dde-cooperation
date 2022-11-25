@@ -55,6 +55,7 @@ public:
     bool tryFlowOut(uint16_t direction, uint16_t x, uint16_t y, bool evFromPeer);
     bool hasPcMachinePaired() const;
     bool hasAndroidPaired() const;
+    void machineCooperated(const std::string &machineId);
     void removeInputGrabber(const std::filesystem::path &path);
 
     void ping(const std::string &ip, uint16_t port = m_scanPort);
@@ -95,6 +96,7 @@ protected:
     void getFileStoragePath(Glib::VariantBase &property, const Glib::ustring &propertyName) const noexcept;
     void getSharedClipboardStatus(Glib::VariantBase &property, const Glib::ustring &propertyName) const noexcept;
     void getSharedDevicesStatus(Glib::VariantBase &property, const Glib::ustring &propertyName) const noexcept;
+    void getCooperatedMachines(Glib::VariantBase &property, const Glib::ustring &propertyName) const noexcept;
 
 private:
     const std::filesystem::path m_dataDir;
@@ -140,6 +142,7 @@ private:
     Glib::RefPtr<DBus::Property> m_propertyFileStoragePath;
     Glib::RefPtr<DBus::Property> m_propertySharedClipboard;
     Glib::RefPtr<DBus::Property> m_propertySharedDevices;
+    Glib::RefPtr<DBus::Property> m_propertyCooperatedMachines;
 
     Glib::RefPtr<Gio::DBus::Proxy> m_dbusProxy;
     Glib::RefPtr<Gio::DBus::Proxy> m_powersaverProxy;
@@ -150,6 +153,7 @@ private:
 
     bool m_sharedClipboard;
     bool m_sharedDevices;
+    QStringList m_cooperatedMachines;
     std::shared_ptr<DConfig> m_dConfig;
 
     void scanAux() noexcept;
@@ -162,6 +166,7 @@ private:
     void initFileStoragePath();
     void initSharedClipboardStatus();
     void initSharedDevicesStatus();
+    void initCooperatedMachines();
 
     void cooperationStatusChanged(bool enable);
     void updateMachine(const std::string &ip, uint16_t port, const DeviceInfo &devInfo);

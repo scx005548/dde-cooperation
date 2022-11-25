@@ -568,6 +568,8 @@ void Machine::handleDeviceSharingStartRequest() {
             m_deviceSharing = true;
             m_propertyCooperating->emitChanged(Glib::Variant<bool>::create(m_deviceSharing));
 
+            m_manager->machineCooperated(m_uuid);
+
             m_direction = FLOW_DIRECTION_LEFT;
             m_propertyDirection->emitChanged(Glib::Variant<uint16_t>::create(m_direction));
         }
@@ -581,6 +583,8 @@ void Machine::handleDeviceSharingStartResponse(const DeviceSharingStartResponse 
 
     m_deviceSharing = true;
     m_propertyCooperating->emitChanged(Glib::Variant<bool>::create(m_deviceSharing));
+
+    m_manager->machineCooperated(m_uuid);
 
     m_direction = FLOW_DIRECTION_RIGHT;
     m_propertyDirection->emitChanged(Glib::Variant<uint16_t>::create(m_direction));
