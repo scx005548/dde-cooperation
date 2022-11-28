@@ -2,6 +2,8 @@
 
 #include <condition_variable>
 
+#include <DDBusSender>
+
 #include "Manager.h"
 #include "ClipboardBase.h"
 #include "InputEmittorWrapper.h"
@@ -687,7 +689,7 @@ void Machine::handleFsSendFileRequest(const FsSendFileRequest &req) {
     std::string filePath = m_mountpoint.string() + reqPath;
     auto process = std::make_shared<uvxx::Process>(m_uvLoop, "/bin/cp");
     process->args = {"-r", filePath, storagePath};
-    process->onExit([this, serial = req.serial(), path = req.path(), process](
+    process->onExit([this, storagePath, serial = req.serial(), path = req.path(), process](
                         int64_t exit_status,
                         [[maybe_unused]] int term_signal) {
         Message msg;
@@ -700,6 +702,10 @@ void Machine::handleFsSendFileRequest(const FsSendFileRequest &req) {
         } else {
             spdlog::info("copy files success");
         }
+
+        std::string::size_type iPos = path.find_last_of('/') + 1;
+        std::string fileName = path.substr(iPos, path.length() - iPos);
+        sendReceivedFilesSystemNtf(storagePath + "/" + fileName, exit_status == 0);
 
         fssendfileresult->set_result(exit_status == 0);
         sendMessage(msg);
@@ -914,6 +920,25 @@ void Machine::sendFlowDirectionNtf() {
     auto *notification = msg.mutable_flowdirectionntf();
     notification->set_direction((FlowDirection)m_direction);
     sendMessage(msg);
+}
+
+void Machine::sendReceivedFilesSystemNtf(const std::string &path, bool isSuccess) {
+    DDBusSender()
+        .service("org.freedesktop.Notifications")
+        .path("/org/freedesktop/Notifications")
+        .interface("org.freedesktop.Notifications")
+        .method(QString("Notify"))
+        .arg(QObject::tr("collaboration"))
+        .arg(static_cast<uint>(0))
+        .arg(QString(""))
+        .arg(QString(""))
+        .arg(QString(QObject::tr("Receive file %1 %2"))
+                 .arg(QString::fromStdString(path))
+                 .arg(isSuccess ? "success" : "failed"))
+        .arg(QStringList())
+        .arg(QVariantMap())
+        .arg(5000)
+        .call();
 }
 
 void Machine::sendFiles(const std::vector<Glib::ustring> &filePaths) {

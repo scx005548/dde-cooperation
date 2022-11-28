@@ -180,7 +180,8 @@ private:
     void stopDeviceSharingAux();
     void receivedUserConfirm(uvxx::Buffer &buff);
     void sendFlowDirectionNtf();
-
+    void sendReceivedFilesSystemNtf(const std::string &path, bool isSuccess);
+    
 protected:
     std::shared_ptr<uvxx::Loop> m_uvLoop;
     std::shared_ptr<uvxx::Async> m_async;
