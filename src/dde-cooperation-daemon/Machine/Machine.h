@@ -56,9 +56,7 @@ public:
     bool isAndroid() const;
 
     bool connected() const { return !!m_conn; }
-
-    virtual void handleConnected() = 0;
-    virtual void handleDisconnected() = 0;
+    Manager *manager() const {return m_manager; }
 
 protected:
     void sendServiceStatusNotification();
@@ -134,6 +132,10 @@ protected:
     void setFlowDirection(FlowDirection direction);
     void sendFiles(const QStringList &filePaths);
     void sendMessage(const Message &msg);
+
+    virtual void handleConnected() = 0;
+    virtual void handleDisconnected() = 0;
+    virtual void handleCaseRequest(const CastRequest &req) = 0;
 };
 
 #endif // !MACHINE_MACHINE_H

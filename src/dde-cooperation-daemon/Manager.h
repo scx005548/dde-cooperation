@@ -32,6 +32,7 @@ class FsResponse;
 class Machine;
 class DisplayBase;
 class ClipboardBase;
+class AndroidMainWindow;
 
 class Manager : public QObject, public ClipboardObserver {
     friend class ManagerDBusAdaptor;
@@ -66,12 +67,15 @@ public:
                                const std::vector<std::string> &targets);
     void onInputEvent();
 
+    std::shared_ptr<AndroidMainWindow> getAndroidMainWindow();
+
 protected:
+    void scan() noexcept;
+    void connectNewAndroidDevice() noexcept;
     bool sendFile(const QStringList &files, int osType) noexcept;
     void setFileStoragePath(const QString &path) noexcept;
     void openSharedClipboard(bool on) noexcept;
     void openSharedDevices(bool on) noexcept;
-
     bool setDeviceSharingSwitch(bool value) noexcept;
 
 private:
@@ -111,7 +115,7 @@ private:
     QStringList m_cooperatedMachines;
     std::shared_ptr<DConfig> m_dConfig;
 
-    void scan() noexcept;
+    std::shared_ptr<AndroidMainWindow> m_androidMainWindow;
 
     void ensureDataDirExists();
     void initUUID();

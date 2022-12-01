@@ -34,9 +34,9 @@ public: // D-Bus properties
     bool getSharedDevices() const;
 
 public slots: // D-Bus methods
-    QString GetUUID(const QDBusMessage &message) const;
     void Scan(const QDBusMessage &message) const;
     void Knock(const QString &ip, quint16 port) const;
+    void ConnectAndroidDevice() const;
     void SendFile(const QStringList &files, int osType, const QDBusMessage &message) const;
     void SetFilesStoragePath(const QString &path, const QDBusMessage &message) const;
     void OpenSharedClipboard(bool on) const;

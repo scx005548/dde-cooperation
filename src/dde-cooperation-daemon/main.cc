@@ -1,8 +1,10 @@
 #include "Manager.h"
 
-#include <QApplication>
+#include <DApplication>
 
 namespace fs = std::filesystem;
+
+DWIDGET_USE_NAMESPACE
 
 int main(int argc, char *argv[]) {
     std::string runtimeDir = getenv("XDG_RUNTIME_DIR");
@@ -12,10 +14,12 @@ int main(int argc, char *argv[]) {
 
     fs::path dataDir = fs::path(runtimeDir) / "dde-cooperation";
 
-    QApplication::setQuitOnLastWindowClosed(false);
-    QApplication app(argc, argv);
+    DApplication::setQuitOnLastWindowClosed(false);
+    DApplication app(argc, argv);
+    app.setOrganizationName("deepin");
+    app.setApplicationName("DDE Cooperation");
 
     Manager cooperation(dataDir);
 
-    app.exec();
+    return app.exec();
 }

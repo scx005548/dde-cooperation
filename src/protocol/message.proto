@@ -3,8 +3,9 @@ syntax = "proto3";
 import "protocol/pair.proto";
 import "protocol/device_sharing.proto";
 import "protocol/clipboard.proto";
-import "protocol/fs.proto";
 import "protocol/service_status.proto";
+import "protocol/fs.proto";
+import "protocol/screencast.proto";
 
 message Message {
   oneof payload {
@@ -47,6 +48,10 @@ message Message {
     ClipboardNotify clipboardNotify = 5000;
     ClipboardGetContentRequest clipboardGetContentRequest = 5001;
     ClipboardGetContentResponse clipboardGetContentResponse = 5002;
+
+    CastRequest castRequest = 1006;
+    CastResponse castResponse = 1007;
+    ReverseCastRequest reverseCastRequest = 1008;
 
     // RemoteDisplayConfigRequest remoteDisplayConfigRequest = 6000;
     // RemoteDisplayConfigResponse remoteDisplayConfigResponse = 6001;

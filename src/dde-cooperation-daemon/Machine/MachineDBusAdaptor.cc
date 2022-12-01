@@ -68,8 +68,8 @@ void MachineDBusAdaptor::Connect(const QDBusMessage &message) const {
         return;
     }
 
-    if ((m_machine->isPcMachine() && m_manager->hasPcMachinePaired()) ||
-        (m_machine->isAndroid() && m_manager->hasAndroidPaired())) {
+    if ((m_machine->isPcMachine() && m_machine->manager()->hasPcMachinePaired()) ||
+        (m_machine->isAndroid() && m_machine->manager()->hasAndroidPaired())) {
         // TODO tips
         m_bus.send(message.createErrorReply(
             {QDBusError::Failed,

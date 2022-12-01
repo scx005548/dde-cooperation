@@ -1,5 +1,5 @@
-#ifndef BACKEND_H
-#define BACKEND_H
+#ifndef ANDROID_DEVICEPROXY_H
+#define ANDROID_DEVICEPROXY_H
 
 #include <QObject>
 
@@ -63,4 +63,4 @@ private:
     bool m_screenOpen;
 };
 
-#endif // BACKEND_H
+#endif // ANDROID_DEVICEPROXY_H

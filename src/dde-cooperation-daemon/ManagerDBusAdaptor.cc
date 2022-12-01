@@ -2,29 +2,9 @@
 
 #include <filesystem>
 
-#include "config.h"
 #include "Manager.h"
 
-namespace fs = std::filesystem;
-
-static bool isSubDir(fs::path p, fs::path root) {
-    qWarning() << "root:" << QString::fromStdString(root.string());
-    for (;;) {
-        qWarning() << "p:" << QString::fromStdString(p.string());
-        if (p == root) {
-            return true;
-        }
-        if (!p.has_parent_path()) {
-            return false;
-        }
-        p = p.parent_path();
-        if (p == "/") {
-            return false;
-        }
-    }
-
-    return false;
-}
+#define DDE_PROTO_VER 13
 
 static const QString managerService{"org.deepin.dde.Cooperation1"};
 static const QString managerPath{"/org/deepin/dde/Cooperation1"};
@@ -64,28 +44,6 @@ bool ManagerDBusAdaptor::getSharedDevices() const {
     return m_manager->m_sharedDevices;
 }
 
-QString ManagerDBusAdaptor::GetUUID(const QDBusMessage &message) const {
-    QString sender = message.service();
-    auto reply = m_bus.interface()->servicePid(sender);
-    if (!reply.isValid()) {
-        qWarning() << "GetConnectionUnixProcessID:" << reply.error();
-        m_bus.send(
-            message.createErrorReply({QDBusError::InternalError, QStringLiteral("Iternal Error")}));
-        return QString();
-    }
-
-    uint pid = reply.value();
-    QString callerPath = QFile::symLinkTarget(QString("/proc/%1/exe").arg(pid));
-    if (!isSubDir(callerPath.toStdString(), EXECUTABLE_INSTALL_DIR)) {
-        qWarning() << "GetUUID callerPath:" << callerPath << "Access Denied";
-        m_bus.send(
-            message.createErrorReply({QDBusError::AccessDenied, QStringLiteral("Access Denied")}));
-        return QString();
-    }
-
-    return QString::fromStdString(m_manager->uuid());
-}
-
 void ManagerDBusAdaptor::Scan(const QDBusMessage &message) const {
     if (m_manager->m_deviceSharingSwitch) {
         message.createErrorReply({QDBusError::Failed, "DeviceSharing Switch close!"});
@@ -98,6 +56,10 @@ void ManagerDBusAdaptor::Scan(const QDBusMessage &message) const {
 
 void ManagerDBusAdaptor::Knock(const QString &ip, quint16 port) const {
     m_manager->ping(ip.toStdString(), port);
+}
+
+void ManagerDBusAdaptor::ConnectAndroidDevice() const {
+    m_manager->connectNewAndroidDevice();
 }
 
 void ManagerDBusAdaptor::SendFile(const QStringList &files,

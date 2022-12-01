@@ -3,11 +3,10 @@ import QtQuick.Window 2.15
 import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.15
 import QtMultimedia 5.8
- 
-Rectangle {
-    property bool maximized: mainWindow.isMaximized || mainWindow.isFullScreen
 
-    id: window
+Rectangle {
+    // property bool maximized: window.isMaximized || mainWindow.isFullScreen
+
     anchors.fill: parent
     color: 'black'
 

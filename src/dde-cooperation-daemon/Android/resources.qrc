@@ -1,7 +1,9 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
   <qresource>
-    <file>ui/VideoPlayer.qml</file>
+    <file>qml/MainWindow.qml</file>
+    <file>qml/NewDevice.qml</file>
+    <file>qml/VideoPlayer.qml</file>
     <file>icons/back.svg</file>
     <file>icons/overview.svg</file>
     <file>icons/home.svg</file>

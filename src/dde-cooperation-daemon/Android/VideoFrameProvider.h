@@ -1,5 +1,5 @@
-#ifndef VIDEOFRAMEPROVIDER_H
-#define VIDEOFRAMEPROVIDER_H
+#ifndef ANDROID_VIDEOFRAMEPROVIDER_H
+#define ANDROID_VIDEOFRAMEPROVIDER_H
 
 #include <QObject>
 #include <QAbstractVideoSurface>
@@ -33,4 +33,4 @@ private:
     virtual void onFrame(const QVideoFrame &frame) override;
 };
 
-#endif // VIDEOFRAMEPROVIDER_H
+#endif // ANDROID_VIDEOFRAMEPROVIDER_H

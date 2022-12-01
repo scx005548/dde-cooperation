@@ -24,6 +24,10 @@ dde_cooperation_daemon_sources = files('''
   X11/Display.cc
   X11/Clipboard.h
   X11/Clipboard.cc
+  Android/QrCodeProxy.cc
+  Android/DeviceProxy.cc
+  Android/VideoFrameProvider.cc
+  Android/AndroidMainWindow.cc
 '''.split())
 
 dde_cooperation_daemon_moc_headers = files('''
@@ -37,10 +41,16 @@ dde_cooperation_daemon_moc_headers = files('''
   Fuse/FuseClient.h
   Fuse/FuseServer.h
   X11/X11.h
+  Android/QrCodeProxy.h
+  Android/DeviceProxy.h
+  Android/VideoFrameProvider.h
+  Android/AndroidMainWindow.h
 '''.split())
 
 dde_cooperation_daemon_sources += qt5.preprocess(
-  qresources: [],
+  qresources: [
+    'Android/resources.qrc',
+  ],
   moc_headers: dde_cooperation_daemon_moc_headers,
 )
 
@@ -76,6 +86,8 @@ executable('dde-cooperation-daemon',
     qt5dep,
     dtk_core,
     dtk_widget,
+    qrcodegencpp,
+    scrcpy_core_dep,
   ],
   install: true,
   install_dir: executable_install_dir

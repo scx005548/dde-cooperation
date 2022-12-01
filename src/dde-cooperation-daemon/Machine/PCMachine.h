@@ -14,8 +14,10 @@ public:
               uint16_t port,
               const DeviceInfo &sp);
 
+protected:
     virtual void handleConnected() override;
     virtual void handleDisconnected() override;
+    virtual void handleCaseRequest([[maybe_unused]] const CastRequest &req) override {}
 
 private:
     void mountFs(const std::string &path);

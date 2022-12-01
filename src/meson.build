@@ -7,6 +7,7 @@ protocol = protoc.process(
     'protocol/clipboard.proto',
     'protocol/remote_display.proto',
     'protocol/service_status.proto',
+    'protocol/screencast.proto',
   ],
   preserve_path_from: meson.current_source_dir(),
 )
@@ -28,6 +29,5 @@ includes = include_directories('./')
 
 subdir('input-emitter')
 subdir('input-grabber')
-subdir('dde-cooperation-daemon')
 subdir('scrcpy-core')
-subdir('dde-scrcpy')
+subdir('dde-cooperation-daemon')

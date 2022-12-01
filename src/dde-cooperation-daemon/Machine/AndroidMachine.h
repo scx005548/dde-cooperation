@@ -13,8 +13,11 @@ public:
                    const std::string &ip,
                    uint16_t port,
                    const DeviceInfo &sp);
+
+protected:
     virtual void handleConnected() override;
     virtual void handleDisconnected() override;
+    virtual void handleCaseRequest(const CastRequest &req) override;
 };
 
 #endif // !MACHINE_ANDROIDMACHINE_H

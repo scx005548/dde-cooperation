@@ -16,6 +16,7 @@
 #include "Machine/Machine.h"
 #include "Machine/PCMachine.h"
 #include "Machine/AndroidMachine.h"
+#include "Android/AndroidMainWindow.h"
 #include "X11/Display.h"
 #include "X11/Clipboard.h"
 #include "utils/message_helper.h"
@@ -189,6 +190,16 @@ void Manager::initCooperatedMachines() {
     m_cooperatedMachines = m_dConfig->value("cooperatedMachineIds").toStringList();
 }
 
+std::shared_ptr<AndroidMainWindow> Manager::getAndroidMainWindow() {
+    if (!m_androidMainWindow) {
+        return std::make_shared<AndroidMainWindow>(QString::fromStdString(m_uuid));
+    }
+
+    auto androidMainWindow = m_androidMainWindow;
+    m_androidMainWindow.reset();
+    return androidMainWindow;
+}
+
 bool Manager::sendFile(const QStringList &files, int osType) noexcept {
     int dstOs = osType;
     bool dstIsPcMachine = dstOs == DEVICE_OS_UOS || dstOs == DEVICE_OS_LINUX ||
@@ -330,6 +341,15 @@ void Manager::scan() noexcept {
     m_socketScan->writeDatagram(MessageHelper::genMessage(base),
                                 QHostAddress::Broadcast,
                                 m_scanPort);
+}
+
+void Manager::connectNewAndroidDevice() noexcept {
+    if (m_androidMainWindow) {
+        return;
+    }
+
+    m_androidMainWindow = std::make_shared<AndroidMainWindow>(QString::fromStdString(m_uuid));
+    m_androidMainWindow->showConnectDevice();
 }
 
 void Manager::removeInputGrabber(const std::filesystem::path &path) {
