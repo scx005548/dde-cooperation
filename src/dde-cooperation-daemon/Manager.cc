@@ -465,7 +465,9 @@ void Manager::handleReceivedSocketScan(std::shared_ptr<uvxx::Addr> addr,
             return;
         }
 
-        updateMachine(ipv4->ip(), request.port(), request.deviceinfo());
+        QMetaObject::invokeMethod(this, [ipv4, request, this] {
+                updateMachine(ipv4->ip(), request.port(), request.deviceinfo());
+            }, Qt::QueuedConnection);
 
         Message msg;
         ScanResponse *response = msg.mutable_scanresponse();
@@ -490,7 +492,9 @@ void Manager::handleReceivedSocketScan(std::shared_ptr<uvxx::Addr> addr,
             return;
         }
 
-        updateMachine(addr->ipv4()->ip(), resp.port(), resp.deviceinfo());
+        QMetaObject::invokeMethod(this, [addr, resp, this] {
+                updateMachine(addr->ipv4()->ip(), resp.port(), resp.deviceinfo());
+            }, Qt::QueuedConnection);
 
         spdlog::info("{} responded", resp.deviceinfo().name());
         break;
