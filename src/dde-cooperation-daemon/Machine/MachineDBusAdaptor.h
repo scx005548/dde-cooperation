@@ -86,17 +86,6 @@ private:
 
     std::shared_ptr<uvxx::Loop> m_uvLoop;
     std::shared_ptr<uvxx::Async> m_async;
-
-    QString m_uuid;
-    QString m_name;
-    QString m_ip;
-    quint16 m_port;
-    quint32 m_os;
-    quint32 m_compositor;
-    bool m_connected = false;
-    bool m_deviceSharing = false;
-    quint16 m_direction = 0;
-    bool m_sharedClipboard = false;
 };
 
 #endif // !MACHINE_MACHINEDBUSADAPTOR_H

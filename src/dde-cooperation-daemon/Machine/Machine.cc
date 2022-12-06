@@ -65,8 +65,6 @@ Machine::Machine(Manager *manager,
     , m_async(std::make_shared<uvxx::Async>(uvLoop))
     , m_ip(ip) {
 
-    QDBusConnection::sessionBus();
-
     m_inputEmittors.emplace(
         std::make_pair(InputDeviceType::KEYBOARD,
                        std::make_unique<InputEmittorWrapper>(weak_from_this(),
@@ -143,10 +141,25 @@ void Machine::connect() {
 }
 
 void Machine::updateMachineInfo(const std::string &ip, uint16_t port, const DeviceInfo &devInfo) {
-    m_ip = ip;
-    m_port = port;
-    m_name = devInfo.name();
-    m_compositor = devInfo.compositor();
+    if (ip != m_ip) {
+        m_ip = ip;
+        m_dbusAdaptor->updateIP(QString::fromStdString(ip));
+    }
+
+    if (port != m_port) {
+        m_port = port;
+        m_dbusAdaptor->updatePort(port);
+    }
+
+    if (devInfo.name() != m_name) {
+        m_name = devInfo.name();
+        m_dbusAdaptor->updateName(QString::fromStdString(devInfo.name()));
+    }
+
+    if (devInfo.compositor() != m_compositor) {
+        m_compositor = devInfo.compositor();
+        m_dbusAdaptor->updateCompositor(devInfo.compositor());
+    }
 }
 
 void Machine::receivedPing() {
