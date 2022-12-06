@@ -8,4 +8,4 @@ ExecStart=@executable_install_dir@/dde-cooperation-daemon
 
 [Install]
 WantedBy=multi-user.target
-Alias=dbus-com.deepin.Cooperation.service
+Alias=dbus-org.deepin.dde.Cooperation1.service

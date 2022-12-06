@@ -68,7 +68,7 @@ executable_install_dir = join_paths(libexecdir, 'dde-cooperation')
 
 subdir('src')
 
-install_data('misc/dbus/services/com.deepin.Cooperation.service',
+install_data('misc/dbus/services/org.deepin.dde.Cooperation1.service',
              install_dir: join_paths(datadir, 'dbus-1', 'services'))
 
 data = configuration_data()
