@@ -2,6 +2,11 @@
 
 #include <condition_variable>
 
+#include <fmt/core.h>
+
+#include <QTcpSocket>
+#include <QHostAddress>
+
 #include <DDBusSender>
 
 #include "Manager.h"
@@ -14,10 +19,8 @@
 
 #include "protocol/message.pb.h"
 
-#include "uvxx/TCP.h"
 #include "uvxx/Loop.h"
 #include "uvxx/Timer.h"
-#include "uvxx/Addr.h"
 #include "uvxx/Async.h"
 #include "uvxx/Process.h"
 
@@ -61,6 +64,7 @@ Machine::Machine(Manager *manager,
     , m_mounted(false)
     , m_uvLoop(uvLoop)
     , m_async(std::make_shared<uvxx::Async>(uvLoop))
+    , m_conn(nullptr)
     , m_ip(ip) {
 
     m_inputEmittors.emplace(
@@ -86,7 +90,6 @@ Machine::~Machine() {
     m_offlineTimer->close();
     m_async->close();
     if (m_conn) {
-        m_conn->onClosed(nullptr);
         m_conn->close();
         m_manager->onStopDeviceSharing();
     }
@@ -106,13 +109,12 @@ bool Machine::isAndroid() const {
 }
 
 void Machine::connect() {
-    m_conn = std::make_shared<uvxx::TCP>(m_uvLoop);
+    m_conn = new QTcpSocket(this);
 
-    m_conn->onConnected([this]() {
-        spdlog::info("connected");
+    QObject::connect(m_conn, &QTcpSocket::connected, [this]() {
+        qInfo() << "connected";
 
         initConnection();
-        m_conn->startRead();
 
         m_pingTimer->stop();
         m_offlineTimer->stop();
@@ -127,14 +129,13 @@ void Machine::connect() {
 
         sendMessage(msg);
     });
-    m_conn->onConnectFailed(
-        [this]([[maybe_unused]] const std::string &title, const std::string &msg) {
-            spdlog::info("connect failed: {}", msg);
+    QObject::connect(m_conn, &QTcpSocket::errorOccurred, [this](QAbstractSocket::SocketError err) {
+        qWarning() << "connect failed:" << err;
 
-            // TODO tips and send scan
-            m_manager->ping(m_ip);
-        });
-    m_conn->connect(uvxx::IPv4Addr::create(m_ip, m_port));
+        // TODO tips and send scan
+        m_manager->ping(m_ip);
+    });
+    m_conn->connectToHost(QHostAddress(QString::fromStdString(m_ip)), m_port);
 }
 
 void Machine::updateMachineInfo(const std::string &ip, uint16_t port, const DeviceInfo &devInfo) {
@@ -153,9 +154,9 @@ void Machine::receivedPing() {
     m_pingTimer->reset();
 }
 
-void Machine::onPair(const std::shared_ptr<uvxx::TCP> &sock) {
+void Machine::onPair(QTcpSocket *socket) {
     spdlog::info("request onPair");
-    m_conn = sock;
+    m_conn = socket;
 
     m_confirmDialog = std::make_unique<ConfirmDialogWrapper>(
         m_ip,
@@ -200,10 +201,10 @@ void Machine::onOffline() {
 }
 
 void Machine::initConnection() {
-    m_conn->onClosed(uvxx::memFunc(this, &Machine::handleDisconnectedAux));
-    m_conn->onReceived(uvxx::memFunc(this, &Machine::dispatcher));
-    m_conn->tcpNoDelay();
-    m_conn->keepalive(true, 20);
+    QObject::connect(m_conn, &QTcpSocket::disconnected, this, &Machine::handleDisconnectedAux);
+    QObject::connect(m_conn, &QTcpSocket::readyRead, this, &Machine::dispatcher);
+    m_conn->setSocketOption(QAbstractSocket::LowDelayOption, true);
+    m_conn->setSocketOption(QAbstractSocket::KeepAliveOption, 20);
 }
 
 void Machine::handleDisconnectedAux() {
@@ -227,30 +228,40 @@ void Machine::handleDisconnectedAux() {
         m_fuseServer.reset();
     }
 
-    m_conn.reset();
+    m_conn->deleteLater();
+    m_conn = nullptr;
 
     m_pingTimer->reset();
 
     handleDisconnected();
 }
 
-void Machine::dispatcher(uvxx::Buffer &buff) noexcept {
-    spdlog::info("received packet from name: {}, UUID: {}, size: {}",
-                 std::string(m_name),
-                 std::string(m_uuid),
-                 buff.size());
+void Machine::dispatcher() noexcept {
+    qInfo() << fmt::format("received packet from name: {}, UUID: {}, size: {}",
+                           std::string(m_name),
+                           std::string(m_uuid),
+                           m_conn->size())
+                   .data();
 
-    while (buff.size() >= header_size) {
-        auto res = MessageHelper::parseMessage<Message>(buff);
-        if (!res.has_value()) {
-            if (res.error() == MessageHelper::PARSE_ERROR::ILLEGAL_MESSAGE) {
-                spdlog::error("illegal message from {}, close the connection", std::string(m_uuid));
-                m_conn->close();
-            }
+    while (m_conn->size() >= header_size) {
+        QByteArray buffer = m_conn->peek(header_size);
+        auto header = MessageHelper::parseMessageHeader(buffer);
+        if (!header.legal()) {
+            qWarning() << "illegal message from " << m_conn->peerAddress().toString();
             return;
         }
 
-        Message &msg = res.value();
+        if (m_conn->size() < static_cast<qint64>(header_size + header.size())) {
+            qDebug() << "partial content";
+            return;
+        }
+
+        m_conn->read(header_size);
+        auto size = header.size();
+        buffer = m_conn->read(size);
+
+        Message msg = MessageHelper::parseMessageBody<Message>(buffer.data(), buffer.size());
+
         spdlog::debug("message type: {}", msg.payload_case());
 
         switch (msg.payload_case()) {
@@ -441,7 +452,7 @@ void Machine::handleInputEventRequest(const InputEventRequest &req) {
     response->set_serial(req.serial());
     response->set_success(success);
 
-    m_conn->write(MessageHelper::genMessage(resp));
+    m_conn->write(MessageHelper::genMessageQ(resp));
 }
 
 void Machine::handleFlowDirectionNtf(const FlowDirectionNtf &ntf) {
@@ -476,7 +487,7 @@ void Machine::handleFsRequest([[maybe_unused]] const FsRequest &req) {
         return;
     }
 
-    m_fuseServer = std::make_unique<FuseServer>(weak_from_this(), m_uvLoop);
+    m_fuseServer = std::make_unique<FuseServer>(weak_from_this());
 
     // TODO: request accept
     Message msg;
@@ -515,9 +526,11 @@ void Machine::handleFsSendFileRequest(const FsSendFileRequest &req) {
     }
     std::string filePath = m_mountpoint.string() + reqPath;
     auto process = std::make_shared<uvxx::Process>(m_uvLoop, "/bin/cp");
-    process->onExit([this, storagePath = storagePath.toStdString(), serial = req.serial(), path = req.path(), process](
-                        int64_t exit_status,
-                        [[maybe_unused]] int term_signal) {
+    process->onExit([this,
+                     storagePath = storagePath.toStdString(),
+                     serial = req.serial(),
+                     path = req.path(),
+                     process](int64_t exit_status, [[maybe_unused]] int term_signal) {
         Message msg;
         auto *fssendfileresult = msg.mutable_fssendfileresult();
         fssendfileresult->set_serial(serial);
@@ -750,7 +763,7 @@ void Machine::sendMessage(const Message &msg) {
         return;
     }
 
-    m_conn->write(MessageHelper::genMessage(msg));
+    m_conn->write(MessageHelper::genMessageQ(msg));
 }
 
 void Machine::sendServiceStatusNotification() {

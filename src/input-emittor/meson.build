@@ -18,6 +18,7 @@ input_emittor = executable('input-emittor',
     spdlog,
     libevdev,
     protobuf,
+    qt5dep,
   ],
   link_with: [
     uvxx,

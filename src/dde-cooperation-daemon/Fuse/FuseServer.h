@@ -6,18 +6,22 @@
 
 #include "protocol/fs.pb.h"
 
+#include <QObject>
+
 namespace uvxx {
 class Loop;
-class TCP;
-class Buffer;
 } // namespace uvxx
+
+class QTcpServer;
+class QTcpSocket;
 
 class Machine;
 
-class FuseServer {
+class FuseServer : public QObject {
+    Q_OBJECT
+
 public:
-    explicit FuseServer(const std::weak_ptr<Machine> &machine,
-                        const std::shared_ptr<uvxx::Loop> &uvLoop);
+    explicit FuseServer(const std::weak_ptr<Machine> &machine);
     ~FuseServer();
 
     uint16_t port() const;
@@ -26,12 +30,12 @@ private:
     std::weak_ptr<Machine> m_machine;
 
     std::shared_ptr<uvxx::Loop> m_uvLoop;
-    std::shared_ptr<uvxx::TCP> m_listen;
-    std::shared_ptr<uvxx::TCP> m_conn;
+    QTcpServer *m_listen;
+    QTcpSocket *m_conn;
 
-    void handleNewConnection(bool) noexcept;
+    void handleNewConnection() noexcept;
     void handleDisconnected() noexcept;
-    void handleRequest(uvxx::Buffer &buff) noexcept;
+    void handleRequest() noexcept;
 
     void methodGetattr(const FsMethodGetAttrRequest &req, FsMethodGetAttrResponse *resp);
     void methodOpen(const FsMethodOpenRequest &req, FsMethodOpenResponse *resp);

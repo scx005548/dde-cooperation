@@ -24,12 +24,13 @@ DCORE_USE_NAMESPACE
 namespace uvxx {
 class Loop;
 class Async;
-class Addr;
-class TCP;
-class UDP;
 class Pipe;
 class Process;
 } // namespace uvxx
+
+class QUdpSocket;
+class QTcpServer;
+class QHostAddress;
 
 class ManagerDBusAdaptor;
 class FsSendFileRequest;
@@ -99,11 +100,10 @@ private:
     std::thread m_uvThread;
     std::shared_ptr<uvxx::Loop> m_uvLoop;
     std::shared_ptr<uvxx::Async> m_async;
-    std::shared_ptr<uvxx::UDP> m_socketScan;
+    QUdpSocket *m_socketScan;
     uint16_t m_port;
-    std::shared_ptr<uvxx::TCP> m_listenPair;
+    QTcpServer *m_listenPair;
     static const uint16_t m_scanPort = 51595;
-    std::shared_ptr<uvxx::Addr> m_scanAddr;
 
     std::string m_uuid;
     QString m_fileStoragePath;
@@ -126,6 +126,7 @@ private:
     void initUUID();
     std::string newUUID() const;
     bool isValidUUID(const std::string &str) const noexcept;
+    QString addrToString(const QHostAddress &addr) const;
 
     void initFileStoragePath();
     void initSharedClipboardStatus();
@@ -140,11 +141,9 @@ private:
     void unInhibitScreensaver();
 
     void handleSocketError(const std::string &title, const std::string &msg);
-    void handleReceivedSocketScan(std::shared_ptr<uvxx::Addr> addr,
-                                  std::shared_ptr<char[]> data,
-                                  size_t size,
-                                  bool partial) noexcept;
-    void handleNewConnection(bool) noexcept;
+    void handleReceivedSocketScan() noexcept;
+    void handleNewConnection() noexcept;
+    void handleNewConnectionFirstPacket() noexcept;
     void sendServiceStoppedNotification() const;
     void serviceStatusChanged();
 };

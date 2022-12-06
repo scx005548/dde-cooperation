@@ -9,12 +9,12 @@
 #include <fmt/core.h>
 #include <spdlog/spdlog.h>
 
+#include <QUdpSocket>
+#include <QTcpServer>
+#include <QTcpSocket>
 #include <QDebug>
 
 #include "uvxx/Loop.h"
-#include "uvxx/TCP.h"
-#include "uvxx/UDP.h"
-#include "uvxx/Addr.h"
 #include "uvxx/Async.h"
 
 #include "Machine/Machine.h"
@@ -42,8 +42,8 @@ Manager::Manager(const std::filesystem::path &dataDir)
     , m_lastRequestId(0)
     , m_uvLoop(uvxx::Loop::defaultLoop())
     , m_async(std::make_shared<uvxx::Async>(m_uvLoop))
-    , m_socketScan(std::make_shared<uvxx::UDP>(m_uvLoop))
-    , m_listenPair(std::make_shared<uvxx::TCP>(m_uvLoop))
+    , m_socketScan(new QUdpSocket(this))
+    , m_listenPair(new QTcpServer(this))
     , m_powersaverProxy("org.freedesktop.ScreenSaver",
                         "/org/freedesktop/ScreenSaver",
                         "org.freedesktop.ScreenSaver")
@@ -58,20 +58,13 @@ Manager::Manager(const std::filesystem::path &dataDir)
 
     m_keypair.load();
 
-    m_socketScan->onSendFailed(uvxx::memFunc(this, &Manager::handleSocketError));
-    m_socketScan->onReceived(uvxx::memFunc(this, &Manager::handleReceivedSocketScan));
-    m_socketScan->bind("0.0.0.0", m_scanPort);
-    m_socketScan->setBroadcast(true);
-    m_socketScan->startRecv();
+    connect(m_socketScan, &QUdpSocket::readyRead, this, &Manager::handleReceivedSocketScan);
+    m_socketScan->bind(QHostAddress::Any, m_scanPort);
 
-    m_listenPair->onNewConnection(uvxx::memFunc(this, &Manager::handleNewConnection));
-    m_listenPair->bind("0.0.0.0");
-    m_listenPair->listen();
-    m_port = m_listenPair->localAddress()->ipv4()->port();
+    connect(m_listenPair, &QTcpServer::newConnection, this, &Manager::handleNewConnection);
+    m_listenPair->listen(QHostAddress::Any);
+    m_port = m_listenPair->serverPort();
     spdlog::debug("TCP listening on port: {}", m_port);
-
-    std::string ip = Net::getIpAddress();
-    m_scanAddr = uvxx::IPv4Addr::create(Net::getBroadcastAddress(ip), m_scanPort);
 
     m_displayServer = std::make_unique<X11::Display>(m_uvLoop, this);
     m_clipboard = std::make_unique<X11::Clipboard>(m_uvLoop, this);
@@ -151,6 +144,16 @@ bool Manager::isValidUUID(const std::string &str) const noexcept {
     uuid_t uuid;
     int res = uuid_parse_range(str.data(), str.data() + str.size(), uuid);
     return res == 0;
+}
+
+QString Manager::addrToString(const QHostAddress &addr) const {
+    bool conversionOK = false;
+    QHostAddress ip4Addr(addr.toIPv4Address(&conversionOK));
+    if (conversionOK) {
+        return ip4Addr.toString();
+    }
+
+    return addr.toString();
 }
 
 void Manager::initFileStoragePath() {
@@ -337,7 +340,9 @@ void Manager::scan() noexcept {
     request->mutable_deviceinfo()->set_os(DEVICE_OS_LINUX);
     request->set_port(m_port);
 
-    m_socketScan->send(m_scanAddr, MessageHelper::genMessage(base));
+    m_socketScan->writeDatagram(MessageHelper::genMessageQ(base),
+                                QHostAddress::Broadcast,
+                                m_scanPort);
 }
 
 void Manager::removeInputGrabber(const std::filesystem::path &path) {
@@ -425,157 +430,166 @@ void Manager::handleSocketError(const std::string &title, const std::string &msg
     spdlog::error("failed to send message: {} {}", title, msg);
 }
 
-void Manager::handleReceivedSocketScan(std::shared_ptr<uvxx::Addr> addr,
-                                       std::shared_ptr<char[]> data,
-                                       [[maybe_unused]] size_t size,
-                                       bool partial) noexcept {
-    spdlog::debug("partial: {}", partial);
+void Manager::handleReceivedSocketScan() noexcept {
 
     if (!m_deviceSharingSwitch) {
         return;
     }
 
-    auto buff = data.get();
-    auto &header = MessageHelper::parseMessageHeader(buff);
-    if (!header.legal()) {
-        spdlog::error("illegal message from {}", addr->toString());
-        return;
-    }
+    while (m_socketScan->hasPendingDatagrams()) {
+        QByteArray datagram;
+        datagram.resize(m_socketScan->pendingDatagramSize());
 
-    buff += header_size;
-    size -= header_size;
+        QHostAddress addr;
+        m_socketScan->readDatagram(datagram.data(), datagram.size(), &addr);
 
-    auto base = MessageHelper::parseMessageBody<Message>(buff, size);
-    spdlog::info("received packet, type: {}", base.payload_case());
+        const char *buff = datagram.data();
+        size_t size = datagram.size();
 
-    switch (base.payload_case()) {
-    case Message::PayloadCase::kScanRequest: {
-        // TODO: check ipv4 or ipv6
-        auto ipv4 = addr->ipv4();
-
-        const auto &request = base.scanrequest();
-        if (request.key() != SCAN_KEY) {
-            spdlog::error("key mismatch: {}", request.key());
+        auto &header = MessageHelper::parseMessageHeader(buff);
+        if (!header.legal()) {
+            qWarning() << "illegal message from " << addr.toString();
             return;
         }
 
-        // 自己扫描到自己，忽略
-        auto uuid = request.deviceinfo().uuid();
-        if (uuid == m_uuid) {
-            return;
-        }
+        buff += header_size;
+        size -= header_size;
 
-        if (!isValidUUID(uuid)) {
-            return;
-        }
+        auto base = MessageHelper::parseMessageBody<Message>(buff, size);
+        spdlog::info("received packet, type: {}", base.payload_case());
 
-        QMetaObject::invokeMethod(this, [ipv4, request, this] {
-                updateMachine(ipv4->ip(), request.port(), request.deviceinfo());
-            }, Qt::QueuedConnection);
-
-        Message msg;
-        ScanResponse *response = msg.mutable_scanresponse();
-        response->set_key(SCAN_KEY);
-        response->mutable_deviceinfo()->set_uuid(m_uuid);
-        response->mutable_deviceinfo()->set_name(Net::getHostname());
-        response->mutable_deviceinfo()->set_os(DEVICE_OS_LINUX);
-        response->set_port(m_port);
-        m_socketScan->send(addr, MessageHelper::genMessage(msg));
-
-        break;
-    }
-    case Message::PayloadCase::kScanResponse: {
-        const auto &resp = base.scanresponse();
-        if (resp.key() != SCAN_KEY) {
-            spdlog::error("key mismatch: {}", SCAN_KEY);
-            return;
-        }
-
-        auto uuid = resp.deviceinfo().uuid();
-        if (!isValidUUID(uuid)) {
-            return;
-        }
-
-        QMetaObject::invokeMethod(this, [addr, resp, this] {
-                updateMachine(addr->ipv4()->ip(), resp.port(), resp.deviceinfo());
-            }, Qt::QueuedConnection);
-
-        spdlog::info("{} responded", resp.deviceinfo().name());
-        break;
-    }
-    case Message::PayloadCase::kServiceStoppedNotification: {
-        const auto &notification = base.servicestoppednotification();
-        const auto &uuid = notification.deviceuuid();
-
-        auto iter = m_machines.find(uuid);
-        if (iter != m_machines.end()) {
-            if (iter->second->m_connected) {
-                iter->second->m_conn->close();
+        switch (base.payload_case()) {
+        case Message::PayloadCase::kScanRequest: {
+            const auto &request = base.scanrequest();
+            if (request.key() != SCAN_KEY) {
+                spdlog::error("key mismatch: {}", request.key());
+                return;
             }
 
-            m_machines.erase(uuid);
-            m_dbusAdaptor->updateMachines(getMachinePaths());
+            // 自己扫描到自己，忽略
+            auto uuid = request.deviceinfo().uuid();
+            if (uuid == m_uuid) {
+                return;
+            }
+
+            if (!isValidUUID(uuid)) {
+                return;
+            }
+
+            updateMachine(addrToString(addr).toStdString(), request.port(), request.deviceinfo());
+
+            Message msg;
+            ScanResponse *response = msg.mutable_scanresponse();
+            response->set_key(SCAN_KEY);
+            response->mutable_deviceinfo()->set_uuid(m_uuid);
+            response->mutable_deviceinfo()->set_name(Net::getHostname());
+            response->mutable_deviceinfo()->set_os(DEVICE_OS_LINUX);
+            response->set_port(m_port);
+            m_socketScan->writeDatagram(MessageHelper::genMessageQ(msg), addr, m_scanPort);
+
+            break;
         }
-        break;
-    }
-    default: {
-        spdlog::error("unknown data type");
-        break;
-    }
+        case Message::PayloadCase::kScanResponse: {
+            const auto &resp = base.scanresponse();
+            if (resp.key() != SCAN_KEY) {
+                spdlog::error("key mismatch: {}", SCAN_KEY);
+                return;
+            }
+
+            auto uuid = resp.deviceinfo().uuid();
+            if (!isValidUUID(uuid)) {
+                return;
+            }
+
+            updateMachine(addrToString(addr).toStdString(), resp.port(), resp.deviceinfo());
+
+            spdlog::info("{} responded", resp.deviceinfo().name());
+            break;
+        }
+        case Message::PayloadCase::kServiceStoppedNotification: {
+            const auto &notification = base.servicestoppednotification();
+            const auto &uuid = notification.deviceuuid();
+
+            auto iter = m_machines.find(uuid);
+            if (iter != m_machines.end()) {
+                if (iter->second->m_connected) {
+                    iter->second->m_conn->close();
+                }
+
+                m_machines.erase(uuid);
+                m_dbusAdaptor->updateMachines(getMachinePaths());
+            }
+            break;
+        }
+        default: {
+            spdlog::error("unknown data type");
+            break;
+        }
+        }
     }
 }
 
-void Manager::handleNewConnection(bool) noexcept {
-    spdlog::debug("new connection received");
+void Manager::handleNewConnection() noexcept {
+    while (m_listenPair->hasPendingConnections()) {
+        spdlog::debug("new connection received");
 
-    auto socketConnected = m_listenPair->accept();
-    socketConnected->onReceived([this, socketConnected](uvxx::Buffer &buff) {
-        auto res = MessageHelper::parseMessage<Message>(buff);
-        if (!res.has_value()) {
-            if (res.error() == MessageHelper::PARSE_ERROR::ILLEGAL_MESSAGE) {
-                spdlog::error("illegal message from {}, close the connection",
-                              socketConnected->remoteAddress()->toString());
-                socketConnected->close();
-                socketConnected->onReceived(nullptr);
+        QTcpSocket *socket = m_listenPair->nextPendingConnection();
+        connect(socket, &QTcpSocket::readyRead, [this, socket] {
+            QByteArray buffer = socket->peek(header_size);
+            auto header = MessageHelper::parseMessageHeader(buffer);
+            if (!header.legal()) {
+                qWarning() << "illegal message from " << socket->peerAddress().toString();
+                return;
             }
-            return;
-        }
 
-        Message &msg = res.value();
+            if (socket->size() < static_cast<qint64>(header_size + header.size())) {
+                qDebug() << "partial packet:" << socket->size();
+                return;
+            }
 
-        const auto &request = msg.pairrequest();
-        if (request.key() != SCAN_KEY) {
-            spdlog::error("key mismatch {}", SCAN_KEY);
-            socketConnected->close();
-            socketConnected->onReceived(nullptr);
-            return;
-        }
+            socket->read(header_size);
+            auto size = header.size();
+            buffer = socket->read(size);
 
-        auto i = m_machines.find(request.deviceinfo().uuid());
-        if (i == m_machines.end()) {
-            // TODO: return failed
-            spdlog::error("cannot found device with uuid {}", request.deviceinfo().uuid());
-            socketConnected->close();
-            socketConnected->onReceived(nullptr);
-            return;
-        }
+            Message msg = MessageHelper::parseMessageBody<Message>(buffer.data(), buffer.size());
 
-        auto machine = i->second;
-        if ((machine->isPcMachine() && hasPcMachinePaired()) ||
-            (machine->isAndroid() && hasAndroidPaired())) {
-            // TODO tips
-            spdlog::error("cannot pair this device, this machine is paired with other machine");
-            socketConnected->close();
-            socketConnected->onReceived(nullptr);
-            return;
-        }
+            const auto &request = msg.pairrequest();
+            if (request.key() != SCAN_KEY) {
+                spdlog::error("key mismatch {}", SCAN_KEY);
+                socket->close();
+                return;
+            }
 
-        auto remote = socketConnected->remoteAddress();
-        spdlog::info("connected by {}@{}", request.deviceinfo().name().c_str(), remote->toString());
+            auto i = m_machines.find(request.deviceinfo().uuid());
+            if (i == m_machines.end()) {
+                // TODO: return failed
+                spdlog::error("cannot found device with uuid {}", request.deviceinfo().uuid());
+                socket->close();
+                return;
+            }
 
-        machine->onPair(socketConnected);
-    });
-    socketConnected->startRead();
+            auto machine = i->second;
+            if ((machine->isPcMachine() && hasPcMachinePaired()) ||
+                (machine->isAndroid() && hasAndroidPaired())) {
+                // TODO tips
+                spdlog::error("cannot pair this device, this machine is paired with other machine");
+                socket->close();
+                return;
+            }
+
+            auto remote = socket->peerAddress();
+            qInfo() << fmt::format("connected by {}@{}",
+                                   request.deviceinfo().name(),
+                                   remote.toString().toStdString())
+                           .data();
+
+            socket->disconnect();
+            machine->onPair(socket);
+        });
+    }
+}
+
+void Manager::handleNewConnectionFirstPacket() noexcept {
 }
 
 void Manager::ping(const std::string &ip, uint16_t port) {
@@ -587,7 +601,9 @@ void Manager::ping(const std::string &ip, uint16_t port) {
     request->mutable_deviceinfo()->set_os(DEVICE_OS_LINUX);
     request->set_port(m_port);
 
-    m_socketScan->send(uvxx::IPv4Addr::create(ip, port), MessageHelper::genMessage(msg));
+    m_socketScan->writeDatagram(MessageHelper::genMessageQ(msg),
+                                QHostAddress(QString::fromStdString(ip)),
+                                port);
 }
 
 void Manager::onMachineOffline(const std::string &uuid) {
@@ -704,8 +720,9 @@ void Manager::sendServiceStoppedNotification() const {
         ServiceStoppedNotification *notification = base.mutable_servicestoppednotification();
         notification->set_deviceuuid(machine->m_uuid);
 
-        m_socketScan->send(uvxx::IPv4Addr::create(machine->ip(), m_scanPort),
-                           MessageHelper::genMessage(base));
+        m_socketScan->writeDatagram(MessageHelper::genMessageQ(base),
+                                    QHostAddress(QString::fromStdString(machine->ip())),
+                                    m_scanPort);
     }
 }
 

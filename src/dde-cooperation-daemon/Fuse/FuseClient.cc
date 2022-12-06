@@ -10,9 +10,10 @@
 #include <spdlog/spdlog.h>
 #include <google/protobuf/util/time_util.h>
 
+#include <QTcpSocket>
+#include <QHostAddress>
+
 #include "uvxx/Loop.h"
-#include "uvxx/TCP.h"
-#include "uvxx/Async.h"
 #include "uvxx/Process.h"
 
 #include "utils/message_helper.h"
@@ -39,8 +40,7 @@ FuseClient::FuseClient(const std::shared_ptr<uvxx::Loop> &uvLoop,
                        uint16_t port,
                        const std::filesystem::path &mountpoint)
     : m_uvLoop(uvLoop)
-    , m_async(std::make_shared<uvxx::Async>(m_uvLoop))
-    , m_conn(std::make_shared<uvxx::TCP>(m_uvLoop))
+    , m_conn(new QTcpSocket(this))
     , m_ip(ip)
     , m_port(port)
     , m_mountpoint(mountpoint)
@@ -62,10 +62,11 @@ FuseClient::FuseClient(const std::shared_ptr<uvxx::Loop> &uvLoop,
         fuse_opt_add_arg(&m_args, m_mountpoint.c_str());
         fuse_opt_add_arg(&m_args, "-d");
 
-        m_conn->onConnected([this]() { m_mountThread = std::thread(&FuseClient::mount, this); });
-        m_conn->onReceived(uvxx::memFunc(this, &FuseClient::handleResponse));
-        m_conn->connect(m_ip, m_port);
-        m_conn->startRead();
+        connect(m_conn, &QTcpSocket::connected, [this] {
+            m_mountThread = std::thread(&FuseClient::mount, this);
+        });
+        connect(m_conn, &QTcpSocket::readyRead, this, &FuseClient::handleResponse);
+        m_conn->connectToHost(QHostAddress(QString::fromStdString(m_ip)), m_port);
 
         process->close();
         process->onExit(nullptr);
@@ -75,7 +76,6 @@ FuseClient::FuseClient(const std::shared_ptr<uvxx::Loop> &uvLoop,
 }
 
 FuseClient::~FuseClient() {
-    m_async->close();
     m_conn->close();
     exit();
 }
@@ -126,13 +126,13 @@ int FuseClient::getattr(const char *path,
                         [[maybe_unused]] struct fuse_file_info *fi) {
     spdlog::debug("getattr: {}", path);
 
-    m_async->wake([this, path]() {
+    QMetaObject::invokeMethod(this, [this, path]() {
         Message msg;
         FsMethodGetAttrRequest *req = msg.mutable_fsmethodgetattrrequest();
         m_serial++;
         req->set_serial(m_serial);
         req->set_path(path);
-        m_conn->write(MessageHelper::genMessage(msg));
+        m_conn->write(MessageHelper::genMessageQ(msg));
     });
 
     auto resp = std::static_pointer_cast<FsMethodGetAttrResponse>(waitForServerReply());
@@ -172,13 +172,13 @@ int FuseClient::getattr(const char *path,
 int FuseClient::open(const char *path, struct fuse_file_info *fi) {
     spdlog::debug("open: {}", path);
 
-    m_async->wake([this, path]() {
+    QMetaObject::invokeMethod(this, [this, path]() {
         Message msg;
         FsMethodOpenRequest *req = msg.mutable_fsmethodopenrequest();
         m_serial++;
         req->set_serial(m_serial);
         req->set_path(path);
-        m_conn->write(MessageHelper::genMessage(msg));
+        m_conn->write(MessageHelper::genMessageQ(msg));
     });
 
     auto resp = std::static_pointer_cast<FsMethodOpenResponse>(waitForServerReply());
@@ -203,7 +203,7 @@ int FuseClient::read(const char *path,
                      struct fuse_file_info *fi) {
     spdlog::debug("read: {}, fh: {}, size: {}, offset: {}", path, fi->fh, size, offset);
 
-    m_async->wake([this, offset, size, fi]() {
+    QMetaObject::invokeMethod(this, [this, offset, size, fi]() {
         Message msg;
         FsMethodReadRequest *req = msg.mutable_fsmethodreadrequest();
         m_serial++;
@@ -212,7 +212,7 @@ int FuseClient::read(const char *path,
         req->set_size(size);
         auto rfi = req->mutable_fi();
         rfi->set_fh(fi->fh);
-        m_conn->write(MessageHelper::genMessage(msg));
+        m_conn->write(MessageHelper::genMessageQ(msg));
     });
 
     auto resp = std::static_pointer_cast<FsMethodReadResponse>(waitForServerReply());
@@ -230,14 +230,14 @@ int FuseClient::read(const char *path,
 int FuseClient::release(const char *path, struct fuse_file_info *fi) {
     spdlog::debug("release: {}", path);
 
-    m_async->wake([this, path, fi]() {
+    QMetaObject::invokeMethod(this, [this, path, fi]() {
         Message msg;
         FsMethodReleaseRequest *req = msg.mutable_fsmethodreleaserequest();
         m_serial++;
         req->set_serial(m_serial);
         req->set_path(path);
         req->mutable_fi()->set_fh(fi->fh);
-        m_conn->write(MessageHelper::genMessage(msg));
+        m_conn->write(MessageHelper::genMessageQ(msg));
     });
 
     auto resp = std::static_pointer_cast<FsMethodReleaseResponse>(waitForServerReply());
@@ -257,13 +257,13 @@ int FuseClient::readdir(const char *path,
                         [[maybe_unused]] enum fuse_readdir_flags flags) {
     spdlog::debug("readdir: {}", path);
 
-    m_async->wake([this, path]() {
+    QMetaObject::invokeMethod(this, [this, path]() {
         Message msg;
         FsMethodReadDirRequest *req = msg.mutable_fsmethodreaddirrequest();
         m_serial++;
         req->set_serial(m_serial);
         req->set_path(path);
-        m_conn->write(MessageHelper::genMessage(msg));
+        m_conn->write(MessageHelper::genMessageQ(msg));
     });
 
     auto resp = std::static_pointer_cast<FsMethodReadDirResponse>(waitForServerReply());
@@ -279,17 +279,27 @@ int FuseClient::readdir(const char *path,
     return resp->result();
 }
 
-void FuseClient::handleResponse(uvxx::Buffer &buff) noexcept {
-    while (buff.size() >= header_size) {
-        auto res = MessageHelper::parseMessage<Message>(buff);
-        if (!res.has_value()) {
-            if (res.error() == MessageHelper::PARSE_ERROR::ILLEGAL_MESSAGE) {
-                m_conn->close();
-            }
+void FuseClient::handleResponse() noexcept {
+    while (m_conn->size() >= header_size) {
+        QByteArray buffer = m_conn->peek(header_size);
+        auto header = MessageHelper::parseMessageHeader(buffer);
+        if (!header.legal()) {
+            qWarning() << "illegal message from " << m_conn->peerAddress().toString();
             return;
         }
 
-        Message &msg = res.value();
+        if (m_conn->size() < static_cast<qint64>(header_size + header.size())) {
+            qDebug() << "partial content";
+            return;
+        }
+
+        m_conn->read(header_size);
+        auto size = header.size();
+        buffer = m_conn->read(size);
+
+        Message msg = MessageHelper::parseMessageBody<Message>(buffer.data(), buffer.size());
+
+        spdlog::debug("message type: {}", msg.payload_case());
 
         switch (msg.payload_case()) {
         case Message::PayloadCase::kFsMethodGetAttrResponse: {

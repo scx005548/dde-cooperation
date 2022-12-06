@@ -12,14 +12,17 @@
 
 #include <google/protobuf/message.h>
 
+#include <QObject>
+
 namespace uvxx {
 class Loop;
-class Async;
-class TCP;
-class Buffer;
 } // namespace uvxx
 
-class FuseClient {
+class QTcpSocket;
+
+class FuseClient : public QObject {
+    Q_OBJECT
+
 public:
     explicit FuseClient(const std::shared_ptr<uvxx::Loop> &uvLoop,
                         const std::string &ip,
@@ -33,8 +36,7 @@ public:
 
 private:
     std::shared_ptr<uvxx::Loop> m_uvLoop;
-    std::shared_ptr<uvxx::Async> m_async;
-    std::shared_ptr<uvxx::TCP> m_conn;
+    QTcpSocket *m_conn;
 
     std::string m_ip;
     uint16_t m_port;
@@ -60,7 +62,7 @@ private:
                 struct fuse_file_info *fi,
                 enum fuse_readdir_flags flags);
 
-    void handleResponse(uvxx::Buffer &buff) noexcept;
+    void handleResponse() noexcept;
     std::shared_ptr<google::protobuf::Message> waitForServerReply();
 };
 

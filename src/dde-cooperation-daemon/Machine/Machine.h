@@ -16,10 +16,10 @@ namespace uvxx {
 class Loop;
 class Timer;
 class Async;
-class TCP;
-class UDP;
 class Buffer;
 } // namespace uvxx
+
+class QTcpSocket;
 
 class Manager;
 class MachineDBusAdaptor;
@@ -54,7 +54,7 @@ public:
     void updateMachineInfo(const std::string &ip, uint16_t port, const DeviceInfo &devInfo);
 
     void receivedPing();
-    void onPair(const std::shared_ptr<uvxx::TCP> &sock);
+    void onPair(QTcpSocket *socket);
     void onInputGrabberEvent(uint8_t deviceType, unsigned int type, unsigned int code, int value);
     void onClipboardTargetsChanged(const std::vector<std::string> &targets);
 
@@ -108,7 +108,7 @@ private:
     void initConnection();
 
     void handleDisconnectedAux();
-    void dispatcher(uvxx::Buffer &buff) noexcept;
+    void dispatcher() noexcept;
     void handlePairResponseAux(const PairResponse &resp);
     void handleServiceOnOffMsg(const ServiceOnOffNotification &notification);
     void handleDeviceSharingStartRequest();
@@ -132,7 +132,7 @@ private:
 protected:
     std::shared_ptr<uvxx::Loop> m_uvLoop;
     std::shared_ptr<uvxx::Async> m_async;
-    std::shared_ptr<uvxx::TCP> m_conn;
+    QTcpSocket *m_conn;
 
     std::string m_ip;
 

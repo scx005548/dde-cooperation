@@ -8,11 +8,11 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include <google/protobuf/util/time_util.h>
+#include <QTcpServer>
+#include <QTcpSocket>
 
-#include "uvxx/Loop.h"
-#include "uvxx/TCP.h"
-#include "uvxx/Addr.h"
+#include <spdlog/spdlog.h>
+#include <google/protobuf/util/time_util.h>
 
 #include "Machine/Machine.h"
 #include "utils/message_helper.h"
@@ -22,15 +22,14 @@ namespace fs = std::filesystem;
 
 static constexpr size_t maxRead = 128 * 1024;
 
-FuseServer::FuseServer(const std::weak_ptr<Machine> &machine,
-                       const std::shared_ptr<uvxx::Loop> &uvLoop)
+FuseServer::FuseServer(const std::weak_ptr<Machine> &machine)
     : m_machine(machine)
-    , m_uvLoop(uvLoop)
-    , m_listen(std::make_shared<uvxx::TCP>(m_uvLoop)) {
+    , m_listen(new QTcpServer(this))
+    , m_conn(nullptr) {
 
-    m_listen->bind("0.0.0.0");
-    m_listen->listen();
-    m_listen->onNewConnection(uvxx::memFunc(this, &FuseServer::handleNewConnection));
+    m_listen->listen(QHostAddress::Any);
+    m_listen->setMaxPendingConnections(1);
+    connect(m_listen, &QTcpServer::newConnection, this, &FuseServer::handleNewConnection);
 }
 
 FuseServer::~FuseServer() {
@@ -41,37 +40,46 @@ FuseServer::~FuseServer() {
 }
 
 uint16_t FuseServer::port() const {
-    return m_listen->localAddress()->ipv4()->port();
+    return m_listen->serverPort();
 }
 
-void FuseServer::handleNewConnection(bool) noexcept {
+void FuseServer::handleNewConnection() noexcept {
     if (m_conn) {
         return;
     }
 
     // TODO: check client
-    m_conn = m_listen->accept();
-    m_conn->onReceived(uvxx::memFunc(this, &FuseServer::handleRequest));
-    m_conn->startRead();
-    m_conn->onClosed(uvxx::memFunc(this, &FuseServer::handleDisconnected));
+    m_conn = m_listen->nextPendingConnection();
+    connect(m_conn, &QTcpSocket::readyRead, this, &FuseServer::handleRequest);
+    connect(m_conn, &QTcpSocket::disconnected, this, &FuseServer::handleDisconnected);
 
     m_listen->close();
 }
 
 void FuseServer::handleDisconnected() noexcept {
+    m_conn->deleteLater();
+    m_conn = nullptr;
 }
 
-void FuseServer::handleRequest(uvxx::Buffer &buff) noexcept {
-    while (buff.size() >= header_size) {
-        auto res = MessageHelper::parseMessage<Message>(buff);
-        if (!res.has_value()) {
-            if (res.error() == MessageHelper::PARSE_ERROR::ILLEGAL_MESSAGE) {
-                m_conn->close();
-            }
+void FuseServer::handleRequest() noexcept {
+    while (m_conn->size() >= header_size) {
+        QByteArray buffer = m_conn->peek(header_size);
+        auto header = MessageHelper::parseMessageHeader(buffer);
+        if (!header.legal()) {
+            qWarning() << "illegal message from " << m_conn->peerAddress().toString();
             return;
         }
 
-        Message &msg = res.value();
+        if (m_conn->size() < static_cast<qint64>(header_size + header.size())) {
+            qDebug() << "partial packet:" << m_conn->size();
+            return;
+        }
+
+        m_conn->read(header_size);
+        auto size = header.size();
+        buffer = m_conn->read(size);
+
+        Message msg = MessageHelper::parseMessageBody<Message>(buffer.data(), buffer.size());
 
         switch (msg.payload_case()) {
         case Message::PayloadCase::kFsMethodGetAttrRequest: {
@@ -79,7 +87,7 @@ void FuseServer::handleRequest(uvxx::Buffer &buff) noexcept {
 
             Message resp;
             methodGetattr(req, resp.mutable_fsmethodgetattrresponse());
-            m_conn->write(MessageHelper::genMessage(resp));
+            m_conn->write(MessageHelper::genMessageQ(resp));
             break;
         }
         case Message::PayloadCase::kFsMethodReadRequest: {
@@ -87,7 +95,7 @@ void FuseServer::handleRequest(uvxx::Buffer &buff) noexcept {
 
             Message resp;
             methodRead(req, resp.mutable_fsmethodreadresponse());
-            m_conn->write(MessageHelper::genMessage(resp));
+            m_conn->write(MessageHelper::genMessageQ(resp));
             break;
         }
         case Message::PayloadCase::kFsMethodReadDirRequest: {
@@ -95,7 +103,7 @@ void FuseServer::handleRequest(uvxx::Buffer &buff) noexcept {
 
             Message resp;
             methodReaddir(req, resp.mutable_fsmethodreaddirresponse());
-            m_conn->write(MessageHelper::genMessage(resp));
+            m_conn->write(MessageHelper::genMessageQ(resp));
             break;
         }
         case Message::PayloadCase::kFsMethodOpenRequest: {
@@ -103,7 +111,7 @@ void FuseServer::handleRequest(uvxx::Buffer &buff) noexcept {
 
             Message resp;
             methodOpen(req, resp.mutable_fsmethodopenresponse());
-            m_conn->write(MessageHelper::genMessage(resp));
+            m_conn->write(MessageHelper::genMessageQ(resp));
             break;
         }
         case Message::PayloadCase::kFsMethodReleaseRequest: {
@@ -111,7 +119,7 @@ void FuseServer::handleRequest(uvxx::Buffer &buff) noexcept {
 
             Message resp;
             methodRelease(req, resp.mutable_fsmethodreleaseresponse());
-            m_conn->write(MessageHelper::genMessage(resp));
+            m_conn->write(MessageHelper::genMessageQ(resp));
             break;
         }
         default: {

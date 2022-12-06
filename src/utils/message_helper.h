@@ -9,6 +9,8 @@
 #include <google/protobuf/message.h>
 #include <tl/expected.hpp>
 
+#include <QByteArray>
+
 #include "uvxx/Buffer.h"
 
 #define SCAN_KEY "UOS-COOPERATION"
@@ -47,6 +49,17 @@ enum class PARSE_ERROR {
     ILLEGAL_MESSAGE,
 };
 
+inline QByteArray genMessageQ(const google::protobuf::Message &msg) {
+    MessageHeader header(msg.ByteSizeLong());
+
+    QByteArray buff;
+    buff.resize(header_size + msg.ByteSizeLong());
+    memcpy(buff.data(), &header, header_size);
+    msg.SerializeToArray(buff.data() + header_size, msg.ByteSizeLong());
+
+    return buff;
+}
+
 inline std::vector<char> genMessage(const google::protobuf::Message &msg) {
     MessageHeader header(msg.ByteSizeLong());
 
@@ -55,6 +68,18 @@ inline std::vector<char> genMessage(const google::protobuf::Message &msg) {
     msg.SerializeToArray(buff.data() + header_size, msg.ByteSizeLong());
 
     return buff;
+}
+
+inline const MessageHeader &parseMessageHeader(const QByteArray &buffer) noexcept {
+    return *reinterpret_cast<const MessageHeader *>(buffer.data());
+}
+
+template <typename T>
+inline T parseMessageBody(const QByteArray &buffer) noexcept {
+    T msg;
+    msg.ParseFromArray(buffer.data(), buffer.size());
+
+    return msg;
 }
 
 inline const MessageHeader &parseMessageHeader(const char *buffer) noexcept {

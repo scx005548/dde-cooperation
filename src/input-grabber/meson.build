@@ -18,6 +18,7 @@ input_grabber = executable('input-grabber',
     spdlog,
     libevdev,
     protobuf,
+    qt5dep,
   ],
   link_with: [
     uvxx,

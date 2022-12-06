@@ -16,9 +16,7 @@ dde_cooperation_daemon_sources = files('''
   Wrappers/InputGrabberWrapper.cc
   Wrappers/ConfirmDialogWrapper.h
   Wrappers/ConfirmDialogWrapper.cc
-  Fuse/FuseClient.h
   Fuse/FuseClient.cc
-  Fuse/FuseServer.h
   Fuse/FuseServer.cc
   DisplayBase.h
   DisplayBase.cc
@@ -37,6 +35,8 @@ dde_cooperation_daemon_moc_headers = files('''
   ManagerDBusAdaptor.h
   Machine/Machine.h
   Machine/MachineDBusAdaptor.h
+  Fuse/FuseClient.h
+  Fuse/FuseServer.h
 '''.split())
 
 dde_cooperation_daemon_sources += qt5.preprocess(
