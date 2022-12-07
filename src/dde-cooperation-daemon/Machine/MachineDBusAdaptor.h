@@ -1,7 +1,9 @@
 #ifndef MACHINE_MACHINEDBUSADAPTOR_H
 #define MACHINE_MACHINEDBUSADAPTOR_H
 
-#include <QtDBus>
+#include <memory>
+
+#include <QDBusConnection>
 #include <QVector>
 
 class Manager;
@@ -12,28 +14,32 @@ class Loop;
 class Async;
 } // namespace uvxx
 
-class MachineDBusAdaptor : public QDBusAbstractAdaptor {
+class MachineDBusAdaptor : public QObject {
     friend class Machine;
 
     Q_OBJECT
     Q_CLASSINFO("D-Bus Interface", "org.deepin.dde.Cooperation1.Machine")
 
-    Q_PROPERTY(QString UUID READ getUUID NOTIFY uuidChanged)
-    Q_PROPERTY(QString Name READ getName NOTIFY nameChanged)
-    Q_PROPERTY(QString IP READ getIP NOTIFY ipChanged)
-    Q_PROPERTY(quint16 Port READ getPort NOTIFY portChanged)
-    Q_PROPERTY(quint32 OS READ getOS NOTIFY osChanged)
-    Q_PROPERTY(quint32 Compositor READ getCompositor NOTIFY compositorChanged)
-    Q_PROPERTY(bool Connected READ getConnected NOTIFY connectedChanged)
-    Q_PROPERTY(bool DeviceSharing READ getDeviceSharing NOTIFY deviceSharingChanged)
-    Q_PROPERTY(quint16 Direction READ getDirection NOTIFY directionChanged)
-    Q_PROPERTY(bool SharedClipboard READ getSharedClipboard NOTIFY sharedClipboardChanged)
+    Q_PROPERTY(QString UUID READ getUUID)
+    Q_PROPERTY(QString Name READ getName)
+    Q_PROPERTY(QString IP READ getIP)
+    Q_PROPERTY(quint16 Port READ getPort)
+    Q_PROPERTY(quint32 OS READ getOS)
+    Q_PROPERTY(quint32 Compositor READ getCompositor)
+    Q_PROPERTY(bool Connected READ getConnected)
+    Q_PROPERTY(bool DeviceSharing READ getDeviceSharing)
+    Q_PROPERTY(quint16 Direction READ getDirection)
+    Q_PROPERTY(bool SharedClipboard READ getSharedClipboard)
 
 public:
     MachineDBusAdaptor(Manager *manager,
                        Machine *machine,
+                       uint32_t id,
                        QDBusConnection bus,
                        const std::shared_ptr<uvxx::Loop> &uvLoop);
+    ~MachineDBusAdaptor();
+
+    const QString &path() const { return m_path; }
 
 public: // D-Bus properties
     QString getUUID() const;
@@ -55,31 +61,17 @@ public slots: // D-Bus methods
     void SetFlowDirection(quint16 direction, const QDBusMessage &message) const;
     void SendFiles(const QStringList &paths, const QDBusMessage &message) const;
 
-signals:
-    void uuidChanged(const QString &);
-    void nameChanged(const QString &);
-    void ipChanged(const QString &);
-    void portChanged(quint16);
-    void osChanged(quint32);
-    void compositorChanged(quint32);
-    void connectedChanged(bool v);
-    void deviceSharingChanged(bool v);
-    void directionChanged(quint16 v);
-    void sharedClipboardChanged(bool v);
-
 protected: // update properties
-    void updateUUID(const QString &uuid);
     void updateName(const QString &name);
-    void updateIP(const QString &ip);
-    void updatePort(quint16);
-    void updateOS(quint32);
-    void updateCompositor(quint32);
-    void updateConnected(bool v);
-    void updateDeviceSharing(bool v);
-    void updateDirection(quint16 v);
-    void updateSharedClipboard(bool v);
+    void updateConnected(bool connected);
+    void updateDeviceSharing(bool on);
+    void updateDirection(quint16 direction);
 
 private:
+    void propertiesChanged(const QString &property, const QVariant &value);
+
+private:
+    QString m_path;
     Manager *m_manager;
     Machine *m_machine;
     QDBusConnection m_bus;

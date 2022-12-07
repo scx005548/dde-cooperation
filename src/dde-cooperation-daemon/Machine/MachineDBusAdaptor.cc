@@ -5,16 +5,26 @@
 #include "Manager.h"
 #include "Machine.h"
 
+static const QString machineInterface{"org.deepin.dde.Cooperation1.Machine"};
+
 MachineDBusAdaptor::MachineDBusAdaptor(Manager *manager,
                                        Machine *machine,
+                                       uint32_t id,
                                        QDBusConnection bus,
                                        const std::shared_ptr<uvxx::Loop> &uvLoop)
-    : QDBusAbstractAdaptor(machine)
+    : QObject(machine)
+    , m_path(QString("/org/deepin/dde/Cooperation1/Machine/%1").arg(id))
     , m_manager(manager)
     , m_machine(machine)
     , m_bus(bus)
     , m_uvLoop(uvLoop)
     , m_async(std::make_shared<uvxx::Async>(m_uvLoop)) {
+    m_bus.registerObject(m_path, this, QDBusConnection::ExportAllSlots |
+                                           QDBusConnection::ExportAllProperties);
+}
+
+MachineDBusAdaptor::~MachineDBusAdaptor() {
+    m_bus.unregisterObject(m_path);
 }
 
 QString MachineDBusAdaptor::getUUID() const {
@@ -130,42 +140,35 @@ void MachineDBusAdaptor::SendFiles(const QStringList &paths, const QDBusMessage 
     m_async->wake([this, paths]() { m_machine->sendFiles(paths); });
 }
 
-void MachineDBusAdaptor::updateUUID(const QString &uuid) {
-    emit uuidChanged(uuid);
-}
-
 void MachineDBusAdaptor::updateName(const QString &name) {
-    emit nameChanged(name);
+    propertiesChanged("Name", name);
 }
 
-void MachineDBusAdaptor::updateIP(const QString &ip) {
-    emit ipChanged(ip);
+void MachineDBusAdaptor::updateConnected(bool connected) {
+    propertiesChanged("Connected", connected);
 }
 
-void MachineDBusAdaptor::updatePort(quint16 port) {
-    emit portChanged(port);
+void MachineDBusAdaptor::updateDeviceSharing(bool on) {
+    propertiesChanged("DeviceSharing", on);
 }
 
-void MachineDBusAdaptor::updateOS(quint32 os) {
-    emit osChanged(os);
+void MachineDBusAdaptor::updateDirection(quint16 direction) {
+    propertiesChanged("Direction", direction);
 }
 
-void MachineDBusAdaptor::updateCompositor(quint32 compositor) {
-    emit compositorChanged(compositor);
-}
+void MachineDBusAdaptor::propertiesChanged(const QString &property, const QVariant &value) {
+    QList<QVariant> arguments;
+    arguments.push_back(machineInterface);
 
-void MachineDBusAdaptor::updateConnected(bool v) {
-    emit connectedChanged(v);
-}
+    QVariantMap changedProps;
+    changedProps.insert(property, value);
 
-void MachineDBusAdaptor::updateDeviceSharing(bool v) {
-    emit deviceSharingChanged(v);
-}
+    arguments.push_back(changedProps);
+    arguments.push_back(QStringList());
 
-void MachineDBusAdaptor::updateDirection(quint16 v) {
-    emit directionChanged(v);
-}
-
-void MachineDBusAdaptor::updateSharedClipboard(bool v) {
-    emit sharedClipboardChanged(v);
+    QDBusMessage msg = QDBusMessage::createSignal(m_path,
+                                                  "org.freedesktop.DBus.Properties",
+                                                  "PropertiesChanged");
+    msg.setArguments(arguments);
+    QDBusConnection::connectToBus(QDBusConnection::SessionBus, machineInterface).send(msg);
 }

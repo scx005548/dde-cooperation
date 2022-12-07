@@ -95,9 +95,6 @@ Manager::Manager(const std::filesystem::path &dataDir)
     });
 
     scan();
-
-    m_bus.registerService(QStringLiteral("org.deepin.dde.Cooperation1"));
-    m_bus.registerObject(QStringLiteral("/org/deepin/dde/Cooperation1"), this);
 }
 
 Manager::~Manager() {
@@ -226,7 +223,12 @@ bool Manager::sendFile(const QStringList &files, int osType) noexcept {
 }
 
 void Manager::setFileStoragePath(const QString &path) noexcept {
+    if (path == m_fileStoragePath) {
+        return;
+    }
+
     m_fileStoragePath = path;
+    m_dbusAdaptor->updateFileStoragePath(path);
 
     if (!m_dConfig || !m_dConfig->isValid() || !m_dConfig->keyList().contains("filesStoragePath")) {
         spdlog::warn("dConfig is invalid or does not has filesStoragePath key!");
@@ -237,11 +239,13 @@ void Manager::setFileStoragePath(const QString &path) noexcept {
 }
 
 void Manager::openSharedClipboard(bool on) noexcept {
-    bool isOn = on;
-    if (isOn != m_sharedClipboard) {
-        m_sharedClipboard = isOn;
-        serviceStatusChanged();
+    if (on == m_sharedClipboard) {
+        return;
     }
+
+    m_sharedClipboard = on;
+    serviceStatusChanged();
+    m_dbusAdaptor->updateSharedClipboard(on);
 
     if (!m_dConfig || !m_dConfig->isValid() || !m_dConfig->keyList().contains("shareClipboard")) {
         spdlog::warn("dConfig is invalid or does not has shareClipboard key!");
@@ -252,13 +256,13 @@ void Manager::openSharedClipboard(bool on) noexcept {
 }
 
 void Manager::openSharedDevices(bool on) noexcept {
-    bool isOn = on;
-    if (isOn != m_sharedDevices) {
-        m_sharedDevices = isOn;
-        serviceStatusChanged();
-    } else {
+    if (on == m_sharedDevices) {
         return;
     }
+
+    m_sharedDevices = on;
+    serviceStatusChanged();
+    m_dbusAdaptor->updateSharedDevices(on);
 
     if (!m_dConfig || !m_dConfig->isValid() || !m_dConfig->keyList().contains("shareDevices")) {
         spdlog::warn("dConfig is invalid or does not has shareDevices key!");

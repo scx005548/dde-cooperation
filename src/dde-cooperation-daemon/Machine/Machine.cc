@@ -6,7 +6,6 @@
 
 #include "Manager.h"
 #include "MachineDBusAdaptor.h"
-#include "ClipboardBase.h"
 #include "Wrappers/InputEmittorWrapper.h"
 #include "Wrappers/ConfirmDialogWrapper.h"
 #include "Fuse/FuseServer.h"
@@ -44,11 +43,10 @@ Machine::Machine(Manager *manager,
                  const DeviceInfo &sp)
     : m_bus(bus)
     , m_manager(manager)
-    , m_dbusAdaptor(new MachineDBusAdaptor(m_manager, this, m_bus, uvLoop))
+    , m_dbusAdaptor(new MachineDBusAdaptor(m_manager, this, id, m_bus, uvLoop))
     , m_clipboard(clipboard)
     , m_dataDir(dataDir)
     , m_mountpoint(m_dataDir / "mp")
-    , m_path(QString("/org/deepin/dde/Cooperation1/Machine/%1").arg(id))
     , m_port(port)
     , m_uuid(sp.uuid())
     , m_name(sp.name())
@@ -81,9 +79,6 @@ Machine::Machine(Manager *manager,
 
     m_pingTimer->start(U10s);
     m_offlineTimer->oneshot(U25s);
-
-    m_bus.registerObject(m_path, this);
-    m_dbusAdaptor->updateUUID(QString::fromStdString(m_uuid));
 }
 
 Machine::~Machine() {
@@ -95,8 +90,10 @@ Machine::~Machine() {
         m_conn->close();
         m_manager->onStopDeviceSharing();
     }
+}
 
-    m_bus.unregisterObject(m_path);
+const QString &Machine::path() const {
+    return m_dbusAdaptor->path();
 }
 
 bool Machine::isPcMachine() const {
@@ -141,24 +138,13 @@ void Machine::connect() {
 }
 
 void Machine::updateMachineInfo(const std::string &ip, uint16_t port, const DeviceInfo &devInfo) {
-    if (ip != m_ip) {
-        m_ip = ip;
-        m_dbusAdaptor->updateIP(QString::fromStdString(ip));
-    }
-
-    if (port != m_port) {
-        m_port = port;
-        m_dbusAdaptor->updatePort(port);
-    }
+    m_ip = ip;
+    m_port = port;
+    m_compositor = devInfo.compositor();
 
     if (devInfo.name() != m_name) {
         m_name = devInfo.name();
         m_dbusAdaptor->updateName(QString::fromStdString(devInfo.name()));
-    }
-
-    if (devInfo.compositor() != m_compositor) {
-        m_compositor = devInfo.compositor();
-        m_dbusAdaptor->updateCompositor(devInfo.compositor());
     }
 }
 
@@ -200,6 +186,8 @@ void Machine::setFlowDirection(FlowDirection direction) {
     if (m_direction != direction) {
         m_direction = (FlowDirection)direction;
         sendFlowDirectionNtf();
+
+        m_dbusAdaptor->updateDirection(direction);
     }
 }
 

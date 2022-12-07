@@ -48,7 +48,7 @@ public:
             const DeviceInfo &sp);
     virtual ~Machine();
 
-    const QString &path() const { return m_path; }
+    const QString &path() const;
     const std::string &ip() const { return m_ip; };
 
     void updateMachineInfo(const std::string &ip, uint16_t port, const DeviceInfo &devInfo);
@@ -80,7 +80,6 @@ private:
 
     const std::filesystem::path m_dataDir;
     const std::filesystem::path m_mountpoint;
-    const QString m_path;
 
     uint16_t m_port;
     std::string m_uuid;

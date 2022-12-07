@@ -28,42 +28,40 @@ static bool isSubDir(fs::path p, fs::path root) {
     return false;
 }
 
+static const QString managerInterface{"org.deepin.dde.Cooperation1"};
+static const QString managerPath{"/org/deepin/dde/Cooperation1"};
+
 ManagerDBusAdaptor::ManagerDBusAdaptor(Manager *manager, QDBusConnection bus)
-    : QDBusAbstractAdaptor(manager)
+    : QObject(manager)
     , m_manager(manager)
-    , m_bus(bus)
-    , m_deviceSharingSwitch(false)
-    , m_fileStoragePath(false)
-    , m_sharedClipboard(false)
-    , m_sharedDevices(false) {
+    , m_bus(bus) {
+    m_bus.registerService(managerInterface);
+    m_bus.registerObject(managerPath, this, QDBusConnection::ExportAllSlots |
+                                                QDBusConnection::ExportAllProperties);
 }
 
 QVector<QDBusObjectPath> ManagerDBusAdaptor::getMachines() const {
-    return m_machines;
+    return m_manager->getMachinePaths();
 }
 
 QStringList ManagerDBusAdaptor::getCooperatedMachines() const {
-    return m_cooperatedMachines;
+    return m_manager->m_cooperatedMachines;
 }
 
 bool ManagerDBusAdaptor::getDeviceSharingSwitch() const {
-    return m_deviceSharingSwitch;
-}
-
-void ManagerDBusAdaptor::setDeviceSharingSwitch(bool value) const {
-    m_manager->setDeviceSharingSwitch(value);
+    return m_manager->m_deviceSharingSwitch;
 }
 
 QString ManagerDBusAdaptor::getFilesStoragePath() const {
-    return m_fileStoragePath;
+    return m_manager->m_fileStoragePath;
 }
 
 bool ManagerDBusAdaptor::getSharedClipboard() const {
-    return m_sharedClipboard;
+    return m_manager->m_sharedClipboard;
 }
 
 bool ManagerDBusAdaptor::getSharedDevices() const {
-    return m_sharedDevices;
+    return m_manager->m_sharedDevices;
 }
 
 QString ManagerDBusAdaptor::GetUUID(const QDBusMessage &message) const {
@@ -139,32 +137,52 @@ void ManagerDBusAdaptor::OpenSharedDevices(bool on) const {
     m_manager->openSharedDevices(on);
 }
 
+void ManagerDBusAdaptor::setDeviceSharingSwitch(bool value) const {
+    m_manager->setDeviceSharingSwitch(value);
+}
+
 void ManagerDBusAdaptor::updateMachines(const QVector<QDBusObjectPath> &machines) {
-    m_machines = machines;
-    emit machinesChanged(m_machines);
+    QVariantList list;
+    for (const QDBusObjectPath &path : machines) {
+        list.append(path);
+    }
+
+    propertiesChanged("Machines", list);
 }
 
 void ManagerDBusAdaptor::updateCooperatedMachines(const QStringList &UUIDs) {
-    m_cooperatedMachines = UUIDs;
-    emit cooperatedMachinesChanged(UUIDs);
+    propertiesChanged("CooperatedMachines", UUIDs);
 }
 
-void ManagerDBusAdaptor::updateDeviceSharingSwitch(bool v) {
-    m_deviceSharingSwitch = v;
-    emit deviceSharingSwitchChanged(v);
+void ManagerDBusAdaptor::updateDeviceSharingSwitch(bool on) {
+    propertiesChanged("DeviceSharingSwitch", on);
 }
 
-void ManagerDBusAdaptor::updateFileStoragePath(QString v) {
-    m_fileStoragePath = v;
-    emit fileStoragePathChanged(v);
+void ManagerDBusAdaptor::updateFileStoragePath(const QString &path) {
+    propertiesChanged("FilesStoragePath", path);
 }
 
-void ManagerDBusAdaptor::updateSharedClipboard(bool v) {
-    m_sharedClipboard = v;
-    emit sharedClipboardChanged(v);
+void ManagerDBusAdaptor::updateSharedClipboard(bool on) {
+    propertiesChanged("SharedClipboard", on);
 }
 
-void ManagerDBusAdaptor::updateSharedDevices(bool v) {
-    m_sharedDevices = v;
-    emit sharedDevicesChanged(v);
+void ManagerDBusAdaptor::updateSharedDevices(bool on) {
+    propertiesChanged("SharedDevices", on);
+}
+
+void ManagerDBusAdaptor::propertiesChanged(const QString &property, const QVariant &value) {
+    QList<QVariant> arguments;
+    arguments.push_back(managerInterface);
+
+    QVariantMap changedProps;
+    changedProps.insert(property, value);
+
+    arguments.push_back(changedProps);
+    arguments.push_back(QStringList());
+
+    QDBusMessage msg = QDBusMessage::createSignal(managerPath,
+                                                  "org.freedesktop.DBus.Properties",
+                                                  "PropertiesChanged");
+    msg.setArguments(arguments);
+    QDBusConnection::connectToBus(QDBusConnection::SessionBus, managerInterface).send(msg);
 }
