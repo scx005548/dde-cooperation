@@ -12,7 +12,7 @@ namespace X11 {
 
 class Display : public X11, public DisplayBase {
 public:
-    explicit Display(const std::shared_ptr<uvxx::Loop> &uvLoop, Manager *manager);
+    explicit Display(Manager *manager, QObject *parent = nullptr);
     virtual ~Display();
 
     virtual void handleEvent(std::shared_ptr<xcb_generic_event_t> event) override;

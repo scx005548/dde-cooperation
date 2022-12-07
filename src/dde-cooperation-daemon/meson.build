@@ -22,7 +22,6 @@ dde_cooperation_daemon_sources = files('''
   DisplayBase.cc
   ClipboardBase.h
   ClipboardBase.cc
-  X11/X11.h
   X11/X11.cc
   X11/Display.h
   X11/Display.cc
@@ -37,6 +36,7 @@ dde_cooperation_daemon_moc_headers = files('''
   Machine/MachineDBusAdaptor.h
   Fuse/FuseClient.h
   Fuse/FuseServer.h
+  X11/X11.h
 '''.split())
 
 dde_cooperation_daemon_sources += qt5.preprocess(

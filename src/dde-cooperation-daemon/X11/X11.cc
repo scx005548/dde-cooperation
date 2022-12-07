@@ -14,15 +14,10 @@
 #include <fmt/core.h>
 #include <spdlog/spdlog.h>
 
-#include "uvxx/Loop.h"
-#include "uvxx/Poll.h"
-
-#include "utils/ptr.h"
-
 namespace X11 {
 
-X11::X11(const std::shared_ptr<uvxx::Loop> &uvLoop)
-    : m_uvLoop(uvLoop) {
+X11::X11(QObject *parent)
+    : QObject(parent) {
     int screenDefaultNbr;
     m_conn = xcb_connect(nullptr, &screenDefaultNbr);
 
@@ -32,18 +27,14 @@ X11::X11(const std::shared_ptr<uvxx::Loop> &uvLoop)
 
     m_xcbFd = xcb_get_file_descriptor(m_conn);
     spdlog::info("xcb fd: {}", m_xcbFd);
-    m_uvPoll = std::make_shared<uvxx::Poll>(m_uvLoop, m_xcbFd);
-    m_uvPoll->onEvent([this](int events) { onEvent(events); });
-    m_uvPoll->start(UV_READABLE);
+    m_socketNotifier = new QSocketNotifier(m_xcbFd, QSocketNotifier::Type::Read, this);
+    connect(m_socketNotifier, &QSocketNotifier::activated, this, &X11::onEvent);
 
     m_setup = xcb_get_setup(m_conn);
     m_screen = screenOfDisplay(screenDefaultNbr);
 }
 
 X11::~X11() {
-    m_uvPoll->stop();
-    m_uvPoll->close();
-
     xcb_disconnect(m_conn);
 }
 
@@ -58,7 +49,8 @@ xcb_screen_t *X11::screenOfDisplay(int screen) {
     return nullptr;
 }
 
-void X11::onEvent([[maybe_unused]] int events) {
+void X11::onEvent([[maybe_unused]] QSocketDescriptor socket,
+                  [[maybe_unused]] QSocketNotifier::Type activationEvent) {
     std::shared_ptr<xcb_generic_event_t> event;
     while (event.reset(xcb_poll_for_event(m_conn)), event) {
         handleEvent(event);

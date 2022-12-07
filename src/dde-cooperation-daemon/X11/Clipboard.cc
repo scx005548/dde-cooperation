@@ -31,8 +31,8 @@ const std::string Clipboard::ATOMS_NAME[] = {
     "TEXT",
 };
 
-Clipboard::Clipboard(const std::shared_ptr<uvxx::Loop> &uvLoop, ClipboardObserver *observer)
-    : X11(uvLoop)
+Clipboard::Clipboard(ClipboardObserver *observer, QObject *parent)
+    : X11(parent)
     , ClipboardBase(observer)
     , m_printingProperty(false) {
     m_dummyWindow = xcb_generate_id(m_conn);

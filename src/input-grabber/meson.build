@@ -1,8 +1,16 @@
 input_grabber_sources = files('''
   main.cc
-  InputGrabber.h
   InputGrabber.cc
 '''.split())
+
+input_grabber_moc_headers = files('''
+  InputGrabber.h
+'''.split())
+
+input_grabber_sources += qt5.preprocess(
+  qresources: [],
+  moc_headers: input_grabber_moc_headers,
+)
 
 input_grabber_sources += [ipc_protocol]
 

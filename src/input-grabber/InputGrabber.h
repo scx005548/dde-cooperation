@@ -7,6 +7,9 @@
 
 #include <libevdev/libevdev.h>
 
+#include <QObject>
+#include <QSocketNotifier>
+
 #include "common.h"
 
 namespace uvxx {
@@ -14,12 +17,15 @@ class Loop;
 class Poll;
 } // namespace uvxx
 
+class QSocketNotifier;
+
 class Machine;
 
-class InputGrabber {
+class InputGrabber : public QObject {
+    Q_OBJECT
+
 public:
-    explicit InputGrabber(const std::shared_ptr<uvxx::Loop> &uvLoop,
-                          const std::filesystem::path &path);
+    explicit InputGrabber(const std::filesystem::path &path);
     ~InputGrabber();
 
     bool shouldIgnore();
@@ -37,17 +43,16 @@ private:
     const std::filesystem::path &m_path;
     int m_fd;
 
-    std::shared_ptr<uvxx::Loop> m_uvLoop;
-    std::shared_ptr<uvxx::Poll> m_uvPoll;
+    QSocketNotifier *m_notifier;
 
     libevdev *m_dev;
 
-    std::string m_name;
+    QString m_name;
     InputDeviceType m_type;
 
     std::function<void(unsigned int type, unsigned int code, int value)> m_onEvent;
 
-    void handlePollEvent(int events);
+    void handlePollEvent(QSocketDescriptor socket, QSocketNotifier::Type type);
 };
 
 #endif // !INPUTEGRABBER_H

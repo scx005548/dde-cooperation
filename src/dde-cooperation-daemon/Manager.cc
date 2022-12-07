@@ -66,8 +66,8 @@ Manager::Manager(const std::filesystem::path &dataDir)
     m_port = m_listenPair->serverPort();
     spdlog::debug("TCP listening on port: {}", m_port);
 
-    m_displayServer = std::make_unique<X11::Display>(m_uvLoop, this);
-    m_clipboard = std::make_unique<X11::Clipboard>(m_uvLoop, this);
+    m_displayServer = std::make_unique<X11::Display>(this, this);
+    m_clipboard = std::make_unique<X11::Clipboard>(this, this);
 
     // TODO: inotify
     for (const auto &entry : fs::directory_iterator(inputDevicePath)) {

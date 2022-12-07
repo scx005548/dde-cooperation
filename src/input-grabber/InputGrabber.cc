@@ -4,25 +4,27 @@
 
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <string.h>
 
-#include <libevdev/libevdev.h>
-#include <spdlog/spdlog.h>
+#include <fmt/core.h>
 
-#include "uvxx/Poll.h"
+#include <libevdev/libevdev.h>
+
+#include <QDebug>
+#include <QCoreApplication>
 
 namespace fs = std::filesystem;
 
-InputGrabber::InputGrabber(const std::shared_ptr<uvxx::Loop> &uvLoop, const fs::path &path)
+InputGrabber::InputGrabber(const fs::path &path)
     : m_path(path)
     , m_fd(open(m_path.c_str(), O_RDONLY | O_NONBLOCK))
-    , m_uvLoop(uvLoop)
-    , m_uvPoll(std::make_shared<uvxx::Poll>(m_uvLoop, m_fd)) {
+    , m_notifier(new QSocketNotifier(m_fd, QSocketNotifier::Type::Read, this)) {
 
     int rc = libevdev_new_from_fd(m_fd, &m_dev);
     if (rc < 0) {
-        spdlog::error("failed to init libevdev {}", strerror(-rc));
-        exit(1);
+        qCritical() << fmt::format("failed to init libevdev {}", strerror(-rc)).data();
+        qApp->quit();
     }
 
     m_name = libevdev_get_name(m_dev);
@@ -37,18 +39,18 @@ InputGrabber::InputGrabber(const std::shared_ptr<uvxx::Loop> &uvLoop, const fs::
         m_type = InputDeviceType::TOUCHPAD;
     }
 
-    m_uvPoll->onEvent(uvxx::memFunc(this, &InputGrabber::handlePollEvent));
+    m_notifier->setEnabled(false);
+    connect(m_notifier, &QSocketNotifier::activated, this, &InputGrabber::handlePollEvent);
 }
 
 InputGrabber::~InputGrabber() {
-    spdlog::debug("InputDevice::~InputDevice() {}", m_name);
-    m_uvPoll->close();
+    qDebug() << "InputDevice::~InputDevice()" << m_name;
     libevdev_free(m_dev);
     close(m_fd);
 }
 
 bool InputGrabber::shouldIgnore() {
-    if (m_name.rfind("DDE Cooperation", 0) == 0) {
+    if (m_name.startsWith("DDE Cooperation")) {
         return true;
     }
 
@@ -64,34 +66,37 @@ bool InputGrabber::shouldIgnore() {
 void InputGrabber::start() {
     // clear already existed events
     input_event ev;
-    while (-EAGAIN != libevdev_next_event(m_dev, LIBEVDEV_READ_FLAG_NORMAL, &ev));
+    while (-EAGAIN != libevdev_next_event(m_dev, LIBEVDEV_READ_FLAG_NORMAL, &ev))
+        ;
 
-    m_uvPoll->start(UV_READABLE);
+    m_notifier->setEnabled(true);
 
     int rc = libevdev_grab(m_dev, LIBEVDEV_GRAB);
     if (rc != 0) {
-        spdlog::error("failed to grab device {}", strerror(-rc));
+        qWarning() << fmt::format("failed to grab device {}", strerror(-rc)).data();
         return;
     }
 }
 
 void InputGrabber::stop() {
-    spdlog::debug("stopping input device: {}", m_name);
-    m_uvPoll->stop();
+    qDebug() << "stopping input device:" << m_name;
+    m_notifier->setEnabled(false);
     libevdev_grab(m_dev, LIBEVDEV_UNGRAB);
-    spdlog::debug("stopped");
+    qDebug("stopped");
 }
 
-void InputGrabber::handlePollEvent([[maybe_unused]] int events) {
+void InputGrabber::handlePollEvent([[maybe_unused]] QSocketDescriptor socket,
+                                   [[maybe_unused]] QSocketNotifier::Type type) {
     input_event ev;
     int rc;
     do {
         rc = libevdev_next_event(m_dev, LIBEVDEV_READ_FLAG_NORMAL, &ev);
         if (rc == LIBEVDEV_READ_STATUS_SUCCESS) {
-            spdlog::debug("event: {}, {}, {}",
-                          libevdev_event_type_get_name(ev.type),
-                          libevdev_event_code_get_name(ev.type, ev.code),
-                          ev.value);
+            qDebug() << fmt::format("event: {}, {}, {}",
+                                    libevdev_event_type_get_name(ev.type),
+                                    libevdev_event_code_get_name(ev.type, ev.code),
+                                    ev.value)
+                            .data();
 
             m_onEvent(ev.type, ev.code, ev.value);
         }

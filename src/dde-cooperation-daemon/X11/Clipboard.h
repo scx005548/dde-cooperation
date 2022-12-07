@@ -17,7 +17,7 @@ namespace X11 {
 
 class Clipboard : public X11, public ClipboardBase {
 public:
-    explicit Clipboard(const std::shared_ptr<uvxx::Loop> &uvLoop, ClipboardObserver *observer);
+    explicit Clipboard(ClipboardObserver *observer, QObject *parent = nullptr);
     virtual ~Clipboard();
 
     virtual void handleEvent(std::shared_ptr<xcb_generic_event_t> event) override;

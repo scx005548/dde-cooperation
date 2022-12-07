@@ -26,7 +26,7 @@ int main(int argc, const char *argv[]) {
     std::string path = argv[2];
     auto loop = uvxx::Loop::defaultLoop();
 
-    InputGrabber grabber(loop, path);
+    InputGrabber grabber(path);
     if (grabber.shouldIgnore()) {
         return 2;
     }

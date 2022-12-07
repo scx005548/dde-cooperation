@@ -13,8 +13,8 @@
 
 using namespace X11;
 
-Display::Display(const std::shared_ptr<uvxx::Loop> &uvLoop, Manager *manager)
-    : X11(uvLoop)
+Display::Display(Manager *manager, QObject *parent)
+    : X11(parent)
     , DisplayBase(manager) {
 
     initXinputExtension();
@@ -66,7 +66,7 @@ void Display::initXinputExtension() {
     mask.head.mask_len = sizeof(mask.mask) / sizeof(uint32_t);
     mask.mask = static_cast<xcb_input_xi_event_mask_t>(XCB_INPUT_XI_EVENT_MASK_HIERARCHY |
                                                        XCB_INPUT_XI_EVENT_MASK_RAW_MOTION |
-                                                       XCB_INPUT_XI_EVENT_MASK_MOTION );
+                                                       XCB_INPUT_XI_EVENT_MASK_MOTION);
     auto cookie = xcb_input_xi_select_events(m_conn, m_screen->root, 1, &mask.head);
     auto err = xcb_request_check(m_conn, cookie);
     if (err) {
@@ -117,7 +117,7 @@ void Display::handleEvent(std::shared_ptr<xcb_generic_event_t> event) {
             bool eventFromPeer = false;
             auto *ev = reinterpret_cast<xcb_input_property_event_t *>(event.get());
             if (ev) {
-                //eventFromPeer = ev->deviceid >= 14;
+                // eventFromPeer = ev->deviceid >= 14;
                 auto reply1 = XCB_REPLY(xcb_input_xi_query_device, m_conn, XCB_INPUT_DEVICE_ALL);
                 auto it = xcb_input_xi_query_device_infos_iterator(reply1.get());
                 for (; it.rem; xcb_input_xi_device_info_next(&it)) {
@@ -133,7 +133,8 @@ void Display::handleEvent(std::shared_ptr<xcb_generic_event_t> event) {
                     switch (deviceInfo->type) {
                     case XCB_INPUT_DEVICE_TYPE_SLAVE_POINTER:
                     case XCB_INPUT_DEVICE_TYPE_MASTER_POINTER: {
-                        std::string deviceName(xcb_input_xi_device_info_name(deviceInfo), deviceInfo->name_len);
+                        std::string deviceName(xcb_input_xi_device_info_name(deviceInfo),
+                                               deviceInfo->name_len);
                         if (!deviceName.empty() && deviceName.rfind("DDE", 0) == 0) {
                             eventFromPeer = true;
                         }
