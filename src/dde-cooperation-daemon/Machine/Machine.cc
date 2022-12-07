@@ -6,6 +6,7 @@
 
 #include <QTcpSocket>
 #include <QHostAddress>
+#include <QTimer>
 
 #include <DDBusSender>
 
@@ -20,7 +21,6 @@
 #include "protocol/message.pb.h"
 
 #include "uvxx/Loop.h"
-#include "uvxx/Timer.h"
 #include "uvxx/Async.h"
 
 #include "utils/net.h"
@@ -57,9 +57,8 @@ Machine::Machine(Manager *manager,
     , m_compositor(sp.compositor())
     , m_deviceSharing(false)
     , m_direction(FLOW_DIRECTION_RIGHT)
-    , m_pingTimer(std::make_shared<uvxx::Timer>(uvLoop, uvxx::memFunc(this, &Machine::ping)))
-    , m_offlineTimer(
-          std::make_shared<uvxx::Timer>(uvLoop, uvxx::memFunc(this, &Machine::onOffline)))
+    , m_pingTimer(new QTimer(this))
+    , m_offlineTimer(new QTimer(this))
     , m_mounted(false)
     , m_uvLoop(uvLoop)
     , m_async(std::make_shared<uvxx::Async>(uvLoop))
@@ -76,13 +75,15 @@ Machine::Machine(Manager *manager,
         std::make_pair(InputDeviceType::TOUCHPAD,
                        std::make_unique<InputEmittorWrapper>(InputDeviceType::TOUCHPAD)));
 
+    QObject::connect(m_pingTimer, &QTimer::timeout, this, &Machine::ping);
     m_pingTimer->start(U10s);
-    m_offlineTimer->oneshot(U25s);
+
+    QObject::connect(m_offlineTimer, &QTimer::timeout, this, &Machine::onOffline);
+    m_offlineTimer->setSingleShot(true);
+    m_offlineTimer->start(U25s);
 }
 
 Machine::~Machine() {
-    m_pingTimer->close();
-    m_offlineTimer->close();
     m_async->close();
     if (m_conn) {
         m_conn->close();
@@ -145,8 +146,8 @@ void Machine::updateMachineInfo(const std::string &ip, uint16_t port, const Devi
 }
 
 void Machine::receivedPing() {
-    m_offlineTimer->reset();
-    m_pingTimer->reset();
+    m_offlineTimer->start();
+    m_pingTimer->start();
 }
 
 void Machine::onPair(QTcpSocket *socket) {
@@ -229,7 +230,8 @@ void Machine::handleDisconnectedAux() {
     m_conn->deleteLater();
     m_conn = nullptr;
 
-    m_pingTimer->reset();
+    m_pingTimer->start();
+    m_offlineTimer->start();
 
     handleDisconnected();
 }

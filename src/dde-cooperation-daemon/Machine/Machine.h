@@ -90,8 +90,8 @@ private:
     uint16_t m_direction;
     bool m_sharedClipboard = false;
 
-    std::shared_ptr<uvxx::Timer> m_pingTimer;
-    std::shared_ptr<uvxx::Timer> m_offlineTimer;
+    QTimer *m_pingTimer;
+    QTimer *m_offlineTimer;
 
     std::unordered_map<InputDeviceType, std::unique_ptr<InputEmittorWrapper>> m_inputEmittors;
 
