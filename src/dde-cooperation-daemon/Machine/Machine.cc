@@ -12,7 +12,7 @@
 #include "Manager.h"
 #include "MachineDBusAdaptor.h"
 #include "Wrappers/InputEmittorWrapper.h"
-#include "Wrappers/ConfirmDialogWrapper.h"
+#include "ConfirmDialog.h"
 #include "Fuse/FuseServer.h"
 #include "Fuse/FuseClient.h"
 #include "utils/message_helper.h"
@@ -158,11 +158,11 @@ void Machine::onPair(QTcpSocket *socket) {
     spdlog::info("request onPair");
     m_conn = socket;
 
-    m_confirmDialog = std::make_unique<ConfirmDialogWrapper>(
-        m_ip,
-        m_name,
-        m_uvLoop,
-        uvxx::memFunc(this, &Machine::receivedUserConfirm));
+    auto *confirmDialog = new ConfirmDialog(QString::fromStdString(m_ip),
+                                            QString::fromStdString(m_name));
+    confirmDialog->setAttribute(Qt::WA_DeleteOnClose);
+    QObject::connect(confirmDialog, &ConfirmDialog::onConfirmed, this, &Machine::receivedUserConfirm);
+    confirmDialog->show();
 }
 
 void Machine::disconnect() {
@@ -682,17 +682,7 @@ void Machine::stopDeviceSharingAux() {
     m_dbusAdaptor->updateDeviceSharing(m_deviceSharing);
 }
 
-void Machine::receivedUserConfirm(uvxx::Buffer &buff) {
-    m_confirmDialog.reset();
-
-    if (buff.size() != 1) {
-        spdlog::warn("user confirm has error!");
-        return;
-    }
-
-    bool isAccept = (buff.data()[0] == ACCEPT);
-    buff.clear();
-
+void Machine::receivedUserConfirm(bool accepted) {
     Message msg;
     auto *response = msg.mutable_pairresponse();
     response->set_key(SCAN_KEY);
@@ -700,11 +690,11 @@ void Machine::receivedUserConfirm(uvxx::Buffer &buff) {
     response->mutable_deviceinfo()->set_name(Net::getHostname());
     response->mutable_deviceinfo()->set_os(DEVICE_OS_LINUX);
     response->mutable_deviceinfo()->set_compositor(COMPOSITOR_X11);
-    response->set_agree(isAccept); // 询问用户是否同意
+    response->set_agree(accepted); // 询问用户是否同意
 
     sendMessage(msg);
 
-    if (isAccept) {
+    if (accepted) {
         initConnection();
 
         m_pingTimer->stop();

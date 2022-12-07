@@ -20,6 +20,7 @@ int main(int argc, char* argv[]) {
 
     fs::path dataDir = fs::path(runtimeDir) / "dde-cooperation";
 
+    QApplication::setQuitOnLastWindowClosed(false);
     QApplication app(argc, argv);
 
     Manager cooperation(dataDir);

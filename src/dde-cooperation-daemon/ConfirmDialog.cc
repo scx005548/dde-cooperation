@@ -1,14 +1,11 @@
-#include "confirmdialog.h"
+#include "ConfirmDialog.h"
 
 #include <QApplication>
 #include <QLabel>
 #include <QFile>
 #include <QDebug>
 
-const char Accept = 0x01;
-const char Reject = 0x00;
-
-ConfirmDialog::ConfirmDialog(const QString &ip, const QString &machineName, int pipeFd)
+ConfirmDialog::ConfirmDialog(const QString &ip, const QString &machineName)
     : DDialog()
     , m_titleLabel(new QLabel(this))
     , m_contentLabel(new QLabel(this)) {
@@ -33,23 +30,8 @@ ConfirmDialog::ConfirmDialog(const QString &ip, const QString &machineName, int 
     connect(this, &ConfirmDialog::buttonClicked, this, [=](int index, const QString &text) {
         Q_UNUSED(text);
         bool isAccepted = index == 1;
-        writeBackResult(pipeFd, isAccepted);
+        emit onConfirmed(isAccepted);
     });
 
-    connect(this, &ConfirmDialog::closed, this, [=]() {
-        writeBackResult(pipeFd, false);
-        qApp->quit();
-    });
-}
-
-void ConfirmDialog::writeBackResult(int pipeFd, bool isAccepted) {
-    QFile writePipe;
-    if (!writePipe.open(pipeFd, QIODevice::WriteOnly)) {
-        qWarning() << "Cooperation open pipeFd has error!";
-        return;
-    }
-
-    char data = isAccepted ? Accept : Reject;
-    writePipe.write(&data, 1);
-    writePipe.close();
+    connect(this, &ConfirmDialog::closed, this, [=]() { emit onConfirmed(false); });
 }

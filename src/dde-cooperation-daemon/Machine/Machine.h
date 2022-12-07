@@ -28,7 +28,6 @@ class Request;
 class InputEmittorWrapper;
 class FuseServer;
 class FuseClient;
-class ConfirmDialogWrapper;
 
 class Machine : public QObject, public std::enable_shared_from_this<Machine> {
     friend class Manager;
@@ -93,7 +92,6 @@ private:
 
     std::shared_ptr<uvxx::Timer> m_pingTimer;
     std::shared_ptr<uvxx::Timer> m_offlineTimer;
-    std::unique_ptr<ConfirmDialogWrapper> m_confirmDialog;
 
     std::unordered_map<InputDeviceType, std::unique_ptr<InputEmittorWrapper>> m_inputEmittors;
 
@@ -125,7 +123,7 @@ private:
     void handleClipboardGetContentResponse(const ClipboardGetContentResponse &resp);
 
     void stopDeviceSharingAux();
-    void receivedUserConfirm(uvxx::Buffer &buff);
+    void receivedUserConfirm(bool accepted);
     void sendFlowDirectionNtf();
     void sendReceivedFilesSystemNtf(const std::string &path, bool isSuccess);
 

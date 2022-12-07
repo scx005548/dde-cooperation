@@ -2,6 +2,7 @@ dde_cooperation_daemon_sources = files('''
   main.cc
   Manager.cc
   ManagerDBusAdaptor.cc
+  ConfirmDialog.cc
   KeyPair.h
   KeyPair.cc
   Machine/Machine.cc
@@ -14,8 +15,6 @@ dde_cooperation_daemon_sources = files('''
   Wrappers/InputEmittorWrapper.cc
   Wrappers/InputGrabberWrapper.h
   Wrappers/InputGrabberWrapper.cc
-  Wrappers/ConfirmDialogWrapper.h
-  Wrappers/ConfirmDialogWrapper.cc
   Fuse/FuseClient.cc
   Fuse/FuseServer.cc
   DisplayBase.h
@@ -32,6 +31,7 @@ dde_cooperation_daemon_sources = files('''
 dde_cooperation_daemon_moc_headers = files('''
   Manager.h
   ManagerDBusAdaptor.h
+  ConfirmDialog.h
   Machine/Machine.h
   Machine/MachineDBusAdaptor.h
   Fuse/FuseClient.h
@@ -76,6 +76,7 @@ executable('dde-cooperation-daemon',
     protobuf,
     qt5dep,
     dtk_core,
+    dtk_widget,
   ],
   link_with: [
     uvxx,
