@@ -4,6 +4,14 @@ input_emittor_sources = files('''
   InputEmittor.cc
 '''.split())
 
+input_emittor_moc_headers = files('''
+'''.split())
+
+input_emittor_sources += qt5.preprocess(
+  qresources: [],
+  moc_headers: input_emittor_moc_headers,
+)
+
 input_emittor_sources += [ipc_protocol]
 
 input_emittor = executable('input-emittor',
@@ -15,13 +23,9 @@ input_emittor = executable('input-emittor',
     stdcxxfs,
     thread,
     fmt,
-    spdlog,
     libevdev,
     protobuf,
     qt5dep,
-  ],
-  link_with: [
-    uvxx,
   ],
   install: true,
   install_mode: ['rwsr-xr-x'],

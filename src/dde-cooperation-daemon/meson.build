@@ -11,9 +11,7 @@ dde_cooperation_daemon_sources = files('''
   Machine/PCMachine.cc
   Machine/AndroidMachine.h
   Machine/AndroidMachine.cc
-  Wrappers/InputEmittorWrapper.h
   Wrappers/InputEmittorWrapper.cc
-  Wrappers/InputGrabberWrapper.h
   Wrappers/InputGrabberWrapper.cc
   Fuse/FuseClient.cc
   Fuse/FuseServer.cc
@@ -34,6 +32,8 @@ dde_cooperation_daemon_moc_headers = files('''
   ConfirmDialog.h
   Machine/Machine.h
   Machine/MachineDBusAdaptor.h
+  Wrappers/InputEmittorWrapper.h
+  Wrappers/InputGrabberWrapper.h
   Fuse/FuseClient.h
   Fuse/FuseServer.h
   X11/X11.h

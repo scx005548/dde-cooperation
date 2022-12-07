@@ -3,38 +3,39 @@
 
 #include <filesystem>
 
+#include <QObject>
+#include <QProcess>
+
 #include "common.h"
 
-namespace uvxx {
-class Loop;
-class Pipe;
-class Process;
-class Buffer;
-} // namespace uvxx
+class QLocalServer;
+class QLocalSocket;
+class QProcess;
 
 class Manager;
 class Machine;
 
-class InputEmittorWrapper {
+class InputEmittorWrapper : public QObject {
+    Q_OBJECT
+
 public:
-    explicit InputEmittorWrapper(const std::weak_ptr<Machine> &machine,
-                                 const std::shared_ptr<uvxx::Loop> &uvLoop,
-                                 InputDeviceType type);
+    explicit InputEmittorWrapper(InputDeviceType type);
     ~InputEmittorWrapper();
     void setMachine(const std::weak_ptr<Machine> &machine);
     bool emitEvent(unsigned int type, unsigned int code, int value) noexcept;
 
+private slots:
+    void onProcessClosed(int exitCode, QProcess::ExitStatus exitStatus);
+    void handleNewConnection();
+    void onReceived();
+    void onDisconnected();
+
 private:
-    std::weak_ptr<Machine> m_machine;
-    std::shared_ptr<uvxx::Loop> m_uvLoop;
-    std::shared_ptr<uvxx::Pipe> m_pipe;
-    std::shared_ptr<uvxx::Process> m_process;
+    QLocalServer *m_server;
+    QLocalSocket *m_conn;
+    QProcess *m_process;
 
     InputDeviceType m_type;
-
-    void onReceived(uvxx::Buffer &buff) noexcept;
-    void onProcessClosed();
-    void onPipeClosed();
 };
 
 #endif // !WRAPPERS_INPUTEMITTORWRAPPER_H

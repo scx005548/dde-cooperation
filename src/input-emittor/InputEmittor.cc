@@ -1,11 +1,11 @@
 #include "InputEmittor.h"
 
-#include <spdlog/spdlog.h>
+#include <fmt/core.h>
+
 #include <libevdev/libevdev.h>
 #include <libevdev/libevdev-uinput.h>
 
-#include "uvxx/Loop.h"
-#include "uvxx/Pipe.h"
+#include <QDebug>
 
 #include "utils/ptr.h"
 
@@ -17,10 +17,8 @@
 
 #define MAX_TRACKING_ID 65535
 
-InputEmittor::InputEmittor(const std::shared_ptr<uvxx::Loop> &uvLoop, InputDeviceType type)
-    : m_uvLoop(uvLoop)
-    , m_pipe(std::make_shared<uvxx::Pipe>(m_uvLoop, false))
-    , m_dev(make_handle(libevdev_new(), &libevdev_free))
+InputEmittor::InputEmittor(InputDeviceType type)
+    : m_dev(make_handle(libevdev_new(), &libevdev_free))
     , m_uidev(nullptr, &libevdev_uinput_destroy) {
     std::string name = std::string("DDE Cooperation ");
 
@@ -97,7 +95,7 @@ InputEmittor::InputEmittor(const std::shared_ptr<uvxx::Loop> &uvLoop, InputDevic
 
         int rc = libevdev_enable_property(m_dev.get(), INPUT_PROP_POINTER);
         if (rc != 0) {
-            spdlog::warn("failed to enable property: INPUT_PROP_POINTER");
+            qWarning("failed to enable property: INPUT_PROP_POINTER");
         }
     } break;
     }
@@ -107,7 +105,7 @@ InputEmittor::InputEmittor(const std::shared_ptr<uvxx::Loop> &uvLoop, InputDevic
     libevdev_uinput *uidev;
     int rc = libevdev_uinput_create_from_device(m_dev.get(), LIBEVDEV_UINPUT_OPEN_MANAGED, &uidev);
     if (rc != 0) {
-        spdlog::error("failed to create uinput device: {}", strerror(-rc));
+        qWarning() << fmt::format("failed to create uinput device: {}", strerror(-rc)).data();
         return;
     }
 
@@ -115,33 +113,36 @@ InputEmittor::InputEmittor(const std::shared_ptr<uvxx::Loop> &uvLoop, InputDevic
 }
 
 InputEmittor::~InputEmittor() {
-    m_pipe->close();
 }
 
 void InputEmittor::enableEventType(unsigned int type) {
     int rc = libevdev_enable_event_type(m_dev.get(), type);
     if (rc != 0) {
-        spdlog::warn("failed to enable event type {}", libevdev_event_type_get_name(type));
+        qWarning() << fmt::format("failed to enable event type {}",
+                                  libevdev_event_type_get_name(type))
+                          .data();
     }
 }
 
 void InputEmittor::enableEventCode(unsigned int type, unsigned int code, const void *data) {
     int rc = libevdev_enable_event_code(m_dev.get(), type, code, data);
     if (rc != 0) {
-        spdlog::warn("failed to enable event code: type: {}, code: {}",
-                     libevdev_event_type_get_name(type),
-                     libevdev_event_code_get_name(type, code));
+        qWarning() << fmt::format("failed to enable event code: type: {}, code: {}",
+                                  libevdev_event_type_get_name(type),
+                                  libevdev_event_code_get_name(type, code))
+                          .data();
     }
 }
 
 bool InputEmittor::emitEvent(unsigned int type, unsigned int code, int value) {
-    spdlog::info("emitting event: {}, {}, {}",
-                 libevdev_event_type_get_name(type),
-                 libevdev_event_code_get_name(type, code),
-                 value);
+    qDebug() << fmt::format("emitting event: {}, {}, {}",
+                            libevdev_event_type_get_name(type),
+                            libevdev_event_code_get_name(type, code),
+                            value)
+                    .data();
     int rc = libevdev_uinput_write_event(m_uidev.get(), type, code, value);
     if (rc != 0) {
-        spdlog::warn("failed to write event: {}", strerror(-rc));
+        qWarning() << fmt::format("failed to write event: {}", strerror(-rc)).data();
         return false;
     }
 

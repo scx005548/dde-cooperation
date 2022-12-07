@@ -22,7 +22,6 @@
 #include "uvxx/Loop.h"
 #include "uvxx/Timer.h"
 #include "uvxx/Async.h"
-#include "uvxx/Process.h"
 
 #include "utils/net.h"
 
@@ -69,17 +68,13 @@ Machine::Machine(Manager *manager,
 
     m_inputEmittors.emplace(
         std::make_pair(InputDeviceType::KEYBOARD,
-                       std::make_unique<InputEmittorWrapper>(weak_from_this(),
-                                                             m_uvLoop,
-                                                             InputDeviceType::KEYBOARD)));
-    m_inputEmittors.emplace(std::make_pair(
-        InputDeviceType::MOUSE,
-        std::make_unique<InputEmittorWrapper>(weak_from_this(), m_uvLoop, InputDeviceType::MOUSE)));
+                       std::make_unique<InputEmittorWrapper>(InputDeviceType::KEYBOARD)));
+    m_inputEmittors.emplace(
+        std::make_pair(InputDeviceType::MOUSE,
+                       std::make_unique<InputEmittorWrapper>(InputDeviceType::MOUSE)));
     m_inputEmittors.emplace(
         std::make_pair(InputDeviceType::TOUCHPAD,
-                       std::make_unique<InputEmittorWrapper>(weak_from_this(),
-                                                             m_uvLoop,
-                                                             InputDeviceType::TOUCHPAD)));
+                       std::make_unique<InputEmittorWrapper>(InputDeviceType::TOUCHPAD)));
 
     m_pingTimer->start(U10s);
     m_offlineTimer->oneshot(U25s);
@@ -161,7 +156,10 @@ void Machine::onPair(QTcpSocket *socket) {
     auto *confirmDialog = new ConfirmDialog(QString::fromStdString(m_ip),
                                             QString::fromStdString(m_name));
     confirmDialog->setAttribute(Qt::WA_DeleteOnClose);
-    QObject::connect(confirmDialog, &ConfirmDialog::onConfirmed, this, &Machine::receivedUserConfirm);
+    QObject::connect(confirmDialog,
+                     &ConfirmDialog::onConfirmed,
+                     this,
+                     &Machine::receivedUserConfirm);
     confirmDialog->show();
 }
 
@@ -502,7 +500,7 @@ void Machine::handleFsResponse(const FsResponse &resp) {
         return;
     }
 
-    m_fuseClient = std::make_unique<FuseClient>(m_uvLoop, m_ip, resp.port(), m_mountpoint);
+    m_fuseClient = std::make_unique<FuseClient>(m_ip, resp.port(), m_mountpoint);
 }
 
 void Machine::handleFsSendFileRequest(const FsSendFileRequest &req) {
@@ -525,33 +523,37 @@ void Machine::handleFsSendFileRequest(const FsSendFileRequest &req) {
         reqPath = "/" + reqPath;
     }
     std::string filePath = m_mountpoint.string() + reqPath;
-    auto process = std::make_shared<uvxx::Process>(m_uvLoop, "/bin/cp");
-    process->onExit([this,
-                     storagePath = storagePath.toStdString(),
-                     serial = req.serial(),
-                     path = req.path(),
-                     process](int64_t exit_status, [[maybe_unused]] int term_signal) {
-        Message msg;
-        auto *fssendfileresult = msg.mutable_fssendfileresult();
-        fssendfileresult->set_serial(serial);
-        fssendfileresult->set_path(path);
+    QProcess *process = new QProcess(this);
+    QObject::connect(
+        process,
+        static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+        [this,
+         storagePath = storagePath.toStdString(),
+         serial = req.serial(),
+         path = req.path(),
+         process]([[maybe_unused]] int exitCode, QProcess::ExitStatus exitStatus) {
+            Message msg;
+            auto *fssendfileresult = msg.mutable_fssendfileresult();
+            fssendfileresult->set_serial(serial);
+            fssendfileresult->set_path(path);
 
-        if (exit_status != 0) {
-            spdlog::info("copy files failed");
-        } else {
-            spdlog::info("copy files success");
-        }
+            if (exitStatus != QProcess::NormalExit) {
+                spdlog::info("copy files failed");
+            } else {
+                spdlog::info("copy files success");
+            }
 
-        std::string::size_type iPos = path.find_last_of('/') + 1;
-        std::string fileName = path.substr(iPos, path.length() - iPos);
-        sendReceivedFilesSystemNtf(storagePath + "/" + fileName, exit_status == 0);
+            std::string::size_type iPos = path.find_last_of('/') + 1;
+            std::string fileName = path.substr(iPos, path.length() - iPos);
+            sendReceivedFilesSystemNtf(storagePath + "/" + fileName,
+                                       exitStatus == QProcess::NormalExit);
 
-        fssendfileresult->set_result(exit_status == 0);
-        sendMessage(msg);
+            fssendfileresult->set_result(exitStatus == QProcess::NormalExit);
+            sendMessage(msg);
 
-        process->onExit(nullptr);
-    });
-    process->spawn();
+            process->deleteLater();
+        });
+    process->start("/bin/cp", QStringList{"-r", QString::fromStdString(filePath), storagePath});
 }
 
 void Machine::handleClipboardNotify(const ClipboardNotify &notify) {

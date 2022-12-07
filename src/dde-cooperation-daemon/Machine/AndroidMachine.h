@@ -3,10 +3,6 @@
 
 #include "Machine.h"
 
-namespace uvxx {
-class Process;
-}
-
 class AndroidMachine : public Machine {
 public:
     AndroidMachine(Manager *manager,
@@ -22,7 +18,7 @@ public:
     virtual void handleDisconnected() override;
 
 private:
-    std::shared_ptr<uvxx::Process> m_process;
+    QProcess *m_process;
 };
 
 #endif // !MACHINE_ANDROIDMACHINE_H

@@ -3,39 +3,42 @@
 
 #include <filesystem>
 
-namespace uvxx {
-class Loop;
-class Pipe;
-class Process;
-class Buffer;
-} // namespace uvxx
+#include <QObject>
+#include <QProcess>
+
+class QLocalServer;
+class QLocalSocket;
+class QProcess;
 
 class Manager;
 class Machine;
 
-class InputGrabberWrapper {
+class InputGrabberWrapper : public QObject {
+    Q_OBJECT
+
 public:
-    explicit InputGrabberWrapper(Manager *manager,
-                                 const std::shared_ptr<uvxx::Loop> &uvLoop,
-                                 const std::filesystem::path &path);
+    explicit InputGrabberWrapper(Manager *manager, const std::filesystem::path &path);
     ~InputGrabberWrapper();
     void setMachine(const std::weak_ptr<Machine> &machine);
     void start();
     void stop();
 
+private slots:
+    void onProcessClosed(int exitCode, QProcess::ExitStatus exitStatus);
+    void handleNewConnection();
+    void onReceived();
+    void onDisconnected();
+
 private:
     Manager *m_manager;
-    std::shared_ptr<uvxx::Loop> m_uvLoop;
-    std::shared_ptr<uvxx::Pipe> m_pipe;
-    std::shared_ptr<uvxx::Process> m_process;
+    QLocalServer *m_server;
+    QLocalSocket *m_conn;
+    QProcess *m_process;
 
-    const std::filesystem::path m_path;
+    const QString m_path;
 
     uint8_t m_type;
     std::weak_ptr<Machine> m_machine;
-
-    void onReceived(uvxx::Buffer &buff) noexcept;
-    void onClosed();
 };
 
 #endif // !WRAPPERS_INPUTGRABBERWRAPPER_H

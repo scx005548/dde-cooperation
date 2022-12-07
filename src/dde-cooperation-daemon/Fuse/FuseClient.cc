@@ -12,9 +12,7 @@
 
 #include <QTcpSocket>
 #include <QHostAddress>
-
-#include "uvxx/Loop.h"
-#include "uvxx/Process.h"
+#include <QProcess>
 
 #include "utils/message_helper.h"
 #include "protocol/message.pb.h"
@@ -35,12 +33,10 @@ struct fuseOpsWrapper<F> {
     }
 };
 
-FuseClient::FuseClient(const std::shared_ptr<uvxx::Loop> &uvLoop,
-                       const std::string &ip,
+FuseClient::FuseClient(const std::string &ip,
                        uint16_t port,
                        const std::filesystem::path &mountpoint)
-    : m_uvLoop(uvLoop)
-    , m_conn(new QTcpSocket(this))
+    : m_conn(new QTcpSocket(this))
     , m_ip(ip)
     , m_port(port)
     , m_mountpoint(mountpoint)
@@ -48,31 +44,30 @@ FuseClient::FuseClient(const std::shared_ptr<uvxx::Loop> &uvLoop,
     , m_fuse(std::unique_ptr<fuse, decltype(&fuse_destroy)>(nullptr, &fuse_destroy)) {
     spdlog::info("FuseClient::FuseClient, mountpoint: {}", m_mountpoint.string());
 
-    auto process = std::make_shared<uvxx::Process>(m_uvLoop, "/usr/bin/umount");
-    process->args = {m_mountpoint.string()};
-    process->onExit([this, process](int64_t exit_status, [[maybe_unused]] int term_signal) {
-        if (!exit_status) {
-            spdlog::info("umount point success");
-        }
+    QProcess *process = new QProcess(this);
+    connect(process,
+            static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+            [this, process]([[maybe_unused]] int exitCode, QProcess::ExitStatus exitStatus) {
+                if (!exitStatus) {
+                    spdlog::info("umount point success");
+                }
 
-        if (!fs::exists(m_mountpoint)) {
-            fs::create_directories(m_mountpoint);
-        }
+                if (!fs::exists(m_mountpoint)) {
+                    fs::create_directories(m_mountpoint);
+                }
 
-        fuse_opt_add_arg(&m_args, m_mountpoint.c_str());
-        fuse_opt_add_arg(&m_args, "-d");
+                fuse_opt_add_arg(&m_args, m_mountpoint.c_str());
+                fuse_opt_add_arg(&m_args, "-d");
 
-        connect(m_conn, &QTcpSocket::connected, [this] {
-            m_mountThread = std::thread(&FuseClient::mount, this);
-        });
-        connect(m_conn, &QTcpSocket::readyRead, this, &FuseClient::handleResponse);
-        m_conn->connectToHost(QHostAddress(QString::fromStdString(m_ip)), m_port);
+                connect(m_conn, &QTcpSocket::connected, [this] {
+                    m_mountThread = std::thread(&FuseClient::mount, this);
+                });
+                connect(m_conn, &QTcpSocket::readyRead, this, &FuseClient::handleResponse);
+                m_conn->connectToHost(QHostAddress(QString::fromStdString(m_ip)), m_port);
 
-        process->close();
-        process->onExit(nullptr);
-    });
-
-    process->spawn();
+                process->deleteLater();
+            });
+    process->start("/usr/bin/umount", QStringList{QString::fromStdString(m_mountpoint.string())});
 }
 
 FuseClient::~FuseClient() {

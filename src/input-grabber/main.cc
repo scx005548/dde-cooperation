@@ -1,46 +1,51 @@
-#include <string>
-
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
+#include <QCoreApplication>
+#include <QLocalSocket>
 
 #include "InputGrabber.h"
-#include "uvxx/Loop.h"
-#include "uvxx/Pipe.h"
-#include "uvxx/Signal.h"
 
 #include "utils/message_helper.h"
 #include "protocol/ipc_message.pb.h"
 
-int main(int argc, const char *argv[]) {
-    auto console = spdlog::stdout_color_mt("console");
-    spdlog::set_default_logger(console);
-    spdlog::set_level(spdlog::level::debug);
-    spdlog::set_pattern("[%^%l%$] input-grabber [thread %t]: %v");
+int main(int argc, char *argv[]) {
+    QCoreApplication::setSetuidAllowed(true);
+    QCoreApplication app(argc, argv);
 
-    if (argc < 3) {
-        spdlog::critical("3 args");
+    auto args = app.arguments();
+    if (args.size() < 3) {
+        qWarning("3 args");
         return 1;
     }
 
-    int fd = atoi(argv[1]);
-    std::string path = argv[2];
-    auto loop = uvxx::Loop::defaultLoop();
+    auto addr = args[1];
+    qDebug() << "input-grabber LocalServer addr:" << addr;
+    auto path = args[2];
 
-    InputGrabber grabber(path);
+    InputGrabber grabber(path.toStdString());
     if (grabber.shouldIgnore()) {
         return 2;
     }
 
-    auto pipe = std::make_shared<uvxx::Pipe>(loop, true);
-    pipe->open(fd);
-    pipe->onReceived([&grabber](uvxx::Buffer &buff) {
-        while (buff.size() >= header_size) {
-            auto res = MessageHelper::parseMessage<InputGrabberParent>(buff);
-            if (!res.has_value()) {
+    QLocalSocket socket;
+    QObject::connect(&socket, &QLocalSocket::readyRead, [&grabber, &socket]() {
+        while (socket.size() >= header_size) {
+            QByteArray buffer = socket.peek(header_size);
+            auto header = MessageHelper::parseMessageHeader(buffer);
+            if (!header.legal()) {
+                qWarning() << "illegal message from InputEmitterWrapper";
                 return;
             }
 
-            InputGrabberParent &base = res.value();
+            if (socket.size() < static_cast<qint64>(header_size + header.size())) {
+                qDebug() << "partial content";
+                return;
+            }
+
+            socket.read(header_size);
+            auto size = header.size();
+            buffer = socket.read(size);
+
+            auto base = MessageHelper::parseMessageBody<InputGrabberParent>(buffer.data(),
+                                                                            buffer.size());
 
             switch (base.payload_case()) {
             case InputGrabberParent::PayloadCase::kStart: {
@@ -54,41 +59,22 @@ int main(int argc, const char *argv[]) {
             }
         }
     });
-    pipe->startRead();
-    pipe->onClosed([]() { exit(1); });
+    QObject::connect(&socket, &QLocalSocket::connected, [&grabber, &socket]() {
+        InputGrabberChild msg;
+        msg.set_devicetype(static_cast<uint8_t>(grabber.type()));
+        socket.write(MessageHelper::genMessageQ(msg));
+    });
+    QObject::connect(&socket, &QLocalSocket::disconnected, [&app]() { app.quit(); });
+    socket.connectToServer(addr);
 
-    grabber.onEvent([pipe](unsigned int type, unsigned int code, int value) {
+    grabber.onEvent([&socket](unsigned int type, unsigned int code, int value) {
         InputGrabberChild msg;
         auto *inputEvent = msg.mutable_inputevent();
         inputEvent->set_type(type);
         inputEvent->set_code(code);
         inputEvent->set_value(value);
-        pipe->write(MessageHelper::genMessage(msg));
+        socket.write(MessageHelper::genMessageQ(msg));
     });
 
-    InputGrabberChild msg;
-    msg.set_devicetype(static_cast<uint8_t>(grabber.type()));
-    pipe->write(MessageHelper::genMessage(msg));
-
-    auto exitCb = [loop]([[maybe_unused]] int signum) { loop->stop(); };
-    auto signalInt = std::make_shared<uvxx::Signal>(loop);
-    signalInt->onTrigger(exitCb);
-    signalInt->start(SIGINT);
-    auto signalQuit = std::make_shared<uvxx::Signal>(loop);
-    signalQuit->onTrigger(exitCb);
-    signalQuit->start(SIGQUIT);
-    auto signalTerm = std::make_shared<uvxx::Signal>(loop);
-    signalTerm->onTrigger(exitCb);
-    signalTerm->start(SIGTERM);
-    auto signalHup = std::make_shared<uvxx::Signal>(loop);
-    signalHup->onTrigger(exitCb);
-    signalHup->start(SIGHUP);
-
-    loop->run();
-
-    pipe->close();
-    signalInt->close();
-    signalQuit->close();
-    signalTerm->close();
-    signalHup->close();
+    return app.exec();
 }

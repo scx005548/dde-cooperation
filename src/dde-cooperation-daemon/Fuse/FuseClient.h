@@ -14,18 +14,13 @@
 
 #include <QObject>
 
-namespace uvxx {
-class Loop;
-} // namespace uvxx
-
 class QTcpSocket;
 
 class FuseClient : public QObject {
     Q_OBJECT
 
 public:
-    explicit FuseClient(const std::shared_ptr<uvxx::Loop> &uvLoop,
-                        const std::string &ip,
+    explicit FuseClient(const std::string &ip,
                         uint16_t port,
                         const std::filesystem::path &mountpoint);
     ~FuseClient();
@@ -35,7 +30,6 @@ public:
     void exit();
 
 private:
-    std::shared_ptr<uvxx::Loop> m_uvLoop;
     QTcpSocket *m_conn;
 
     std::string m_ip;

@@ -1,42 +1,49 @@
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
+#include <QCoreApplication>
+
+#include <QLocalSocket>
 
 #include "InputEmittor.h"
-
-#include "uvxx/Loop.h"
-#include "uvxx/Pipe.h"
-#include "uvxx/Signal.h"
 
 #include "utils/message_helper.h"
 #include "protocol/ipc_message.pb.h"
 
-int main(int argc, const char *argv[]) {
-    auto console = spdlog::stdout_color_mt("console");
-    spdlog::set_default_logger(console);
-    spdlog::set_level(spdlog::level::debug);
-    spdlog::set_pattern("[%^%l%$] input-emittor [thread %t]: %v");
+int main(int argc, char *argv[]) {
+    QCoreApplication::setSetuidAllowed(true);
+    QCoreApplication app(argc, argv);
 
-    if (argc < 3) {
-        spdlog::critical("3 args");
+    auto args = app.arguments();
+    if (args.size() < 3) {
+        qWarning("3 args");
         return 1;
     }
 
-    int fd = atoi(argv[1]);
-    InputDeviceType type = static_cast<InputDeviceType>(atoi(argv[2]));
-    auto loop = uvxx::Loop::defaultLoop();
+    auto addr = args[1];
+    qDebug() << "input-emitter LocalServer addr:" << addr;
 
-    InputEmittor emittor(loop, type);
+    InputDeviceType type = static_cast<InputDeviceType>(args[2].toUInt());
+    InputEmittor emittor(type);
 
-    auto pipe = std::make_shared<uvxx::Pipe>(loop, true);
-    pipe->open(fd);
-    pipe->onReceived([&emittor](uvxx::Buffer &buff) {
-        while (buff.size() >= header_size) {
-            auto res = MessageHelper::parseMessage<InputEmittorParent>(buff);
-            if (!res.has_value()) {
+    QLocalSocket socket;
+    QObject::connect(&socket, &QLocalSocket::readyRead, [&emittor, &socket]() {
+        while (socket.size() >= header_size) {
+            QByteArray buffer = socket.peek(header_size);
+            auto header = MessageHelper::parseMessageHeader(buffer);
+            if (!header.legal()) {
+                qWarning() << "illegal message from InputEmitterWrapper";
                 return;
             }
 
-            InputEmittorParent &base = res.value();
+            if (socket.size() < static_cast<qint64>(header_size + header.size())) {
+                qDebug() << "partial content";
+                return;
+            }
+
+            socket.read(header_size);
+            auto size = header.size();
+            buffer = socket.read(size);
+
+            auto base = MessageHelper::parseMessageBody<InputEmittorParent>(buffer.data(),
+                                                                            buffer.size());
 
             switch (base.payload_case()) {
             case InputEmittorParent::PayloadCase::kInputEvent: {
@@ -48,28 +55,8 @@ int main(int argc, const char *argv[]) {
             }
         }
     });
-    pipe->startRead();
-    pipe->onClosed([]() { exit(1); });
+    QObject::connect(&socket, &QLocalSocket::disconnected, [&app]() { app.quit(); });
+    socket.connectToServer(addr);
 
-    auto exitCb = [loop]([[maybe_unused]] int signum) { loop->stop(); };
-    auto signalInt = std::make_shared<uvxx::Signal>(loop);
-    signalInt->onTrigger(exitCb);
-    signalInt->start(SIGINT);
-    auto signalQuit = std::make_shared<uvxx::Signal>(loop);
-    signalQuit->onTrigger(exitCb);
-    signalQuit->start(SIGQUIT);
-    auto signalTerm = std::make_shared<uvxx::Signal>(loop);
-    signalTerm->onTrigger(exitCb);
-    signalTerm->start(SIGTERM);
-    auto signalHup = std::make_shared<uvxx::Signal>(loop);
-    signalHup->onTrigger(exitCb);
-    signalHup->start(SIGHUP);
-
-    loop->run();
-
-    pipe->close();
-    signalInt->close();
-    signalQuit->close();
-    signalTerm->close();
-    signalHup->close();
+    return app.exec();
 }

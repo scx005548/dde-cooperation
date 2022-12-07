@@ -80,12 +80,10 @@ Manager::Manager(const std::filesystem::path &dataDir)
 
         m_inputGrabbers.emplace(
             std::make_pair(entry.path().string(),
-                           std::make_shared<InputGrabberWrapper>(this, m_uvLoop, entry.path())));
+                           std::make_shared<InputGrabberWrapper>(this, entry.path())));
     }
 
-    m_uvThread = std::thread([this] () {
-        m_uvLoop->run();
-    });
+    m_uvThread = std::thread([this]() { m_uvLoop->run(); });
 
     scan();
 }

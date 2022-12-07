@@ -1,7 +1,8 @@
 #include "InputGrabberWrapper.h"
 
-#include "uvxx/Process.h"
-#include "uvxx/Pipe.h"
+#include <QLocalServer>
+#include <QLocalSocket>
+#include <QProcess>
 
 #include "config.h"
 #include "Manager.h"
@@ -9,39 +10,36 @@
 #include "utils/message_helper.h"
 #include "protocol/ipc_message.pb.h"
 
-InputGrabberWrapper::InputGrabberWrapper(Manager *manager,
-                                         const std::shared_ptr<uvxx::Loop> &uvLoop,
-                                         const std::filesystem::path &path)
+InputGrabberWrapper::InputGrabberWrapper(Manager *manager, const std::filesystem::path &path)
     : m_manager(manager)
-    , m_uvLoop(uvLoop)
-    , m_pipe(std::make_shared<uvxx::Pipe>(m_uvLoop, true))
-    , m_process(std::make_shared<uvxx::Process>(m_uvLoop, INPUT_GRABBER_PATH))
-    , m_path(path) {
-    m_process->setStdout(static_cast<uv_stdio_flags>(UV_INHERIT_FD), fileno(stdout));
-    m_process->setStderr(static_cast<uv_stdio_flags>(UV_INHERIT_FD), fileno(stderr));
-    int fd = m_process->addStdio(
-        static_cast<uv_stdio_flags>(UV_CREATE_PIPE | UV_READABLE_PIPE | UV_WRITABLE_PIPE),
-        std::static_pointer_cast<uvxx::Stream>(m_pipe));
-    m_process->args.emplace_back(std::to_string(fd));
-    m_process->args.emplace_back(path.string());
-    m_process->spawn();
-    m_process->onExit([this](int64_t, int) { m_process->close(); });
+    , m_server(new QLocalServer(this))
+    , m_conn(nullptr)
+    , m_process(new QProcess(this))
+    , m_path(QString::fromStdString(path)) {
+    auto name = QString("DDECooperationInputEmitter-%1").arg(QString(m_path).replace("/", "_"));
+    m_server->listen(name);
+    m_server->setMaxPendingConnections(1);
+    qDebug() << "InputGrabber listen addr:" << m_server->serverName();
 
-    m_process->onClosed(uvxx::memFunc(this, &InputGrabberWrapper::onClosed));
+    connect(m_server,
+            &QLocalServer::newConnection,
+            this,
+            &InputGrabberWrapper::handleNewConnection);
 
-    m_pipe->onReceived(uvxx::memFunc(this, &InputGrabberWrapper::onReceived));
-    m_pipe->onClosed(uvxx::memFunc(this, &InputGrabberWrapper::onClosed));
-    m_pipe->startRead();
+    connect(m_process,
+            static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+            this,
+            &InputGrabberWrapper::onProcessClosed);
+    m_process->start(INPUT_GRABBER_PATH,
+                     QStringList{m_server->serverName(), QString::fromStdString(path.string())});
 }
 
 InputGrabberWrapper::~InputGrabberWrapper() {
-    m_pipe->onClosed(nullptr);
-    m_process->onExit(nullptr);
-    m_process->onClosed(nullptr);
-
-    m_pipe->close();
-    m_process->kill(SIGINT);
-    m_process->close();
+    m_server->close();
+    if (m_conn) {
+        m_conn->close();
+    }
+    m_process->kill();
 }
 
 void InputGrabberWrapper::setMachine(const std::weak_ptr<Machine> &machine) {
@@ -49,27 +47,60 @@ void InputGrabberWrapper::setMachine(const std::weak_ptr<Machine> &machine) {
 }
 
 void InputGrabberWrapper::start() {
+    qDebug() << "start" << m_path;
     InputGrabberParent msg;
     msg.mutable_start();
-    m_pipe->write(MessageHelper::genMessage(msg));
+    m_conn->write(MessageHelper::genMessageQ(msg));
 }
 
 void InputGrabberWrapper::stop() {
+    qDebug() << "stop" << m_path;
     InputGrabberParent msg;
     msg.mutable_stop();
-    m_pipe->write(MessageHelper::genMessage(msg));
+    m_conn->write(MessageHelper::genMessageQ(msg));
 }
 
-void InputGrabberWrapper::onReceived(uvxx::Buffer &buff) noexcept {
-    spdlog::info("onReceived");
+void InputGrabberWrapper::handleNewConnection() {
+    if (m_conn) {
+        return;
+    }
 
-    while (buff.size() >= header_size) {
-        auto res = MessageHelper::parseMessage<InputGrabberChild>(buff);
-        if (!res.has_value()) {
+    qDebug() << "InputGrabber new connection" << m_path;
+    m_conn = m_server->nextPendingConnection();
+    m_server->close();
+
+    connect(m_conn, &QLocalSocket::readyRead, this, &InputGrabberWrapper::onReceived);
+    connect(m_conn, &QLocalSocket::disconnected, this, &InputGrabberWrapper::onDisconnected);
+}
+
+void InputGrabberWrapper::onProcessClosed([[maybe_unused]] int exitCode,
+                                          [[maybe_unused]] QProcess::ExitStatus exitStatus) {
+    qDebug() << "onProcessClosed" << m_path;
+    m_manager->removeInputGrabber(m_path.toStdString());
+}
+
+void InputGrabberWrapper::onReceived() {
+    qDebug() << "input-grabber onReceived";
+
+    while (m_conn->size() >= header_size) {
+        QByteArray buffer = m_conn->peek(header_size);
+        auto header = MessageHelper::parseMessageHeader(buffer);
+        if (!header.legal()) {
+            qWarning() << "illegal message from input-grabber";
             return;
         }
 
-        InputGrabberChild &base = res.value();
+        if (m_conn->size() < static_cast<qint64>(header_size + header.size())) {
+            qDebug() << "partial content";
+            return;
+        }
+
+        m_conn->read(header_size);
+        auto size = header.size();
+        buffer = m_conn->read(size);
+
+        InputGrabberChild base = MessageHelper::parseMessageBody<InputGrabberChild>(buffer.data(),
+                                                                                    buffer.size());
 
         switch (base.payload_case()) {
         case InputGrabberChild::PayloadCase::kDeviceType: {
@@ -94,6 +125,6 @@ void InputGrabberWrapper::onReceived(uvxx::Buffer &buff) noexcept {
     }
 }
 
-void InputGrabberWrapper::onClosed() {
-    m_manager->removeInputGrabber(m_path);
+void InputGrabberWrapper::onDisconnected() {
+    m_process->kill();
 }
