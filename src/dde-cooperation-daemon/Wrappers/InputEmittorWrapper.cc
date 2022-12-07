@@ -51,7 +51,7 @@ bool InputEmittorWrapper::emitEvent(unsigned int type, unsigned int code, int va
     inputEvent->set_type(type);
     inputEvent->set_code(code);
     inputEvent->set_value(value);
-    return m_conn->write(MessageHelper::genMessageQ(msg));
+    return m_conn->write(MessageHelper::genMessage(msg));
 }
 
 void InputEmittorWrapper::handleNewConnection() {

@@ -11,8 +11,6 @@
 
 #include <QByteArray>
 
-#include "uvxx/Buffer.h"
-
 #define SCAN_KEY "UOS-COOPERATION"
 
 #if __BIG_ENDIAN__
@@ -49,21 +47,11 @@ enum class PARSE_ERROR {
     ILLEGAL_MESSAGE,
 };
 
-inline QByteArray genMessageQ(const google::protobuf::Message &msg) {
+inline QByteArray genMessage(const google::protobuf::Message &msg) {
     MessageHeader header(msg.ByteSizeLong());
 
     QByteArray buff;
     buff.resize(header_size + msg.ByteSizeLong());
-    memcpy(buff.data(), &header, header_size);
-    msg.SerializeToArray(buff.data() + header_size, msg.ByteSizeLong());
-
-    return buff;
-}
-
-inline std::vector<char> genMessage(const google::protobuf::Message &msg) {
-    MessageHeader header(msg.ByteSizeLong());
-
-    std::vector<char> buff(header_size + msg.ByteSizeLong());
     memcpy(buff.data(), &header, header_size);
     msg.SerializeToArray(buff.data() + header_size, msg.ByteSizeLong());
 
@@ -90,24 +78,6 @@ template <typename T>
 inline T parseMessageBody(const char *buffer, size_t size) noexcept {
     T msg;
     msg.ParseFromArray(buffer, size);
-
-    return msg;
-}
-
-template <typename T>
-inline tl::expected<T, PARSE_ERROR> parseMessage(uvxx::Buffer &buff) {
-    auto header = buff.peak<MessageHeader>();
-    if (!header.legal()) {
-        return tl::make_unexpected(PARSE_ERROR::ILLEGAL_MESSAGE);
-    }
-
-    if (buff.size() < header_size + header.size()) {
-        return tl::make_unexpected(PARSE_ERROR::PARTIAL_MESSAGE);
-    }
-
-    T msg;
-    msg.ParseFromArray(buff.data() + header_size, header.size());
-    buff.retrieve(header_size + header.size());
 
     return msg;
 }

@@ -87,7 +87,7 @@ void FuseServer::handleRequest() noexcept {
 
             Message resp;
             methodGetattr(req, resp.mutable_fsmethodgetattrresponse());
-            m_conn->write(MessageHelper::genMessageQ(resp));
+            m_conn->write(MessageHelper::genMessage(resp));
             break;
         }
         case Message::PayloadCase::kFsMethodReadRequest: {
@@ -95,7 +95,7 @@ void FuseServer::handleRequest() noexcept {
 
             Message resp;
             methodRead(req, resp.mutable_fsmethodreadresponse());
-            m_conn->write(MessageHelper::genMessageQ(resp));
+            m_conn->write(MessageHelper::genMessage(resp));
             break;
         }
         case Message::PayloadCase::kFsMethodReadDirRequest: {
@@ -103,7 +103,7 @@ void FuseServer::handleRequest() noexcept {
 
             Message resp;
             methodReaddir(req, resp.mutable_fsmethodreaddirresponse());
-            m_conn->write(MessageHelper::genMessageQ(resp));
+            m_conn->write(MessageHelper::genMessage(resp));
             break;
         }
         case Message::PayloadCase::kFsMethodOpenRequest: {
@@ -111,7 +111,7 @@ void FuseServer::handleRequest() noexcept {
 
             Message resp;
             methodOpen(req, resp.mutable_fsmethodopenresponse());
-            m_conn->write(MessageHelper::genMessageQ(resp));
+            m_conn->write(MessageHelper::genMessage(resp));
             break;
         }
         case Message::PayloadCase::kFsMethodReleaseRequest: {
@@ -119,7 +119,7 @@ void FuseServer::handleRequest() noexcept {
 
             Message resp;
             methodRelease(req, resp.mutable_fsmethodreleaseresponse());
-            m_conn->write(MessageHelper::genMessageQ(resp));
+            m_conn->write(MessageHelper::genMessage(resp));
             break;
         }
         default: {

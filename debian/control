@@ -20,7 +20,6 @@ Build-Depends:
  libspdlog-dev,
  libssl-dev,
  libswscale-dev,
- libuv1-dev,
  libxcb-randr0-dev,
  libxcb-util-dev,
  libxcb-xfixes0-dev,

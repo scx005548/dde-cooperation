@@ -127,7 +127,7 @@ int FuseClient::getattr(const char *path,
         m_serial++;
         req->set_serial(m_serial);
         req->set_path(path);
-        m_conn->write(MessageHelper::genMessageQ(msg));
+        m_conn->write(MessageHelper::genMessage(msg));
     });
 
     auto resp = std::static_pointer_cast<FsMethodGetAttrResponse>(waitForServerReply());
@@ -173,7 +173,7 @@ int FuseClient::open(const char *path, struct fuse_file_info *fi) {
         m_serial++;
         req->set_serial(m_serial);
         req->set_path(path);
-        m_conn->write(MessageHelper::genMessageQ(msg));
+        m_conn->write(MessageHelper::genMessage(msg));
     });
 
     auto resp = std::static_pointer_cast<FsMethodOpenResponse>(waitForServerReply());
@@ -207,7 +207,7 @@ int FuseClient::read(const char *path,
         req->set_size(size);
         auto rfi = req->mutable_fi();
         rfi->set_fh(fi->fh);
-        m_conn->write(MessageHelper::genMessageQ(msg));
+        m_conn->write(MessageHelper::genMessage(msg));
     });
 
     auto resp = std::static_pointer_cast<FsMethodReadResponse>(waitForServerReply());
@@ -232,7 +232,7 @@ int FuseClient::release(const char *path, struct fuse_file_info *fi) {
         req->set_serial(m_serial);
         req->set_path(path);
         req->mutable_fi()->set_fh(fi->fh);
-        m_conn->write(MessageHelper::genMessageQ(msg));
+        m_conn->write(MessageHelper::genMessage(msg));
     });
 
     auto resp = std::static_pointer_cast<FsMethodReleaseResponse>(waitForServerReply());
@@ -258,7 +258,7 @@ int FuseClient::readdir(const char *path,
         m_serial++;
         req->set_serial(m_serial);
         req->set_path(path);
-        m_conn->write(MessageHelper::genMessageQ(msg));
+        m_conn->write(MessageHelper::genMessage(msg));
     });
 
     auto resp = std::static_pointer_cast<FsMethodReadDirResponse>(waitForServerReply());

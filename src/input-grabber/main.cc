@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
     QObject::connect(&socket, &QLocalSocket::connected, [&grabber, &socket]() {
         InputGrabberChild msg;
         msg.set_devicetype(static_cast<uint8_t>(grabber.type()));
-        socket.write(MessageHelper::genMessageQ(msg));
+        socket.write(MessageHelper::genMessage(msg));
     });
     QObject::connect(&socket, &QLocalSocket::disconnected, [&app]() { app.quit(); });
     socket.connectToServer(addr);
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
         inputEvent->set_type(type);
         inputEvent->set_code(code);
         inputEvent->set_value(value);
-        socket.write(MessageHelper::genMessageQ(msg));
+        socket.write(MessageHelper::genMessage(msg));
     });
 
     return app.exec();

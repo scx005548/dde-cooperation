@@ -50,14 +50,14 @@ void InputGrabberWrapper::start() {
     qDebug() << "start" << m_path;
     InputGrabberParent msg;
     msg.mutable_start();
-    m_conn->write(MessageHelper::genMessageQ(msg));
+    m_conn->write(MessageHelper::genMessage(msg));
 }
 
 void InputGrabberWrapper::stop() {
     qDebug() << "stop" << m_path;
     InputGrabberParent msg;
     msg.mutable_stop();
-    m_conn->write(MessageHelper::genMessageQ(msg));
+    m_conn->write(MessageHelper::genMessage(msg));
 }
 
 void InputGrabberWrapper::handleNewConnection() {

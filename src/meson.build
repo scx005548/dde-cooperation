@@ -26,7 +26,6 @@ common_sources = files('''
 
 includes = include_directories('./')
 
-subdir('uvxx')
 subdir('input-emittor')
 subdir('input-grabber')
 subdir('dde-cooperation-daemon')

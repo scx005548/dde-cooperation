@@ -445,7 +445,7 @@ void Machine::handleInputEventRequest(const InputEventRequest &req) {
     response->set_serial(req.serial());
     response->set_success(success);
 
-    m_conn->write(MessageHelper::genMessageQ(resp));
+    m_conn->write(MessageHelper::genMessage(resp));
 }
 
 void Machine::handleFlowDirectionNtf(const FlowDirectionNtf &ntf) {
@@ -750,7 +750,7 @@ void Machine::sendMessage(const Message &msg) {
         return;
     }
 
-    m_conn->write(MessageHelper::genMessageQ(msg));
+    m_conn->write(MessageHelper::genMessage(msg));
 }
 
 void Machine::sendServiceStatusNotification() {

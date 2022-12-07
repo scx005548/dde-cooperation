@@ -328,7 +328,7 @@ void Manager::scan() noexcept {
     request->mutable_deviceinfo()->set_os(DEVICE_OS_LINUX);
     request->set_port(m_port);
 
-    m_socketScan->writeDatagram(MessageHelper::genMessageQ(base),
+    m_socketScan->writeDatagram(MessageHelper::genMessage(base),
                                 QHostAddress::Broadcast,
                                 m_scanPort);
 }
@@ -471,7 +471,7 @@ void Manager::handleReceivedSocketScan() noexcept {
             response->mutable_deviceinfo()->set_name(Net::getHostname());
             response->mutable_deviceinfo()->set_os(DEVICE_OS_LINUX);
             response->set_port(m_port);
-            m_socketScan->writeDatagram(MessageHelper::genMessageQ(msg), addr, m_scanPort);
+            m_socketScan->writeDatagram(MessageHelper::genMessage(msg), addr, m_scanPort);
 
             break;
         }
@@ -587,7 +587,7 @@ void Manager::ping(const std::string &ip, uint16_t port) {
     request->mutable_deviceinfo()->set_os(DEVICE_OS_LINUX);
     request->set_port(m_port);
 
-    m_socketScan->writeDatagram(MessageHelper::genMessageQ(msg),
+    m_socketScan->writeDatagram(MessageHelper::genMessage(msg),
                                 QHostAddress(QString::fromStdString(ip)),
                                 port);
 }
@@ -706,7 +706,7 @@ void Manager::sendServiceStoppedNotification() const {
         ServiceStoppedNotification *notification = base.mutable_servicestoppednotification();
         notification->set_deviceuuid(machine->m_uuid);
 
-        m_socketScan->writeDatagram(MessageHelper::genMessageQ(base),
+        m_socketScan->writeDatagram(MessageHelper::genMessage(base),
                                     QHostAddress(QString::fromStdString(machine->ip())),
                                     m_scanPort);
     }

@@ -8,10 +8,6 @@
 
 #include <QObject>
 
-namespace uvxx {
-class Loop;
-} // namespace uvxx
-
 class QTcpServer;
 class QTcpSocket;
 
@@ -29,7 +25,6 @@ public:
 private:
     std::weak_ptr<Machine> m_machine;
 
-    std::shared_ptr<uvxx::Loop> m_uvLoop;
     QTcpServer *m_listen;
     QTcpSocket *m_conn;
 

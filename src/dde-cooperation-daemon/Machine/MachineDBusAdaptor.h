@@ -9,11 +9,6 @@
 class Manager;
 class Machine;
 
-namespace uvxx {
-class Loop;
-class Async;
-} // namespace uvxx
-
 class MachineDBusAdaptor : public QObject {
     friend class Machine;
 

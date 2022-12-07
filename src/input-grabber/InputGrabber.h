@@ -12,11 +12,6 @@
 
 #include "common.h"
 
-namespace uvxx {
-class Loop;
-class Poll;
-} // namespace uvxx
-
 class QSocketNotifier;
 
 class Machine;
