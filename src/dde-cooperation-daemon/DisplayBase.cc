@@ -1,7 +1,5 @@
 #include "DisplayBase.h"
 
-#include <spdlog/spdlog.h>
-
 #include "Manager.h"
 #include "protocol/device_sharing.pb.h"
 
@@ -20,14 +18,14 @@ void DisplayBase::handleMotion(int16_t x, int16_t y, bool evFromPeer) {
         if (m_lastX == x) {
             if (x == 0) {
                 // left flow
-                spdlog::info("left flow");
+                qInfo("left flow");
                 flowOut(FLOW_DIRECTION_LEFT, 0, y, evFromPeer);
                 break;
             }
 
             if (x == m_screenWidth - 1) {
                 // right flow
-                spdlog::info("right flow");
+                qInfo("right flow");
                 flowOut(FLOW_DIRECTION_RIGHT, 0, y, evFromPeer);
                 break;
             }
@@ -36,14 +34,14 @@ void DisplayBase::handleMotion(int16_t x, int16_t y, bool evFromPeer) {
         if (m_lastY == y) {
             if (y == 0) {
                 // top flow
-                spdlog::info("top flow");
+                qInfo("top flow");
                 flowOut(FLOW_DIRECTION_TOP, x, 0, evFromPeer);
                 break;
             }
 
             if (y == m_screenHeight - 1) {
                 // bottom flow
-                spdlog::info("bottom flow");
+                qInfo("bottom flow");
                 flowOut(FLOW_DIRECTION_BOTTOM, x, 0, evFromPeer);
                 break;
             }
@@ -71,7 +69,7 @@ void DisplayBase::flowBack(uint16_t direction, uint16_t x, uint16_t y) {
 void DisplayBase::flowOut(uint16_t direction, uint16_t x, uint16_t y, bool evFromPeer) {
     bool r = m_manager->tryFlowOut(direction, x, y, evFromPeer);
     if (r) {
-        //stopEdgeDetection();
+        // stopEdgeDetection();
         hideMouse(true);
     }
 }

@@ -11,7 +11,9 @@
 #include <openssl/rsa.h>
 #include <openssl/pem.h>
 
-#include <spdlog/spdlog.h>
+#include <fmt/core.h>
+
+#include <QDebug>
 
 #include <utils/net.h>
 #include <utils/ptr.h>
@@ -92,7 +94,7 @@ bool KeyPair::generateNewKey() {
         fs::create_directories(dir);
     } else {
         if (!fs::is_directory(dir)) {
-            spdlog::critical("path {} is not a directory", dir.string());
+            qCritical() << fmt::format("path {} is not a directory", dir.string()).data();
             return false;
         }
     }

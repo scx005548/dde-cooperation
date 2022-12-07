@@ -12,7 +12,8 @@
 #include <xcb/xinput.h>
 
 #include <fmt/core.h>
-#include <spdlog/spdlog.h>
+
+#include <QDebug>
 
 namespace X11 {
 
@@ -26,7 +27,7 @@ X11::X11(QObject *parent)
     }
 
     m_xcbFd = xcb_get_file_descriptor(m_conn);
-    spdlog::info("xcb fd: {}", m_xcbFd);
+    qInfo() << fmt::format("xcb fd: {}", m_xcbFd).data();
     m_socketNotifier = new QSocketNotifier(m_xcbFd, QSocketNotifier::Type::Read, this);
     connect(m_socketNotifier, &QSocketNotifier::activated, this, &X11::onEvent);
 

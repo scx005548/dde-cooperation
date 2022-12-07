@@ -605,7 +605,7 @@ void Machine::handleClipboardGetContentResponse(const ClipboardGetContentRespons
         }
         out.resize(out.length() - 1);
         content.swap(out);
-        // spdlog::info("content[{}]: {}", content.length(), content);
+        // qInfo() << fmt::format("content[{}]: {}", content.length(), content).data();
     }
 
     // fill up text/uri-list target. when pasted, this target is need;

@@ -10,7 +10,8 @@
 
 #include <fmt/core.h>
 #include <fmt/ranges.h>
-#include <spdlog/spdlog.h>
+
+#include <QDebug>
 
 using namespace X11;
 
@@ -50,10 +51,10 @@ Clipboard::Clipboard(ClipboardObserver *observer, QObject *parent)
                                             valueList);
     auto *err = xcb_request_check(m_conn, cookie);
     if (err != nullptr) {
-        spdlog::error("failed to create window: {}", err->error_code);
+        qWarning() << fmt::format("failed to create window: {}", err->error_code).data();
     }
 
-    spdlog::info("clipboard window id: {}", m_dummyWindow);
+    qInfo() << fmt::format("clipboard window id: {}", m_dummyWindow).data();
 
     m_selection = getAtom(ATOM_LIST::CLIPBOARD);
 
@@ -80,7 +81,7 @@ xcb_atom_t Clipboard::getAtom(const std::string &name, bool onlyIfExists) {
     }
 
     auto reply = XCB_REPLY(xcb_intern_atom, m_conn, onlyIfExists, name.length(), name.c_str());
-    spdlog::warn("ATOM: {}, {}", name, reply->atom);
+    qWarning() << fmt::format("ATOM: {}, {}", name, reply->atom).data();
     m_atoms.emplace(name, reply->atom);
     return reply->atom;
 }
@@ -88,7 +89,7 @@ xcb_atom_t Clipboard::getAtom(const std::string &name, bool onlyIfExists) {
 void Clipboard::initXfixesExtension() {
     m_xfixes = xcb_get_extension_data(m_conn, &xcb_xfixes_id);
     if (!m_xfixes->present) {
-        spdlog::warn("xfixes is not present");
+        qWarning("xfixes is not present");
         return;
     }
 
@@ -98,12 +99,13 @@ void Clipboard::initXfixesExtension() {
                            XCB_XFIXES_MAJOR_VERSION,
                            XCB_XFIXES_MINOR_VERSION);
     if (err != nullptr) {
-        spdlog::warn("xcb_xfixes_query_version: {}", err->error_code);
+        qWarning() << fmt::format("xcb_xfixes_query_version: {}", err->error_code).data();
         return;
     }
 
-    spdlog::debug("xfixes version {}.{}", reply->major_version, reply->minor_version);
-    spdlog::debug("xfixes first event: {}", m_xfixes->first_event);
+    qDebug()
+        << fmt::format("xfixes version {}.{}", reply->major_version, reply->minor_version).data();
+    qDebug() << fmt::format("xfixes first event: {}", m_xfixes->first_event).data();
 
     xcb_void_cookie_t cookie = xcb_xfixes_select_selection_input_checked(
         m_conn,
@@ -112,13 +114,14 @@ void Clipboard::initXfixesExtension() {
         XCB_XFIXES_SELECTION_EVENT_MASK_SET_SELECTION_OWNER);
     err = xcb_request_check(m_conn, cookie);
     if (err != nullptr) {
-        spdlog::error("xcb_xfixes_select_selection_input_checked: {}", err->error_code);
+        qWarning()
+            << fmt::format("xcb_xfixes_select_selection_input_checked: {}", err->error_code).data();
     }
 }
 
 void Clipboard::handleEvent(std::shared_ptr<xcb_generic_event_t> event) {
     auto response_type = event->response_type & ~0x80;
-    spdlog::debug("event: {}", response_type);
+    qDebug() << fmt::format("event: {}", response_type).data();
     if (response_type == m_xfixes->first_event + XCB_XFIXES_SELECTION_NOTIFY) {
         auto ev = reinterpret_cast<xcb_xfixes_selection_notify_event_t *>(event.get());
         if (ev->owner != m_dummyWindow) {
@@ -160,13 +163,13 @@ std::vector<char> Clipboard::readProperty(xcb_window_t requestor, xcb_atom_t pro
                            0,
                            0);
     if (!reply || reply->type == XCB_NONE) {
-        spdlog::error("no reply");
+        qWarning("no reply");
         return {};
     }
 
     decltype(reply->bytes_after) buffOffset = 0, offset = 0;
     auto bytesLeft = reply->bytes_after;
-    spdlog::info("target {} size: {}", getTargetName(property), bytesLeft);
+    qInfo() << fmt::format("target {} size: {}", getTargetName(property), bytesLeft).data();
     std::vector<char> buff(bytesLeft);
 
     while (bytesLeft > 0) {
@@ -179,7 +182,7 @@ std::vector<char> Clipboard::readProperty(xcb_window_t requestor, xcb_atom_t pro
                           offset,
                           UINT_MAX / 4);
         if (!reply || reply->type == XCB_NONE) {
-            spdlog::error("no reply");
+            qWarning("no reply");
             break;
         }
 
@@ -188,7 +191,7 @@ std::vector<char> Clipboard::readProperty(xcb_window_t requestor, xcb_atom_t pro
         int length = xcb_get_property_value_length(reply.get());
 
         if ((buffOffset + length) > buff.size()) {
-            spdlog::error("buffer overflow");
+            qWarning("buffer overflow");
             length = buff.size() - buffOffset;
             // escape loop
             bytesLeft = 0;
@@ -214,7 +217,7 @@ void Clipboard::printPropertyTargets() {
                                                 XCB_CURRENT_TIME);
     auto *err = xcb_request_check(m_conn, cookie);
     if (err != nullptr) {
-        spdlog::error("xcb_convert_selection_checked: {}", err->error_code);
+        qWarning() << fmt::format("xcb_convert_selection_checked: {}", err->error_code).data();
         return;
     }
 }
@@ -247,7 +250,7 @@ void Clipboard::printNextPenddingProperty() {
                                                 XCB_CURRENT_TIME);
     auto *err = xcb_request_check(m_conn, cookie);
     if (err != nullptr) {
-        spdlog::error("xcb_convert_selection_checked: {}", err->error_code);
+        qWarning() << fmt::format("xcb_convert_selection_checked: {}", err->error_code).data();
         return;
     }
 }
@@ -264,7 +267,7 @@ void Clipboard::printProperties(const std::vector<xcb_atom_t> &pairs) {
                                                   pairs.data());
         auto *err = xcb_request_check(m_conn, cookie);
         if (err != nullptr) {
-            spdlog::error("xcb_change_property_checked: {}", err->error_code);
+            qWarning() << fmt::format("xcb_change_property_checked: {}", err->error_code).data();
             return;
         }
     }
@@ -277,7 +280,7 @@ void Clipboard::printProperties(const std::vector<xcb_atom_t> &pairs) {
                                                     XCB_CURRENT_TIME);
         auto *err = xcb_request_check(m_conn, cookie);
         if (err != nullptr) {
-            spdlog::error("xcb_convert_selection_checked: {}", err->error_code);
+            qWarning() << fmt::format("xcb_convert_selection_checked: {}", err->error_code).data();
             return;
         }
     }
@@ -309,7 +312,7 @@ std::vector<std::string> Clipboard::getTargetsName(const std::vector<xcb_atom_t>
         auto reply = std::unique_ptr<xcb_get_atom_name_reply_t>(
             xcb_get_atom_name_reply(m_conn, cookies[i], nullptr));
         if (!reply) {
-            spdlog::error("no reply");
+            qWarning("no reply");
             continue;
         }
 
@@ -326,7 +329,7 @@ std::string Clipboard::getTargetName(xcb_atom_t atom) {
     auto reply = std::unique_ptr<xcb_get_atom_name_reply_t>(
         xcb_get_atom_name_reply(m_conn, cookie, nullptr));
     if (!reply) {
-        spdlog::error("no reply");
+        qWarning("no reply");
         return "";
     }
 
@@ -383,7 +386,7 @@ void Clipboard::notifyRequestor(std::shared_ptr<xcb_selection_request_event_t> e
 
 void Clipboard::handleXcbSelectionRequest(std::shared_ptr<xcb_selection_request_event_t> event) {
     if (event->target == getAtom("TARGETS")) {
-        spdlog::debug("print TARGETS");
+        qDebug() << fmt::format("print TARGETS").data();
         setTargets(event->requestor, event->property, m_cachedTargets);
         notifyRequestor(event);
 
@@ -410,10 +413,10 @@ void Clipboard::handleXcbSelectionRequest(std::shared_ptr<xcb_selection_request_
         // notifyRequestor(event);
     } else {
         auto targetName = getTargetName(event->target);
-        spdlog::debug("print target: {}", targetName);
+        qDebug() << fmt::format("print target: {}", targetName).data();
         if (std::find(m_cachedTargets.begin(), m_cachedTargets.end(), event->target) ==
             m_cachedTargets.end()) {
-            spdlog::warn("target {} is not exist", event->target);
+            qWarning() << fmt::format("target {} is not exist", event->target).data();
 
             setRequestorPropertyWithClipboardContent(event->requestor,
                                                      event->property,
@@ -447,16 +450,17 @@ void Clipboard::handleXcbSelectionNotify(std::shared_ptr<xcb_selection_notify_ev
     if (event->property == getAtom(ATOM_LIST::CPRT_TARGETS)) {
         m_cachedTargets = getTargets();
         auto targetsName = getTargetsName(m_cachedTargets);
-        spdlog::debug("targets: {}", fmt::join(targetsName, ", "));
+        qDebug() << fmt::format("targets: {}", fmt::join(targetsName, ", ")).data();
 
         notifyTargetsChanged(targetsName);
 
     } else if (event->property == getAtom(ATOM_LIST::CPRT_PROPERTY)) {
         m_cachedProperties[event->target] = readProperty(event->requestor, event->property);
-        spdlog::debug("target: {}, content: [{}] {}",
-                      getTargetName(event->target),
-                      m_cachedProperties[event->target].size(),
-                      m_cachedProperties[event->target]);
+        qDebug() << fmt::format("target: {}, content: [{}] {}",
+                                getTargetName(event->target),
+                                m_cachedProperties[event->target].size(),
+                                m_cachedProperties[event->target])
+                        .data();
 
         m_sectionPropertyNotifyCb.remove_if([](auto &cb) -> bool { return cb(); });
 
@@ -475,9 +479,10 @@ void Clipboard::handleXcbSelectionNotify(std::shared_ptr<xcb_selection_notify_ev
             xcb_atom_t property = pairs[i + 1];
 
             m_cachedProperties[target] = readProperty(m_dummyWindow, property);
-            spdlog::debug("target: {}, content: {}",
-                          getTargetName(target),
-                          m_cachedProperties[target]);
+            qDebug() << fmt::format("target: {}, content: {}",
+                                    getTargetName(target),
+                                    m_cachedProperties[target])
+                            .data();
         }
 
         m_sectionPropertyNotifyCb.remove_if([](auto &cb) -> bool { return cb(); });

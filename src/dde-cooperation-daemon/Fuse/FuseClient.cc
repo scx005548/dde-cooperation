@@ -7,7 +7,7 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 
-#include <spdlog/spdlog.h>
+#include <fmt/core.h>
 #include <google/protobuf/util/time_util.h>
 
 #include <QTcpSocket>
@@ -42,14 +42,14 @@ FuseClient::FuseClient(const std::string &ip,
     , m_mountpoint(mountpoint)
     , m_args(FUSE_ARGS_INIT(0, nullptr))
     , m_fuse(std::unique_ptr<fuse, decltype(&fuse_destroy)>(nullptr, &fuse_destroy)) {
-    spdlog::info("FuseClient::FuseClient, mountpoint: {}", m_mountpoint.string());
+    qInfo() << fmt::format("FuseClient::FuseClient, mountpoint: {}", m_mountpoint.string()).data();
 
     QProcess *process = new QProcess(this);
     connect(process,
             static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
             [this, process]([[maybe_unused]] int exitCode, QProcess::ExitStatus exitStatus) {
                 if (!exitStatus) {
-                    spdlog::info("umount point success");
+                    qInfo("umount point success");
                 }
 
                 if (!fs::exists(m_mountpoint)) {
@@ -76,7 +76,7 @@ FuseClient::~FuseClient() {
 }
 
 bool FuseClient::mount() {
-    spdlog::info("FuseClient::mount");
+    qInfo("FuseClient::mount");
 
     fuse_operations ops{};
     ops.getattr = fuseOpsWrapper<&FuseClient::getattr>::func,
@@ -119,7 +119,7 @@ void FuseClient::exit() {
 int FuseClient::getattr(const char *path,
                         struct stat *const st,
                         [[maybe_unused]] struct fuse_file_info *fi) {
-    spdlog::debug("getattr: {}", path);
+    qDebug() << fmt::format("getattr: {}", path).data();
 
     QMetaObject::invokeMethod(this, [this, path]() {
         Message msg;
@@ -154,18 +154,19 @@ int FuseClient::getattr(const char *path,
     st->st_ctim.tv_sec = retStat.ctime().seconds();
     st->st_ctim.tv_nsec = retStat.ctime().nanos();
 
-    spdlog::info("path: {}, mode: {}, S_IFDIR: {}, S_IFREG: {}, nlink: {}",
-                 path,
-                 static_cast<uint32_t>(st->st_mode),
-                 static_cast<bool>(st->st_mode & S_IFDIR),
-                 static_cast<bool>(st->st_mode & S_IFREG),
-                 st->st_nlink);
+    qDebug() << fmt::format("path: {}, mode: {}, S_IFDIR: {}, S_IFREG: {}, nlink: {}",
+                            path,
+                            static_cast<uint32_t>(st->st_mode),
+                            static_cast<bool>(st->st_mode & S_IFDIR),
+                            static_cast<bool>(st->st_mode & S_IFREG),
+                            st->st_nlink)
+                    .data();
 
     return resp->result();
 }
 
 int FuseClient::open(const char *path, struct fuse_file_info *fi) {
-    spdlog::debug("open: {}", path);
+    qDebug() << fmt::format("open: {}", path).data();
 
     QMetaObject::invokeMethod(this, [this, path]() {
         Message msg;
@@ -196,7 +197,8 @@ int FuseClient::read(const char *path,
                      size_t size,
                      off_t offset,
                      struct fuse_file_info *fi) {
-    spdlog::debug("read: {}, fh: {}, size: {}, offset: {}", path, fi->fh, size, offset);
+    qDebug()
+        << fmt::format("read: {}, fh: {}, size: {}, offset: {}", path, fi->fh, size, offset).data();
 
     QMetaObject::invokeMethod(this, [this, offset, size, fi]() {
         Message msg;
@@ -216,14 +218,15 @@ int FuseClient::read(const char *path,
         return -1;
     }
 
-    spdlog::info("readed size: {}, result: {}", resp->data().size(), resp->result());
+    qInfo()
+        << fmt::format("readed size: {}, result: {}", resp->data().size(), resp->result()).data();
     memcpy(buf, resp->data().data(), resp->data().size());
 
     return resp->result();
 }
 
 int FuseClient::release(const char *path, struct fuse_file_info *fi) {
-    spdlog::debug("release: {}", path);
+    qDebug() << fmt::format("release: {}", path).data();
 
     QMetaObject::invokeMethod(this, [this, path, fi]() {
         Message msg;
@@ -250,7 +253,7 @@ int FuseClient::readdir(const char *path,
                         [[maybe_unused]] off_t offset,
                         [[maybe_unused]] struct fuse_file_info *fi,
                         [[maybe_unused]] enum fuse_readdir_flags flags) {
-    spdlog::debug("readdir: {}", path);
+    qDebug() << fmt::format("readdir: {}", path).data();
 
     QMetaObject::invokeMethod(this, [this, path]() {
         Message msg;
@@ -294,7 +297,7 @@ void FuseClient::handleResponse() noexcept {
 
         Message msg = MessageHelper::parseMessageBody<Message>(buffer.data(), buffer.size());
 
-        spdlog::debug("message type: {}", msg.payload_case());
+        qDebug() << fmt::format("message type: {}", msg.payload_case()).data();
 
         switch (msg.payload_case()) {
         case Message::PayloadCase::kFsMethodGetAttrResponse: {
@@ -328,7 +331,7 @@ void FuseClient::handleResponse() noexcept {
             break;
         }
         default: {
-            spdlog::warn("invalid message type: {}", msg.payload_case());
+            qWarning() << fmt::format("invalid message type: {}", msg.payload_case()).data();
             m_conn->close();
             return;
         }
@@ -341,9 +344,9 @@ std::shared_ptr<google::protobuf::Message> FuseClient::waitForServerReply() {
     m_buff.reset();
     m_cv.wait_for(lk, 3s);
     if (m_buff) {
-        spdlog::info("fuse responded");
+        qInfo("fuse responded");
     } else {
-        spdlog::info("fuse not responded");
+        qInfo("fuse not responded");
     }
 
     return m_buff;

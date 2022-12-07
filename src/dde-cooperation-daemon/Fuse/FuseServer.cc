@@ -11,7 +11,7 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 
-#include <spdlog/spdlog.h>
+#include <fmt/core.h>
 #include <google/protobuf/util/time_util.h>
 
 #include "Machine/Machine.h"
@@ -123,7 +123,7 @@ void FuseServer::handleRequest() noexcept {
             break;
         }
         default: {
-            spdlog::warn("invalid message type: {}", msg.payload_case());
+            qWarning() << fmt::format("invalid message type: {}", msg.payload_case()).data();
             m_conn->close();
             return;
         }
@@ -132,7 +132,7 @@ void FuseServer::handleRequest() noexcept {
 }
 
 void FuseServer::methodGetattr(const FsMethodGetAttrRequest &req, FsMethodGetAttrResponse *resp) {
-    spdlog::info("methodGetattr: {}", req.path());
+    qInfo() << fmt::format("methodGetattr: {}", req.path()).data();
 
     resp->set_serial(req.serial());
 
@@ -156,16 +156,17 @@ void FuseServer::methodGetattr(const FsMethodGetAttrRequest &req, FsMethodGetAtt
     resp->mutable_stat()->mutable_ctime()->set_seconds(st.st_ctim.tv_sec);
     resp->mutable_stat()->mutable_ctime()->set_nanos(st.st_ctim.tv_nsec);
 
-    spdlog::info("path: {}, mode: {}, S_IFDIR: {}, S_IFREG: {}, nlink: {}",
-                 req.path(),
-                 static_cast<uint32_t>(st.st_mode),
-                 static_cast<bool>(st.st_mode & S_IFDIR),
-                 static_cast<bool>(st.st_mode & S_IFREG),
-                 st.st_nlink);
+    qDebug() << fmt::format("path: {}, mode: {}, S_IFDIR: {}, S_IFREG: {}, nlink: {}",
+                            req.path(),
+                            static_cast<uint32_t>(st.st_mode),
+                            static_cast<bool>(st.st_mode & S_IFDIR),
+                            static_cast<bool>(st.st_mode & S_IFREG),
+                            st.st_nlink)
+                    .data();
 }
 
 void FuseServer::methodOpen(const FsMethodOpenRequest &req, FsMethodOpenResponse *resp) {
-    spdlog::info("methodOpen: {}", req.path());
+    qInfo() << fmt::format("methodOpen: {}", req.path()).data();
 
     resp->set_serial(req.serial());
 
@@ -188,16 +189,16 @@ void FuseServer::methodRead(const FsMethodReadRequest &req, FsMethodReadResponse
     resp->set_serial(req.serial());
 
     if (!req.has_fi()) {
-        spdlog::error("methodRead: no fi");
+        qWarning("methodRead: no fi");
         resp->set_result(-EBADF);
         return;
     }
 
-    spdlog::info("methodRead: fh: {}", req.fi().fh());
+    qInfo() << fmt::format("methodRead: fh: {}", req.fi().fh()).data();
 
     off_t off = lseek(req.fi().fh(), req.offset(), SEEK_SET);
     if (off == -1) {
-        spdlog::error("lseek failed: {}({})", strerror(errno), errno);
+        qWarning() << fmt::format("lseek failed: {}({})", strerror(errno), errno).data();
         resp->set_result(-errno);
         return;
     }
@@ -217,18 +218,18 @@ void FuseServer::methodRelease(const FsMethodReleaseRequest &req, FsMethodReleas
     resp->set_serial(req.serial());
 
     if (!req.has_fi()) {
-        spdlog::error("methodRelease: no fi");
+        qWarning("methodRelease: no fi");
         resp->set_result(EBADF);
         return;
     }
 
-    spdlog::info("methodRelease: fh: {}", req.fi().fh());
+    qInfo() << fmt::format("methodRelease: fh: {}", req.fi().fh()).data();
     int result = close(req.fi().fh());
     resp->set_result(result);
 }
 
 void FuseServer::methodReaddir(const FsMethodReadDirRequest &req, FsMethodReadDirResponse *resp) {
-    spdlog::info("methodReaddir: {}", req.path());
+    qInfo() << fmt::format("methodReaddir: {}", req.path()).data();
 
     resp->set_serial(req.serial());
 

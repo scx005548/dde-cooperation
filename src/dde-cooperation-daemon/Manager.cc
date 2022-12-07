@@ -7,7 +7,6 @@
 
 #include <uuid/uuid.h>
 #include <fmt/core.h>
-#include <spdlog/spdlog.h>
 
 #include <QUdpSocket>
 #include <QTcpServer>
@@ -59,7 +58,7 @@ Manager::Manager(const std::filesystem::path &dataDir)
     connect(m_listenPair, &QTcpServer::newConnection, this, &Manager::handleNewConnection);
     m_listenPair->listen(QHostAddress::Any);
     m_port = m_listenPair->serverPort();
-    spdlog::debug("TCP listening on port: {}", m_port);
+    qDebug() << fmt::format("TCP listening on port: {}", m_port).data();
 
     m_displayServer = std::make_unique<X11::Display>(this, this);
     m_clipboard = std::make_unique<X11::Clipboard>(this, this);
@@ -104,7 +103,7 @@ void Manager::ensureDataDirExists() {
 
 void Manager::initUUID() {
     if (!m_dConfig || !m_dConfig->isValid() || !m_dConfig->keyList().contains("machineId")) {
-        spdlog::warn("dConfig is invalid or does not has machineId key!");
+        qWarning("dConfig is invalid or does not has machineId key!");
         m_uuid = newUUID();
         return;
     }
@@ -146,7 +145,7 @@ QString Manager::addrToString(const QHostAddress &addr) const {
 
 void Manager::initFileStoragePath() {
     if (!m_dConfig || !m_dConfig->isValid() || !m_dConfig->keyList().contains("filesStoragePath")) {
-        spdlog::warn("dConfig is invalid or does not has filesStoragePath key!");
+        qWarning("dConfig is invalid or does not has filesStoragePath key!");
         m_fileStoragePath = getenv("HOME"); // default
         return;
     }
@@ -162,7 +161,7 @@ void Manager::initFileStoragePath() {
 
 void Manager::initSharedClipboardStatus() {
     if (!m_dConfig || !m_dConfig->isValid() || !m_dConfig->keyList().contains("shareClipboard")) {
-        spdlog::warn("dConfig is invalid or does not has shareClipboard key!");
+        qWarning("dConfig is invalid or does not has shareClipboard key!");
         m_sharedClipboard = false;
         return;
     }
@@ -172,7 +171,7 @@ void Manager::initSharedClipboardStatus() {
 
 void Manager::initSharedDevicesStatus() {
     if (!m_dConfig || !m_dConfig->isValid() || !m_dConfig->keyList().contains("shareDevices")) {
-        spdlog::warn("dConfig is invalid or does not has shareDevices key!");
+        qWarning("dConfig is invalid or does not has shareDevices key!");
         m_sharedDevices = false;
         return;
     }
@@ -183,7 +182,7 @@ void Manager::initSharedDevicesStatus() {
 void Manager::initCooperatedMachines() {
     if (!m_dConfig || !m_dConfig->isValid() ||
         !m_dConfig->keyList().contains("cooperatedMachineIds")) {
-        spdlog::warn("dConfig is invalid or does not has cooperatedMachineIds key!");
+        qWarning("dConfig is invalid or does not has cooperatedMachineIds key!");
         return;
     }
 
@@ -222,7 +221,7 @@ void Manager::setFileStoragePath(const QString &path) noexcept {
     m_dbusAdaptor->updateFileStoragePath(path);
 
     if (!m_dConfig || !m_dConfig->isValid() || !m_dConfig->keyList().contains("filesStoragePath")) {
-        spdlog::warn("dConfig is invalid or does not has filesStoragePath key!");
+        qWarning("dConfig is invalid or does not has filesStoragePath key!");
         return;
     }
 
@@ -239,7 +238,7 @@ void Manager::openSharedClipboard(bool on) noexcept {
     m_dbusAdaptor->updateSharedClipboard(on);
 
     if (!m_dConfig || !m_dConfig->isValid() || !m_dConfig->keyList().contains("shareClipboard")) {
-        spdlog::warn("dConfig is invalid or does not has shareClipboard key!");
+        qWarning("dConfig is invalid or does not has shareClipboard key!");
         return;
     }
 
@@ -256,7 +255,7 @@ void Manager::openSharedDevices(bool on) noexcept {
     m_dbusAdaptor->updateSharedDevices(on);
 
     if (!m_dConfig || !m_dConfig->isValid() || !m_dConfig->keyList().contains("shareDevices")) {
-        spdlog::warn("dConfig is invalid or does not has shareDevices key!");
+        qWarning("dConfig is invalid or does not has shareDevices key!");
         return;
     }
 
@@ -342,8 +341,10 @@ bool Manager::tryFlowOut(uint16_t direction, uint16_t x, uint16_t y, bool evFrom
         const std::shared_ptr<Machine> &machine = v.second;
         if (machine->m_deviceSharing && machine->m_direction == direction) {
             if (evFromPeer) {
+                qInfo() << fmt::format("flow back to machine: {}", machine->m_name).data();
                 machine->flowTo(direction, x, y);
             } else if (isSharedDevices()) {
+                qInfo() << fmt::format("flow out to machine: {}", machine->m_name).data();
                 machine->flowTo(direction, x, y);
                 onFlowOut(machine);
             }
@@ -413,7 +414,7 @@ void Manager::addMachine(const std::string &ip, uint16_t port, const DeviceInfo 
 }
 
 void Manager::handleSocketError(const std::string &title, const std::string &msg) {
-    spdlog::error("failed to send message: {} {}", title, msg);
+    qWarning() << fmt::format("failed to send message: {} {}", title, msg).data();
 }
 
 void Manager::handleReceivedSocketScan() noexcept {
@@ -442,13 +443,13 @@ void Manager::handleReceivedSocketScan() noexcept {
         size -= header_size;
 
         auto base = MessageHelper::parseMessageBody<Message>(buff, size);
-        spdlog::info("received packet, type: {}", base.payload_case());
+        qInfo() << fmt::format("received packet, type: {}", base.payload_case()).data();
 
         switch (base.payload_case()) {
         case Message::PayloadCase::kScanRequest: {
             const auto &request = base.scanrequest();
             if (request.key() != SCAN_KEY) {
-                spdlog::error("key mismatch: {}", request.key());
+                qWarning() << fmt::format("key mismatch: {}", request.key()).data();
                 return;
             }
 
@@ -478,7 +479,7 @@ void Manager::handleReceivedSocketScan() noexcept {
         case Message::PayloadCase::kScanResponse: {
             const auto &resp = base.scanresponse();
             if (resp.key() != SCAN_KEY) {
-                spdlog::error("key mismatch: {}", SCAN_KEY);
+                qWarning() << fmt::format("key mismatch: {}", SCAN_KEY).data();
                 return;
             }
 
@@ -489,7 +490,7 @@ void Manager::handleReceivedSocketScan() noexcept {
 
             updateMachine(addrToString(addr).toStdString(), resp.port(), resp.deviceinfo());
 
-            spdlog::info("{} responded", resp.deviceinfo().name());
+            qInfo() << fmt::format("{} responded", resp.deviceinfo().name()).data();
             break;
         }
         case Message::PayloadCase::kServiceStoppedNotification: {
@@ -508,7 +509,7 @@ void Manager::handleReceivedSocketScan() noexcept {
             break;
         }
         default: {
-            spdlog::error("unknown data type");
+            qWarning("unknown data type");
             break;
         }
         }
@@ -517,7 +518,7 @@ void Manager::handleReceivedSocketScan() noexcept {
 
 void Manager::handleNewConnection() noexcept {
     while (m_listenPair->hasPendingConnections()) {
-        spdlog::debug("new connection received");
+        qDebug() << fmt::format("new connection received").data();
 
         QTcpSocket *socket = m_listenPair->nextPendingConnection();
         connect(socket, &QTcpSocket::readyRead, [this, socket] {
@@ -541,7 +542,7 @@ void Manager::handleNewConnection() noexcept {
 
             const auto &request = msg.pairrequest();
             if (request.key() != SCAN_KEY) {
-                spdlog::error("key mismatch {}", SCAN_KEY);
+                qWarning() << fmt::format("key mismatch {}", SCAN_KEY).data();
                 socket->close();
                 return;
             }
@@ -549,7 +550,9 @@ void Manager::handleNewConnection() noexcept {
             auto i = m_machines.find(request.deviceinfo().uuid());
             if (i == m_machines.end()) {
                 // TODO: return failed
-                spdlog::error("cannot found device with uuid {}", request.deviceinfo().uuid());
+                qWarning() << fmt::format("cannot found device with uuid {}",
+                                          request.deviceinfo().uuid())
+                                  .data();
                 socket->close();
                 return;
             }
@@ -558,7 +561,7 @@ void Manager::handleNewConnection() noexcept {
             if ((machine->isPcMachine() && hasPcMachinePaired()) ||
                 (machine->isAndroid() && hasAndroidPaired())) {
                 // TODO tips
-                spdlog::error("cannot pair this device, this machine is paired with other machine");
+                qWarning("cannot pair this device, this machine is paired with other machine");
                 socket->close();
                 return;
             }

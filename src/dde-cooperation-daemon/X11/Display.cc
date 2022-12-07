@@ -9,7 +9,8 @@
 #include <xcb/xinput.h>
 
 #include <fmt/core.h>
-#include <spdlog/spdlog.h>
+
+#include <QDebug>
 
 using namespace X11;
 
@@ -55,7 +56,8 @@ void Display::initXinputExtension() {
             throw std::runtime_error("X server does not support XInput 2");
         }
 
-        spdlog::debug("XInput version {}.{}", reply->major_version, reply->minor_version);
+        qDebug() << fmt::format("XInput version {}.{}", reply->major_version, reply->minor_version)
+                        .data();
     }
 
     struct {
@@ -77,7 +79,7 @@ void Display::initXinputExtension() {
 void Display::initXfixesExtension() {
     m_xfixes = xcb_get_extension_data(m_conn, &xcb_xfixes_id);
     if (!m_xfixes->present) {
-        spdlog::warn("xfixes is not present");
+        qWarning("xfixes is not present");
         return;
     }
 
@@ -87,11 +89,12 @@ void Display::initXfixesExtension() {
                            XCB_XFIXES_MAJOR_VERSION,
                            XCB_XFIXES_MINOR_VERSION);
     if (err != nullptr) {
-        spdlog::warn("xcb_xfixes_query_version: {}", err->error_code);
+        qWarning() << fmt::format("xcb_xfixes_query_version: {}", err->error_code).data();
         return;
     }
 
-    spdlog::debug("Xfixes version {}.{}", reply->major_version, reply->minor_version);
+    qDebug()
+        << fmt::format("Xfixes version {}.{}", reply->major_version, reply->minor_version).data();
 }
 
 void Display::handleEvent(std::shared_ptr<xcb_generic_event_t> event) {
@@ -110,7 +113,7 @@ void Display::handleEvent(std::shared_ptr<xcb_generic_event_t> event) {
             ge->event_type == XCB_INPUT_MOTION) {
             auto reply = XCB_REPLY(xcb_query_pointer, m_conn, m_screen->root);
             if (!reply) {
-                spdlog::warn("failed to query pointer");
+                qWarning("failed to query pointer");
                 break;
             }
 
@@ -158,13 +161,13 @@ void Display::hideMouse(bool hide) {
         xcb_void_cookie_t cookie = xcb_xfixes_hide_cursor_checked(m_conn, m_screen->root);
         xcb_generic_error_t *err = xcb_request_check(m_conn, cookie);
         if (err != nullptr) {
-            spdlog::error("failed to hide cursor: {}", err->error_code);
+            qWarning() << fmt::format("failed to hide cursor: {}", err->error_code).data();
         }
     } else {
         xcb_void_cookie_t cookie = xcb_xfixes_show_cursor_checked(m_conn, m_screen->root);
         xcb_generic_error_t *err = xcb_request_check(m_conn, cookie);
         if (err != nullptr) {
-            spdlog::error("failed to show cursor: {}", err->error_code);
+            qWarning() << fmt::format("failed to show cursor: {}", err->error_code).data();
         }
     }
 #endif
@@ -175,6 +178,6 @@ void Display::moveMouse(uint16_t x, uint16_t y) {
         cookie = xcb_warp_pointer_checked(m_conn, XCB_NONE, m_screen->root, 0, 0, 0, 0, x, y);
     xcb_generic_error_t *err = xcb_request_check(m_conn, cookie);
     if (err != nullptr) {
-        spdlog::error("failed to move cursor: {}", err->error_code);
+        qWarning() << fmt::format("failed to move cursor: {}", err->error_code).data();
     }
 }
