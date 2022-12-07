@@ -21,13 +21,6 @@
 
 DCORE_USE_NAMESPACE
 
-namespace uvxx {
-class Loop;
-class Async;
-class Pipe;
-class Process;
-} // namespace uvxx
-
 class QUdpSocket;
 class QTcpServer;
 class QHostAddress;
@@ -98,8 +91,6 @@ private:
     std::unordered_map<std::string, std::shared_ptr<InputGrabberWrapper>> m_inputGrabbers;
 
     std::thread m_uvThread;
-    std::shared_ptr<uvxx::Loop> m_uvLoop;
-    std::shared_ptr<uvxx::Async> m_async;
     QUdpSocket *m_socketScan;
     uint16_t m_port;
     QTcpServer *m_listenPair;

@@ -1,7 +1,5 @@
 #include "MachineDBusAdaptor.h"
 
-#include "uvxx/Async.h"
-
 #include "Manager.h"
 #include "Machine.h"
 
@@ -10,17 +8,15 @@ static const QString machineInterface{"org.deepin.dde.Cooperation1.Machine"};
 MachineDBusAdaptor::MachineDBusAdaptor(Manager *manager,
                                        Machine *machine,
                                        uint32_t id,
-                                       QDBusConnection bus,
-                                       const std::shared_ptr<uvxx::Loop> &uvLoop)
+                                       QDBusConnection bus)
     : QObject(machine)
     , m_path(QString("/org/deepin/dde/Cooperation1/Machine/%1").arg(id))
     , m_manager(manager)
     , m_machine(machine)
-    , m_bus(bus)
-    , m_uvLoop(uvLoop)
-    , m_async(std::make_shared<uvxx::Async>(m_uvLoop)) {
-    m_bus.registerObject(m_path, this, QDBusConnection::ExportAllSlots |
-                                           QDBusConnection::ExportAllProperties);
+    , m_bus(bus) {
+    m_bus.registerObject(m_path,
+                         this,
+                         QDBusConnection::ExportAllSlots | QDBusConnection::ExportAllProperties);
 }
 
 MachineDBusAdaptor::~MachineDBusAdaptor() {
@@ -81,8 +77,7 @@ void MachineDBusAdaptor::Connect(const QDBusMessage &message) const {
         return;
     }
 
-    // m_async
-    m_async->wake(uvxx::memFunc(m_machine, &Machine::connect));
+    m_machine->connect();
 }
 
 void MachineDBusAdaptor::Disconnect() const {
@@ -106,7 +101,7 @@ void MachineDBusAdaptor::RequestDeviceSharing(const QDBusMessage &message) const
         return;
     }
 
-    m_async->wake(uvxx::memFunc(m_machine, &Machine::requestDeviceSharing));
+    m_machine->requestDeviceSharing();
 }
 
 void MachineDBusAdaptor::StopDeviceSharing(const QDBusMessage &message) const {
@@ -115,7 +110,7 @@ void MachineDBusAdaptor::StopDeviceSharing(const QDBusMessage &message) const {
         return;
     }
 
-    m_async->wake(uvxx::memFunc(m_machine, &Machine::stopDeviceSharing));
+    m_machine->stopDeviceSharing();
 }
 
 void MachineDBusAdaptor::SetFlowDirection(quint16 direction, const QDBusMessage &message) const {
@@ -125,9 +120,7 @@ void MachineDBusAdaptor::SetFlowDirection(quint16 direction, const QDBusMessage 
         return;
     }
 
-    m_async->wake([this, direction = static_cast<FlowDirection>(direction)]() {
-        m_machine->setFlowDirection(direction);
-    });
+    m_machine->setFlowDirection(static_cast<FlowDirection>(direction));
 }
 
 void MachineDBusAdaptor::SendFiles(const QStringList &paths, const QDBusMessage &message) const {
@@ -137,7 +130,7 @@ void MachineDBusAdaptor::SendFiles(const QStringList &paths, const QDBusMessage 
         return;
     }
 
-    m_async->wake([this, paths]() { m_machine->sendFiles(paths); });
+    m_machine->sendFiles(paths);
 }
 
 void MachineDBusAdaptor::updateName(const QString &name) {

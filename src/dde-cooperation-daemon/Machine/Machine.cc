@@ -20,9 +20,6 @@
 
 #include "protocol/message.pb.h"
 
-#include "uvxx/Loop.h"
-#include "uvxx/Async.h"
-
 #include "utils/net.h"
 
 namespace fs = std::filesystem;
@@ -36,7 +33,6 @@ static const uint64_t U25s = 25 * 1000;
 
 Machine::Machine(Manager *manager,
                  ClipboardBase *clipboard,
-                 const std::shared_ptr<uvxx::Loop> &uvLoop,
                  QDBusConnection bus,
                  uint32_t id,
                  const fs::path &dataDir,
@@ -45,7 +41,7 @@ Machine::Machine(Manager *manager,
                  const DeviceInfo &sp)
     : m_bus(bus)
     , m_manager(manager)
-    , m_dbusAdaptor(new MachineDBusAdaptor(m_manager, this, id, m_bus, uvLoop))
+    , m_dbusAdaptor(new MachineDBusAdaptor(m_manager, this, id, m_bus))
     , m_clipboard(clipboard)
     , m_dataDir(dataDir)
     , m_mountpoint(m_dataDir / "mp")
@@ -60,8 +56,6 @@ Machine::Machine(Manager *manager,
     , m_pingTimer(new QTimer(this))
     , m_offlineTimer(new QTimer(this))
     , m_mounted(false)
-    , m_uvLoop(uvLoop)
-    , m_async(std::make_shared<uvxx::Async>(uvLoop))
     , m_conn(nullptr)
     , m_ip(ip) {
 
@@ -84,7 +78,6 @@ Machine::Machine(Manager *manager,
 }
 
 Machine::~Machine() {
-    m_async->close();
     if (m_conn) {
         m_conn->close();
         m_manager->onStopDeviceSharing();
@@ -151,7 +144,7 @@ void Machine::receivedPing() {
 }
 
 void Machine::onPair(QTcpSocket *socket) {
-    spdlog::info("request onPair");
+    qDebug("request onPair");
     m_conn = socket;
 
     auto *confirmDialog = new ConfirmDialog(QString::fromStdString(m_ip),
@@ -207,7 +200,7 @@ void Machine::initConnection() {
 }
 
 void Machine::handleDisconnectedAux() {
-    spdlog::info("disconnected");
+    qDebug("disconnected");
 
     if (m_connected) {
         m_manager->onStopDeviceSharing();
@@ -262,7 +255,7 @@ void Machine::dispatcher() noexcept {
 
         Message msg = MessageHelper::parseMessageBody<Message>(buffer.data(), buffer.size());
 
-        spdlog::debug("message type: {}", msg.payload_case());
+        qDebug() << "message type:" << msg.payload_case();
 
         switch (msg.payload_case()) {
         case Message::PayloadCase::kPairResponse: {
@@ -356,7 +349,7 @@ void Machine::dispatcher() noexcept {
         }
 
         default: {
-            spdlog::warn("invalid message type: {}", msg.payload_case());
+            qWarning() << "invalid message type:", msg.payload_case();
             m_conn->close();
             return;
             break;
@@ -389,25 +382,24 @@ void Machine::handleServiceOnOffMsg(const ServiceOnOffNotification &notification
 
 void Machine::handleDeviceSharingStartRequest() {
     bool accepted = true;
-    m_async->wake([this, accepted]() {
-        Message msg;
-        DeviceSharingStartResponse *resp = msg.mutable_devicesharingstartresponse();
-        resp->set_accept(accepted);
-        sendMessage(msg);
 
-        if (accepted) {
-            auto wptr = weak_from_this();
-            m_manager->onStartDeviceSharing(wptr, true);
+    Message msg;
+    DeviceSharingStartResponse *resp = msg.mutable_devicesharingstartresponse();
+    resp->set_accept(accepted);
+    sendMessage(msg);
 
-            m_deviceSharing = true;
-            m_dbusAdaptor->updateDeviceSharing(m_deviceSharing);
+    if (accepted) {
+        auto wptr = weak_from_this();
+        m_manager->onStartDeviceSharing(wptr, true);
 
-            m_manager->machineCooperated(m_uuid);
+        m_deviceSharing = true;
+        m_dbusAdaptor->updateDeviceSharing(m_deviceSharing);
 
-            m_direction = FLOW_DIRECTION_LEFT;
-            m_dbusAdaptor->updateDirection(m_direction);
-        }
-    });
+        m_manager->machineCooperated(m_uuid);
+
+        m_direction = FLOW_DIRECTION_LEFT;
+        m_dbusAdaptor->updateDirection(m_direction);
+    }
 }
 
 void Machine::handleDeviceSharingStartResponse(const DeviceSharingStartResponse &resp) {
@@ -433,7 +425,7 @@ void Machine::handleDeviceSharingStopRequest() {
 }
 
 void Machine::handleInputEventRequest(const InputEventRequest &req) {
-    spdlog::debug("received input event");
+    qDebug("received input event");
 
     bool success = true;
 
@@ -441,7 +433,8 @@ void Machine::handleInputEventRequest(const InputEventRequest &req) {
     auto it = m_inputEmittors.find(deviceType);
     if (it == m_inputEmittors.end()) {
         success = false;
-        spdlog::error("no deviceType {} found", static_cast<uint8_t>(deviceType));
+        qWarning()
+            << fmt::format("no deviceType {} found", static_cast<uint8_t>(deviceType)).data();
     } else {
         auto &inputEmittor = it->second;
         success = inputEmittor->emitEvent(req.type(), req.code(), req.value());
@@ -540,9 +533,9 @@ void Machine::handleFsSendFileRequest(const FsSendFileRequest &req) {
             fssendfileresult->set_path(path);
 
             if (exitStatus != QProcess::NormalExit) {
-                spdlog::info("copy files failed");
+                qInfo("copy files failed");
             } else {
-                spdlog::info("copy files success");
+                qInfo("copy files success");
             }
 
             std::string::size_type iPos = path.find_last_of('/') + 1;
@@ -587,7 +580,7 @@ void Machine::handleClipboardGetContentResponse(const ClipboardGetContentRespons
     auto target = resp.target();
     auto content = resp.content();
     if (target == "x-special/gnome-copied-files") {
-        spdlog::warn("ori x-special/gnome-copied-files: {}", content);
+        qDebug() << fmt::format("ori x-special/gnome-copied-files: {}", content).data();
     }
     if (m_clipboard->isFiles()) {
         std::stringstream ss(content);
@@ -629,7 +622,7 @@ void Machine::handleClipboardGetContentResponse(const ClipboardGetContentRespons
         }
 
         if (!filePath.empty()) {
-            spdlog::info("pc machine fill up text/uri-list target:{}", filePath);
+            qDebug() << fmt::format("pc machine fill up text/uri-list target: {}", filePath).data();
             m_clipboard->updateTargetContent(uriListTarget,
                                              std::vector<char>(filePath.begin(), filePath.end()));
         }
@@ -741,19 +734,19 @@ void Machine::sendReceivedFilesSystemNtf(const std::string &path, bool isSuccess
 }
 
 void Machine::sendFiles(const QStringList &filePaths) {
-    m_async->wake([this, filePaths]() {
-        for (const QString &filePath : filePaths) {
-            Message msg;
-            FsSendFileRequest *send = msg.mutable_fssendfilerequest();
-            send->set_path(filePath.toStdString());
-            sendMessage(msg);
-        }
-    });
+    for (const QString &filePath : filePaths) {
+        Message msg;
+        FsSendFileRequest *send = msg.mutable_fssendfilerequest();
+        send->set_path(filePath.toStdString());
+        sendMessage(msg);
+    }
 }
 
 void Machine::sendMessage(const Message &msg) {
     if (!m_conn) {
-        spdlog::warn("connection reset but still want to send msg:{}", msg.GetTypeName());
+        qWarning() << fmt::format("connection reset but still want to send msg: {}",
+                                  msg.GetTypeName())
+                          .data();
         return;
     }
 

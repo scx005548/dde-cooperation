@@ -14,9 +14,6 @@
 #include <QTcpSocket>
 #include <QDebug>
 
-#include "uvxx/Loop.h"
-#include "uvxx/Async.h"
-
 #include "Machine/Machine.h"
 #include "Machine/PCMachine.h"
 #include "Machine/AndroidMachine.h"
@@ -40,8 +37,6 @@ Manager::Manager(const std::filesystem::path &dataDir)
     , m_lastMachineIndex(0)
     , m_deviceSharingSwitch(true)
     , m_lastRequestId(0)
-    , m_uvLoop(uvxx::Loop::defaultLoop())
-    , m_async(std::make_shared<uvxx::Async>(m_uvLoop))
     , m_socketScan(new QUdpSocket(this))
     , m_listenPair(new QTcpServer(this))
     , m_powersaverProxy("org.freedesktop.ScreenSaver",
@@ -83,17 +78,12 @@ Manager::Manager(const std::filesystem::path &dataDir)
                            std::make_shared<InputGrabberWrapper>(this, entry.path())));
     }
 
-    m_uvThread = std::thread([this]() { m_uvLoop->run(); });
-
     scan();
 }
 
 Manager::~Manager() {
-    m_async->close();
     m_socketScan->close();
     m_listenPair->close();
-
-    m_uvLoop->stop();
 }
 
 void Manager::ensureDataDirExists() {
@@ -344,7 +334,7 @@ void Manager::scan() noexcept {
 }
 
 void Manager::removeInputGrabber(const std::filesystem::path &path) {
-    m_async->wake([this, path]() { m_inputGrabbers.erase(path.string()); });
+    m_inputGrabbers.erase(path.string());
 }
 
 bool Manager::tryFlowOut(uint16_t direction, uint16_t x, uint16_t y, bool evFromPeer) {
@@ -400,7 +390,6 @@ void Manager::addMachine(const std::string &ip, uint16_t port, const DeviceInfo 
     if (devInfo.os() == DEVICE_OS_ANDROID) {
         auto m = std::make_shared<AndroidMachine>(this,
                                                   m_clipboard.get(),
-                                                  m_uvLoop,
                                                   m_bus,
                                                   m_lastMachineIndex,
                                                   dataPath,
@@ -411,7 +400,6 @@ void Manager::addMachine(const std::string &ip, uint16_t port, const DeviceInfo 
     } else {
         auto m = std::make_shared<PCMachine>(this,
                                              m_clipboard.get(),
-                                             m_uvLoop,
                                              m_bus,
                                              m_lastMachineIndex,
                                              dataPath,

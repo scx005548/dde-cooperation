@@ -78,9 +78,6 @@ executable('dde-cooperation-daemon',
     dtk_core,
     dtk_widget,
   ],
-  link_with: [
-    uvxx,
-  ],
   install: true,
   install_dir: executable_install_dir
 )

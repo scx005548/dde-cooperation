@@ -2,8 +2,6 @@
 
 #include <filesystem>
 
-#include "uvxx/Async.h"
-
 #include "config.h"
 #include "Manager.h"
 
@@ -36,8 +34,9 @@ ManagerDBusAdaptor::ManagerDBusAdaptor(Manager *manager, QDBusConnection bus)
     , m_manager(manager)
     , m_bus(bus) {
     m_bus.registerService(managerInterface);
-    m_bus.registerObject(managerPath, this, QDBusConnection::ExportAllSlots |
-                                                QDBusConnection::ExportAllProperties);
+    m_bus.registerObject(managerPath,
+                         this,
+                         QDBusConnection::ExportAllSlots | QDBusConnection::ExportAllProperties);
 }
 
 QVector<QDBusObjectPath> ManagerDBusAdaptor::getMachines() const {
@@ -93,11 +92,11 @@ void ManagerDBusAdaptor::Scan(const QDBusMessage &message) const {
         return;
     }
 
-    m_manager->m_async->wake([this]() { m_manager->scan(); });
+    m_manager->scan();
 }
 
 void ManagerDBusAdaptor::Knock(const QString &ip, quint16 port) const {
-    m_manager->m_async->wake([this, ip = ip.toStdString(), port]() { m_manager->ping(ip, port); });
+    m_manager->ping(ip.toStdString(), port);
 }
 
 void ManagerDBusAdaptor::SendFile(const QStringList &files,

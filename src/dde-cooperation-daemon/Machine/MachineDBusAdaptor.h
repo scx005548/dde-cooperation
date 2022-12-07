@@ -32,11 +32,7 @@ class MachineDBusAdaptor : public QObject {
     Q_PROPERTY(bool SharedClipboard READ getSharedClipboard)
 
 public:
-    MachineDBusAdaptor(Manager *manager,
-                       Machine *machine,
-                       uint32_t id,
-                       QDBusConnection bus,
-                       const std::shared_ptr<uvxx::Loop> &uvLoop);
+    MachineDBusAdaptor(Manager *manager, Machine *machine, uint32_t id, QDBusConnection bus);
     ~MachineDBusAdaptor();
 
     const QString &path() const { return m_path; }
@@ -75,9 +71,6 @@ private:
     Manager *m_manager;
     Machine *m_machine;
     QDBusConnection m_bus;
-
-    std::shared_ptr<uvxx::Loop> m_uvLoop;
-    std::shared_ptr<uvxx::Async> m_async;
 };
 
 #endif // !MACHINE_MACHINEDBUSADAPTOR_H

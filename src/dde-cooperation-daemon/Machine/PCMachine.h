@@ -7,7 +7,6 @@ class PCMachine : public Machine {
 public:
     PCMachine(Manager *manager,
               ClipboardBase *clipboard,
-              const std::shared_ptr<uvxx::Loop> &uvLoop,
               QDBusConnection service,
               uint32_t id,
               const std::filesystem::path &dataDir,

@@ -12,8 +12,6 @@
 #include <fmt/ranges.h>
 #include <spdlog/spdlog.h>
 
-#include "uvxx/Async.h"
-
 using namespace X11;
 
 const std::string Clipboard::ATOMS_NAME[] = {

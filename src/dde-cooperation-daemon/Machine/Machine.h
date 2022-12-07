@@ -12,13 +12,6 @@
 
 #include "protocol/message.pb.h"
 
-namespace uvxx {
-class Loop;
-class Timer;
-class Async;
-class Buffer;
-} // namespace uvxx
-
 class QTcpSocket;
 
 class Manager;
@@ -38,7 +31,6 @@ class Machine : public QObject, public std::enable_shared_from_this<Machine> {
 public:
     Machine(Manager *manager,
             ClipboardBase *clipboard,
-            const std::shared_ptr<uvxx::Loop> &uvLoop,
             QDBusConnection bus,
             uint32_t id,
             const std::filesystem::path &dataDir,
@@ -128,8 +120,6 @@ private:
     void sendReceivedFilesSystemNtf(const std::string &path, bool isSuccess);
 
 protected:
-    std::shared_ptr<uvxx::Loop> m_uvLoop;
-    std::shared_ptr<uvxx::Async> m_async;
     QTcpSocket *m_conn;
 
     std::string m_ip;
