@@ -79,6 +79,12 @@ configure_file(
   install_dir: systemd_user_unit_dir,
 )
 
+install_data('misc/org.deepin.dde.cooperation.desktop',
+             install_dir: join_paths(datadir, 'applications'))
+
+install_data('misc/org.deepin.dde.cooperation.svg',
+             install_dir: join_paths(datadir, 'icons', 'hicolor', 'scalable', 'apps'))
+
 install_data('misc/config/compressor-singlefile.conf',
              install_dir: '/usr/share/applications/context-menus')
 
