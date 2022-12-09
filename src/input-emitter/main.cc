@@ -2,7 +2,7 @@
 
 #include <QLocalSocket>
 
-#include "InputEmittor.h"
+#include "InputEmitter.h"
 
 #include "utils/message_helper.h"
 #include "protocol/ipc_message.pb.h"
@@ -21,10 +21,10 @@ int main(int argc, char *argv[]) {
     qDebug() << "input-emitter LocalServer addr:" << addr;
 
     InputDeviceType type = static_cast<InputDeviceType>(args[2].toUInt());
-    InputEmittor emittor(type);
+    InputEmitter emitter(type);
 
     QLocalSocket socket;
-    QObject::connect(&socket, &QLocalSocket::readyRead, [&emittor, &socket]() {
+    QObject::connect(&socket, &QLocalSocket::readyRead, [&emitter, &socket]() {
         while (socket.size() >= header_size) {
             QByteArray buffer = socket.peek(header_size);
             auto header = MessageHelper::parseMessageHeader(buffer);
@@ -42,15 +42,15 @@ int main(int argc, char *argv[]) {
             auto size = header.size();
             buffer = socket.read(size);
 
-            auto base = MessageHelper::parseMessageBody<InputEmittorParent>(buffer.data(),
+            auto base = MessageHelper::parseMessageBody<InputEmitterParent>(buffer.data(),
                                                                             buffer.size());
 
             switch (base.payload_case()) {
-            case InputEmittorParent::PayloadCase::kInputEvent: {
+            case InputEmitterParent::PayloadCase::kInputEvent: {
                 auto &inputEvent = base.inputevent();
-                emittor.emitEvent(inputEvent.type(), inputEvent.code(), inputEvent.value());
+                emitter.emitEvent(inputEvent.type(), inputEvent.code(), inputEvent.value());
             } break;
-            case InputEmittorParent::PayloadCase::PAYLOAD_NOT_SET: {
+            case InputEmitterParent::PayloadCase::PAYLOAD_NOT_SET: {
             } break;
             }
         }

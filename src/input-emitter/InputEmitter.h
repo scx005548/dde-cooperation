@@ -8,10 +8,10 @@
 
 #include "common.h"
 
-class InputEmittor {
+class InputEmitter {
 public:
-    explicit InputEmittor(InputDeviceType type);
-    ~InputEmittor();
+    explicit InputEmitter(InputDeviceType type);
+    ~InputEmitter();
 
     bool emitEvent(unsigned int type, unsigned int code, int value);
 

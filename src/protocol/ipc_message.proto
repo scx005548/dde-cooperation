@@ -23,7 +23,7 @@ message InputGrabberChild {
     }
 }
 
-message InputEmittorParent {
+message InputEmitterParent {
     oneof payload {
         InputEvent inputEvent = 1;
     }

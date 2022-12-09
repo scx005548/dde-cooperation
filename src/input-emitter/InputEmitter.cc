@@ -1,4 +1,4 @@
-#include "InputEmittor.h"
+#include "InputEmitter.h"
 
 #include <fmt/core.h>
 
@@ -17,7 +17,7 @@
 
 #define MAX_TRACKING_ID 65535
 
-InputEmittor::InputEmittor(InputDeviceType type)
+InputEmitter::InputEmitter(InputDeviceType type)
     : m_dev(make_handle(libevdev_new(), &libevdev_free))
     , m_uidev(nullptr, &libevdev_uinput_destroy) {
     std::string name = std::string("DDE Cooperation ");
@@ -112,10 +112,10 @@ InputEmittor::InputEmittor(InputDeviceType type)
     m_uidev = make_handle(uidev, &libevdev_uinput_destroy);
 }
 
-InputEmittor::~InputEmittor() {
+InputEmitter::~InputEmitter() {
 }
 
-void InputEmittor::enableEventType(unsigned int type) {
+void InputEmitter::enableEventType(unsigned int type) {
     int rc = libevdev_enable_event_type(m_dev.get(), type);
     if (rc != 0) {
         qWarning() << fmt::format("failed to enable event type {}",
@@ -124,7 +124,7 @@ void InputEmittor::enableEventType(unsigned int type) {
     }
 }
 
-void InputEmittor::enableEventCode(unsigned int type, unsigned int code, const void *data) {
+void InputEmitter::enableEventCode(unsigned int type, unsigned int code, const void *data) {
     int rc = libevdev_enable_event_code(m_dev.get(), type, code, data);
     if (rc != 0) {
         qWarning() << fmt::format("failed to enable event code: type: {}, code: {}",
@@ -134,7 +134,7 @@ void InputEmittor::enableEventCode(unsigned int type, unsigned int code, const v
     }
 }
 
-bool InputEmittor::emitEvent(unsigned int type, unsigned int code, int value) {
+bool InputEmitter::emitEvent(unsigned int type, unsigned int code, int value) {
     qDebug() << fmt::format("emitting event: {}, {}, {}",
                             libevdev_event_type_get_name(type),
                             libevdev_event_code_get_name(type, code),

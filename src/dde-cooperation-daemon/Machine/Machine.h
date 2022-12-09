@@ -18,7 +18,7 @@ class Manager;
 class MachineDBusAdaptor;
 class ClipboardBase;
 class Request;
-class InputEmittorWrapper;
+class InputEmitterWrapper;
 class FuseServer;
 class FuseClient;
 
@@ -85,7 +85,7 @@ private:
     QTimer *m_pingTimer;
     QTimer *m_offlineTimer;
 
-    std::unordered_map<InputDeviceType, std::unique_ptr<InputEmittorWrapper>> m_inputEmittors;
+    std::unordered_map<InputDeviceType, std::unique_ptr<InputEmitterWrapper>> m_inputEmitters;
 
     std::unique_ptr<FuseServer> m_fuseServer;
     std::unique_ptr<FuseClient> m_fuseClient;

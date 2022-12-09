@@ -1,5 +1,5 @@
-#ifndef WRAPPERS_INPUTEMITTORWRAPPER_H
-#define WRAPPERS_INPUTEMITTORWRAPPER_H
+#ifndef WRAPPERS_INPUTEMITTERWRAPPER_H
+#define WRAPPERS_INPUTEMITTERWRAPPER_H
 
 #include <filesystem>
 
@@ -15,12 +15,12 @@ class QProcess;
 class Manager;
 class Machine;
 
-class InputEmittorWrapper : public QObject {
+class InputEmitterWrapper : public QObject {
     Q_OBJECT
 
 public:
-    explicit InputEmittorWrapper(InputDeviceType type);
-    ~InputEmittorWrapper();
+    explicit InputEmitterWrapper(InputDeviceType type);
+    ~InputEmitterWrapper();
     void setMachine(const std::weak_ptr<Machine> &machine);
     bool emitEvent(unsigned int type, unsigned int code, int value) noexcept;
 
@@ -38,4 +38,4 @@ private:
     InputDeviceType m_type;
 };
 
-#endif // !WRAPPERS_INPUTEMITTORWRAPPER_H
+#endif // !WRAPPERS_INPUTEMITTERWRAPPER_H

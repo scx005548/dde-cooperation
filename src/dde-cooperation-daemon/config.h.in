@@ -2,7 +2,7 @@
 #define CONFIG_H
 
 #define EXECUTABLE_INSTALL_DIR "@executable_install_dir@"
-#define INPUT_EMITTOR_PATH "@executable_install_dir@/input-emittor"
+#define INPUT_EMITTER_PATH "@executable_install_dir@/input-emitter"
 #define INPUT_GRABBER_PATH "@executable_install_dir@/input-grabber"
 #define CONFIRM_DIALOG_PATH "@executable_install_dir@/dde-cooperation-dialog"
 #define DDE_SCRCPY_PATH "@executable_install_dir@/dde-scrcpy"

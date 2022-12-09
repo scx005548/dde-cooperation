@@ -12,7 +12,7 @@
 
 #include "Manager.h"
 #include "MachineDBusAdaptor.h"
-#include "Wrappers/InputEmittorWrapper.h"
+#include "Wrappers/InputEmitterWrapper.h"
 #include "ConfirmDialog.h"
 #include "Fuse/FuseServer.h"
 #include "Fuse/FuseClient.h"
@@ -59,15 +59,15 @@ Machine::Machine(Manager *manager,
     , m_conn(nullptr)
     , m_ip(ip) {
 
-    m_inputEmittors.emplace(
+    m_inputEmitters.emplace(
         std::make_pair(InputDeviceType::KEYBOARD,
-                       std::make_unique<InputEmittorWrapper>(InputDeviceType::KEYBOARD)));
-    m_inputEmittors.emplace(
+                       std::make_unique<InputEmitterWrapper>(InputDeviceType::KEYBOARD)));
+    m_inputEmitters.emplace(
         std::make_pair(InputDeviceType::MOUSE,
-                       std::make_unique<InputEmittorWrapper>(InputDeviceType::MOUSE)));
-    m_inputEmittors.emplace(
+                       std::make_unique<InputEmitterWrapper>(InputDeviceType::MOUSE)));
+    m_inputEmitters.emplace(
         std::make_pair(InputDeviceType::TOUCHPAD,
-                       std::make_unique<InputEmittorWrapper>(InputDeviceType::TOUCHPAD)));
+                       std::make_unique<InputEmitterWrapper>(InputDeviceType::TOUCHPAD)));
 
     QObject::connect(m_pingTimer, &QTimer::timeout, this, &Machine::ping);
     m_pingTimer->start(U10s);
@@ -430,14 +430,14 @@ void Machine::handleInputEventRequest(const InputEventRequest &req) {
     bool success = true;
 
     auto deviceType = static_cast<InputDeviceType>(req.devicetype());
-    auto it = m_inputEmittors.find(deviceType);
-    if (it == m_inputEmittors.end()) {
+    auto it = m_inputEmitters.find(deviceType);
+    if (it == m_inputEmitters.end()) {
         success = false;
         qWarning()
             << fmt::format("no deviceType {} found", static_cast<uint8_t>(deviceType)).data();
     } else {
-        auto &inputEmittor = it->second;
-        success = inputEmittor->emitEvent(req.type(), req.code(), req.value());
+        auto &inputEmitter = it->second;
+        success = inputEmitter->emitEvent(req.type(), req.code(), req.value());
     }
 
     Message resp;

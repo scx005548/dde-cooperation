@@ -26,7 +26,7 @@ common_sources = files('''
 
 includes = include_directories('./')
 
-subdir('input-emittor')
+subdir('input-emitter')
 subdir('input-grabber')
 subdir('dde-cooperation-daemon')
 subdir('scrcpy-core')

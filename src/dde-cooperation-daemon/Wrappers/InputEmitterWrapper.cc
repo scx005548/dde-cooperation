@@ -1,4 +1,4 @@
-#include "InputEmittorWrapper.h"
+#include "InputEmitterWrapper.h"
 
 #include <QLocalServer>
 #include <QLocalSocket>
@@ -8,7 +8,7 @@
 #include "utils/message_helper.h"
 #include "protocol/ipc_message.pb.h"
 
-InputEmittorWrapper::InputEmittorWrapper(InputDeviceType type)
+InputEmitterWrapper::InputEmitterWrapper(InputDeviceType type)
     : m_server(new QLocalServer(this))
     , m_conn(nullptr)
     , m_process(new QProcess(this))
@@ -22,18 +22,18 @@ InputEmittorWrapper::InputEmittorWrapper(InputDeviceType type)
     connect(m_server,
             &QLocalServer::newConnection,
             this,
-            &InputEmittorWrapper::handleNewConnection);
+            &InputEmitterWrapper::handleNewConnection);
 
     connect(m_process,
             static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
             this,
-            &InputEmittorWrapper::onProcessClosed);
+            &InputEmitterWrapper::onProcessClosed);
     m_process->start(
-        INPUT_EMITTOR_PATH,
+        INPUT_EMITTER_PATH,
         QStringList{m_server->serverName(), QString::number(static_cast<uint8_t>(type))});
 }
 
-InputEmittorWrapper::~InputEmittorWrapper() {
+InputEmitterWrapper::~InputEmitterWrapper() {
     m_server->close();
     if (m_conn) {
         m_conn->close();
@@ -41,12 +41,12 @@ InputEmittorWrapper::~InputEmittorWrapper() {
     m_process->kill();
 }
 
-bool InputEmittorWrapper::emitEvent(unsigned int type, unsigned int code, int value) noexcept {
+bool InputEmitterWrapper::emitEvent(unsigned int type, unsigned int code, int value) noexcept {
     if (!m_conn) {
         return false;
     }
 
-    InputEmittorParent msg;
+    InputEmitterParent msg;
     auto *inputEvent = msg.mutable_inputevent();
     inputEvent->set_type(type);
     inputEvent->set_code(code);
@@ -54,7 +54,7 @@ bool InputEmittorWrapper::emitEvent(unsigned int type, unsigned int code, int va
     return m_conn->write(MessageHelper::genMessage(msg));
 }
 
-void InputEmittorWrapper::handleNewConnection() {
+void InputEmitterWrapper::handleNewConnection() {
     if (m_conn) {
         return;
     }
@@ -62,19 +62,19 @@ void InputEmittorWrapper::handleNewConnection() {
     m_conn = m_server->nextPendingConnection();
     m_server->close();
 
-    connect(m_conn, &QLocalSocket::readyRead, this, &InputEmittorWrapper::onReceived);
-    connect(m_conn, &QLocalSocket::disconnected, this, &InputEmittorWrapper::onDisconnected);
+    connect(m_conn, &QLocalSocket::readyRead, this, &InputEmitterWrapper::onReceived);
+    connect(m_conn, &QLocalSocket::disconnected, this, &InputEmitterWrapper::onDisconnected);
 }
 
-void InputEmittorWrapper::onReceived() {
+void InputEmitterWrapper::onReceived() {
     qDebug("input-emitter onReceived");
 }
 
-void InputEmittorWrapper::onProcessClosed([[maybe_unused]] int exitCode,
+void InputEmitterWrapper::onProcessClosed([[maybe_unused]] int exitCode,
                                           [[maybe_unused]] QProcess::ExitStatus exitStatus) {
     // todo: remove emitter
 }
 
-void InputEmittorWrapper::onDisconnected() {
+void InputEmitterWrapper::onDisconnected() {
     // todo: remove emitter
 }

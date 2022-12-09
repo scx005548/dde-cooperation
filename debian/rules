@@ -22,4 +22,4 @@ override_dh_installsystemd:
 	dh_installsystemd --no-enable --no-start
 
 override_dh_fixperms:
-	dh_fixperms --exclude /usr/libexec/dde-cooperation/input-emittor --exclude /usr/libexec/dde-cooperation/input-grabber
+	dh_fixperms --exclude /usr/libexec/dde-cooperation/input-emitter --exclude /usr/libexec/dde-cooperation/input-grabber
