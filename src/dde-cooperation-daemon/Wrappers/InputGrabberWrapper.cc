@@ -30,6 +30,7 @@ InputGrabberWrapper::InputGrabberWrapper(Manager *manager, const std::filesystem
             static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
             this,
             &InputGrabberWrapper::onProcessClosed);
+    m_process->setProcessChannelMode(QProcess::ForwardedChannels);
     m_process->start(INPUT_GRABBER_PATH,
                      QStringList{m_server->serverName(), QString::fromStdString(path.string())});
 }

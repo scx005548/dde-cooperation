@@ -28,6 +28,7 @@ InputEmitterWrapper::InputEmitterWrapper(InputDeviceType type)
             static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
             this,
             &InputEmitterWrapper::onProcessClosed);
+    m_process->setProcessChannelMode(QProcess::ForwardedChannels);
     m_process->start(
         INPUT_EMITTER_PATH,
         QStringList{m_server->serverName(), QString::number(static_cast<uint8_t>(type))});
