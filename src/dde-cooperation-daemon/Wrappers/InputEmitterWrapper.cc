@@ -40,6 +40,7 @@ InputEmitterWrapper::~InputEmitterWrapper() {
         m_conn->close();
     }
     m_process->kill();
+    m_process->waitForFinished(100);
 }
 
 bool InputEmitterWrapper::emitEvent(unsigned int type, unsigned int code, int value) noexcept {

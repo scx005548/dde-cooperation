@@ -41,6 +41,7 @@ InputGrabberWrapper::~InputGrabberWrapper() {
         m_conn->close();
     }
     m_process->kill();
+    m_process->waitForFinished(100);
 }
 
 void InputGrabberWrapper::setMachine(const std::weak_ptr<Machine> &machine) {
