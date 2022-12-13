@@ -41,7 +41,7 @@ public slots: // D-Bus methods
     void SetFilesStoragePath(const QString &path, const QDBusMessage &message) const;
     void OpenSharedClipboard(bool on) const;
     void OpenSharedDevices(bool on) const;
-    void setDeviceSharingSwitch(bool value) const;
+    void SetDeviceSharingSwitch(bool value) const;
 
 protected: // update properties
     void updateMachines(const QVector<QDBusObjectPath> &machines);

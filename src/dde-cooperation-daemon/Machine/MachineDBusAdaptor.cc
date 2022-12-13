@@ -163,5 +163,5 @@ void MachineDBusAdaptor::propertiesChanged(const QString &property, const QVaria
                                                   "org.freedesktop.DBus.Properties",
                                                   "PropertiesChanged");
     msg.setArguments(arguments);
-    QDBusConnection::connectToBus(QDBusConnection::SessionBus, machineInterface).send(msg);
+    m_bus.send(msg);
 }

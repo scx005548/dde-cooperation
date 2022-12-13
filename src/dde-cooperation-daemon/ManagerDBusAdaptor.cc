@@ -26,14 +26,15 @@ static bool isSubDir(fs::path p, fs::path root) {
     return false;
 }
 
-static const QString managerInterface{"org.deepin.dde.Cooperation1"};
+static const QString managerService{"org.deepin.dde.Cooperation1"};
 static const QString managerPath{"/org/deepin/dde/Cooperation1"};
+static const QString managerInterface{"org.deepin.dde.Cooperation1"};
 
 ManagerDBusAdaptor::ManagerDBusAdaptor(Manager *manager, QDBusConnection bus)
     : QObject(manager)
     , m_manager(manager)
     , m_bus(bus) {
-    m_bus.registerService(managerInterface);
+    m_bus.registerService(managerService);
     m_bus.registerObject(managerPath,
                          this,
                          QDBusConnection::ExportAllSlots | QDBusConnection::ExportAllProperties);
@@ -136,7 +137,7 @@ void ManagerDBusAdaptor::OpenSharedDevices(bool on) const {
     m_manager->openSharedDevices(on);
 }
 
-void ManagerDBusAdaptor::setDeviceSharingSwitch(bool value) const {
+void ManagerDBusAdaptor::SetDeviceSharingSwitch(bool value) const {
     m_manager->setDeviceSharingSwitch(value);
 }
 
@@ -183,5 +184,5 @@ void ManagerDBusAdaptor::propertiesChanged(const QString &property, const QVaria
                                                   "org.freedesktop.DBus.Properties",
                                                   "PropertiesChanged");
     msg.setArguments(arguments);
-    QDBusConnection::connectToBus(QDBusConnection::SessionBus, managerInterface).send(msg);
+    m_bus.send(msg);
 }
