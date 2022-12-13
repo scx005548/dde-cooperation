@@ -27,7 +27,10 @@ class MachineDBusAdaptor : public QObject {
     Q_PROPERTY(bool SharedClipboard READ getSharedClipboard)
 
 public:
-    MachineDBusAdaptor(Manager *manager, Machine *machine, uint32_t id, QDBusConnection bus);
+    MachineDBusAdaptor(Manager *manager,
+                       Machine *machine,
+                       QDBusConnection bus,
+                       const QString &path);
     ~MachineDBusAdaptor();
 
     const QString &path() const { return m_path; }

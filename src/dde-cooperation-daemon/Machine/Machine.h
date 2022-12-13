@@ -63,8 +63,11 @@ public:
 protected:
     void sendServiceStatusNotification();
 
-private:
+protected:
     QDBusConnection m_bus;
+    QString m_dbusPath;
+
+private:
     Manager *m_manager;
     MachineDBusAdaptor *m_dbusAdaptor;
     ClipboardBase *m_clipboard;

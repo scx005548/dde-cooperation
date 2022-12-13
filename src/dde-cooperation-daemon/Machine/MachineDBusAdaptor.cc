@@ -7,10 +7,10 @@ static const QString machineInterface{"org.deepin.dde.Cooperation1.Machine"};
 
 MachineDBusAdaptor::MachineDBusAdaptor(Manager *manager,
                                        Machine *machine,
-                                       uint32_t id,
-                                       QDBusConnection bus)
+                                       QDBusConnection bus,
+                                       const QString &path)
     : QObject(machine)
-    , m_path(QString("/org/deepin/dde/Cooperation1/Machine/%1").arg(id))
+    , m_path(path)
     , m_manager(manager)
     , m_machine(machine)
     , m_bus(bus) {

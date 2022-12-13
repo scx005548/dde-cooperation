@@ -40,8 +40,9 @@ Machine::Machine(Manager *manager,
                  uint16_t port,
                  const DeviceInfo &sp)
     : m_bus(bus)
+    , m_dbusPath(QString("/org/deepin/dde/Cooperation1/Machine/%1").arg(id))
     , m_manager(manager)
-    , m_dbusAdaptor(new MachineDBusAdaptor(m_manager, this, id, m_bus))
+    , m_dbusAdaptor(new MachineDBusAdaptor(m_manager, this, m_bus, m_dbusPath))
     , m_clipboard(clipboard)
     , m_dataDir(dataDir)
     , m_mountpoint(m_dataDir / "mp")
