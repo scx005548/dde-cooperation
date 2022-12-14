@@ -112,6 +112,7 @@ private:
     void handleFsRequest(const FsRequest &req);
     void handleFsResponse(const FsResponse &resp);
     void handleFsSendFileRequest(const FsSendFileRequest &req);
+    void handleFsSendFileResult(const FsSendFileResult &resp);
     void handleClipboardNotify(const ClipboardNotify &notify);
     void handleClipboardGetContentRequest(const ClipboardGetContentRequest &req);
     void handleClipboardGetContentResponse(const ClipboardGetContentResponse &resp);
@@ -119,7 +120,7 @@ private:
     void stopDeviceSharingAux();
     void receivedUserConfirm(bool accepted);
     void sendFlowDirectionNtf();
-    void sendReceivedFilesSystemNtf(const std::string &path, bool isSuccess);
+    void sendReceivedFilesSystemNtf(const QString &body);
 
     virtual void handleTransferResponse(const TransferResponse &resp) = 0;
 

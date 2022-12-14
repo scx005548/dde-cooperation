@@ -331,6 +331,7 @@ void Machine::dispatcher() noexcept {
         }
 
         case Message::PayloadCase::kFsSendFileResult: {
+            handleFsSendFileResult(msg.fssendfileresult());
             break;
         }
 
@@ -540,8 +541,16 @@ void Machine::handleFsSendFileRequest(const FsSendFileRequest &req) {
 
             std::string::size_type iPos = path.find_last_of('/') + 1;
             std::string fileName = path.substr(iPos, path.length() - iPos);
-            sendReceivedFilesSystemNtf(storagePath + "/" + fileName,
-                                       exitStatus == QProcess::NormalExit);
+            QString msgBody;
+            if (exitStatus == QProcess::NormalExit) {
+                msgBody = QString(QObject::tr("Successfully received the file sent by device %1"))
+                              .arg(QString::fromStdString(m_name));
+            } else {
+                msgBody = QString(QObject::tr("Unable to receive the file sent by device A %1"))
+                                  .arg(QString::fromStdString(m_name));
+            }
+
+            sendReceivedFilesSystemNtf(msgBody);
 
             fssendfileresult->set_result(exitStatus == QProcess::NormalExit);
             sendMessage(msg);
@@ -549,6 +558,19 @@ void Machine::handleFsSendFileRequest(const FsSendFileRequest &req) {
             process->deleteLater();
         });
     process->start("/bin/cp", QStringList{"-r", QString::fromStdString(filePath), storagePath});
+}
+
+void Machine::handleFsSendFileResult(const FsSendFileResult &resp) {
+    QString msgBody;
+    if (resp.result()) {
+        msgBody = QString(QObject::tr("File successfully sent to the collaboration device %1"))
+                      .arg(QString::fromStdString(m_name));
+    } else {
+        msgBody = QString(QObject::tr("Unable to send files to the cooperating device %1"))
+                      .arg(QString::fromStdString(m_name));
+    }
+
+    sendReceivedFilesSystemNtf(msgBody);
 }
 
 void Machine::handleClipboardNotify(const ClipboardNotify &notify) {
@@ -714,7 +736,7 @@ void Machine::sendFlowDirectionNtf() {
     sendMessage(msg);
 }
 
-void Machine::sendReceivedFilesSystemNtf(const std::string &path, bool isSuccess) {
+void Machine::sendReceivedFilesSystemNtf(const QString &body) {
     DDBusSender()
         .service("org.freedesktop.Notifications")
         .path("/org/freedesktop/Notifications")
@@ -724,9 +746,7 @@ void Machine::sendReceivedFilesSystemNtf(const std::string &path, bool isSuccess
         .arg(static_cast<uint>(0))
         .arg(QString(""))
         .arg(QString(""))
-        .arg(QString(QObject::tr("Receive file %1 %2"))
-                 .arg(QString::fromStdString(path))
-                 .arg(isSuccess ? "success" : "failed"))
+        .arg(body)
         .arg(QStringList())
         .arg(QVariantMap())
         .arg(5000)
