@@ -363,7 +363,6 @@ void Machine::handlePairResponseAux(const PairResponse &resp) {
     bool agree = resp.agree();
     if (!agree) {
         // handle not agree
-        m_conn->close();
         // rejected, need notify,ui can reset connecting status
         m_connected = false;
         m_dbusAdaptor->updateConnected(m_connected);
