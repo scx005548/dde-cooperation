@@ -428,7 +428,8 @@ void Manager::handleReceivedSocketScan() noexcept {
         datagram.resize(m_socketScan->pendingDatagramSize());
 
         QHostAddress addr;
-        m_socketScan->readDatagram(datagram.data(), datagram.size(), &addr);
+        quint16 port;
+        m_socketScan->readDatagram(datagram.data(), datagram.size(), &addr, &port);
 
         const char *buff = datagram.data();
         size_t size = datagram.size();
@@ -472,7 +473,7 @@ void Manager::handleReceivedSocketScan() noexcept {
             response->mutable_deviceinfo()->set_name(Net::getHostname());
             response->mutable_deviceinfo()->set_os(DEVICE_OS_LINUX);
             response->set_port(m_port);
-            m_socketScan->writeDatagram(MessageHelper::genMessage(msg), addr, m_scanPort);
+            m_socketScan->writeDatagram(MessageHelper::genMessage(msg), addr, port);
 
             break;
         }
