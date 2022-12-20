@@ -4,6 +4,7 @@
 #include <algorithm>
 
 #include "Manager.h"
+#include "AndroidMachineDBusAdaptor.h"
 #include "Android/AndroidMainWindow.h"
 
 AndroidMachine::AndroidMachine(Manager *manager,
@@ -15,7 +16,15 @@ AndroidMachine::AndroidMachine(Manager *manager,
                                uint16_t port,
                                const DeviceInfo &sp)
     : Machine(manager, clipboard, service, id, dataDir, ip, port, sp)
+    , m_dbusAdaptorAndroid(new AndroidMachineDBusAdaptor(this, m_bus, m_dbusPath))
     , m_currentTransferId(0) {
+}
+
+void AndroidMachine::startCast() {
+    Message msg;
+    auto *reverseCastRequest = msg.mutable_reversecastrequest();
+    reverseCastRequest->set_uuid(uuid());
+    sendMessage(msg);
 }
 
 void AndroidMachine::handleConnected() {

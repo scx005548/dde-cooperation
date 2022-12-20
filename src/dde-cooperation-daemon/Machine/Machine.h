@@ -41,6 +41,7 @@ public:
 
     const QString &path() const;
     const std::string &ip() const { return m_ip; };
+    const std::string &uuid() const { return m_uuid; };
 
     void updateMachineInfo(const std::string &ip, uint16_t port, const DeviceInfo &devInfo);
 
@@ -56,7 +57,7 @@ public:
     bool isAndroid() const;
 
     bool connected() const { return !!m_conn; }
-    Manager *manager() const {return m_manager; }
+    Manager *manager() const { return m_manager; }
 
 protected:
     void sendServiceStatusNotification();
