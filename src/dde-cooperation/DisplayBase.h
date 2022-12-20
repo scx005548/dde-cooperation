@@ -1,5 +1,5 @@
-#ifndef DDE_COOPERATION_DEAMON_DISPLAYBASE_H
-#define DDE_COOPERATION_DEAMON_DISPLAYBASE_H
+#ifndef DISPLAYBASE_H
+#define DISPLAYBASE_H
 
 #include <vector>
 
@@ -39,4 +39,4 @@ private:
     void flowOut(uint16_t direction, uint16_t x, uint16_t y, bool evFromPeer);
 };
 
-#endif // !DDE_COOPERATION_DEAMON_DISPLAYBASE_H
+#endif // !DISPLAYBASE_H

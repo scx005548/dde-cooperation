@@ -1,5 +1,5 @@
-#ifndef DDE_COOPERATION_DAEMON_SENDTRANSFER_H
-#define DDE_COOPERATION_DAEMON_SENDTRANSFER_H
+#ifndef SENDTRANSFER_H
+#define SENDTRANSFER_H
 
 #include <vector>
 #include <string>
@@ -33,4 +33,4 @@ private:
     void handleDisconnected();
 };
 
-#endif // !DDE_COOPERATION_DAEMON_SENDTRANSFER_H
+#endif // !SENDTRANSFER_H

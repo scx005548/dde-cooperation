@@ -1,5 +1,5 @@
-#ifndef DDE_COOPERATION_DAEMON_RECEIVETRANSFER_H
-#define DDE_COOPERATION_DAEMON_RECEIVETRANSFER_H
+#ifndef RECEIVETRANSFER_H
+#define RECEIVETRANSFER_H
 
 #include <vector>
 #include <string>
@@ -42,4 +42,4 @@ private:
     void handleStopTransferRequest(const StopTransferRequest &req);
 };
 
-#endif // !DDE_COOPERATION_DAEMON_RECEIVETRANSFER_H
+#endif // !RECEIVETRANSFER_H

@@ -1,4 +1,4 @@
-dde_cooperation_daemon_sources = files('''
+dde_cooperation_sources = files('''
   main.cc
   Manager.cc
   ManagerDBusAdaptor.cc
@@ -33,7 +33,7 @@ dde_cooperation_daemon_sources = files('''
   Android/AndroidMainWindow.cc
 '''.split())
 
-dde_cooperation_daemon_moc_headers = files('''
+dde_cooperation_moc_headers = files('''
   Manager.h
   ManagerDBusAdaptor.h
   ConfirmDialog.h
@@ -53,14 +53,14 @@ dde_cooperation_daemon_moc_headers = files('''
   Android/AndroidMainWindow.h
 '''.split())
 
-dde_cooperation_daemon_sources += qt5.preprocess(
+dde_cooperation_sources += qt5.preprocess(
   qresources: [
     'Android/resources.qrc',
   ],
-  moc_headers: dde_cooperation_daemon_moc_headers,
+  moc_headers: dde_cooperation_moc_headers,
 )
 
-dde_cooperation_daemon_sources += common_sources + [protocol] + [ipc_protocol]
+dde_cooperation_sources += common_sources + [protocol] + [ipc_protocol]
 
 conf_data = configuration_data()
 conf_data.set('executable_install_dir', executable_install_dir)
@@ -70,8 +70,8 @@ configure_file(
   configuration: conf_data
 )
 
-executable('dde-cooperation-daemon',
-  dde_cooperation_daemon_sources,
+executable('dde-cooperation',
+  dde_cooperation_sources,
   include_directories: [
     includes,
   ],

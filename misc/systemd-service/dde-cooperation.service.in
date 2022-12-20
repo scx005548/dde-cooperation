@@ -1,10 +1,10 @@
 [Unit]
-Description=DDE cooperation daemon
+Description=DDE cooperation
 After=network.target
 
 [Service]
 Type=simple
-ExecStart=@executable_install_dir@/dde-cooperation-daemon
+ExecStart=@executable_install_dir@/dde-cooperation
 
 [Install]
 WantedBy=multi-user.target

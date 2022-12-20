@@ -1,5 +1,5 @@
-#ifndef DDE_COOPERATION_DAEMON_CONFIRMDIALOG_H
-#define DDE_COOPERATION_DAEMON_CONFIRMDIALOG_H
+#ifndef CONFIRMDIALOG_H
+#define CONFIRMDIALOG_H
 
 #include <DDialog>
 
@@ -21,4 +21,4 @@ private:
     QLabel *m_contentLabel;
 };
 
-#endif // DDE_COOPERATION_DAEMON_CONFIRMDIALOG_H
+#endif // CONFIRMDIALOG_H

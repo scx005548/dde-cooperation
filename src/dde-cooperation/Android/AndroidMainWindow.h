@@ -1,5 +1,5 @@
-#ifndef ANDROID_MAINWINDOW_H
-#define ANDROID_MAINWINDOW_H
+#ifndef ANDROID_ANDROIDMAINWINDOW_H
+#define ANDROID_ANDROIDMAINWINDOW_H
 
 #include <DMainWindow>
 #include <QQmlApplicationEngine>
@@ -77,4 +77,4 @@ private:
     void listDevices();
 };
 
-#endif // ANDROID_MAINWINDOW_H
+#endif // ANDROID_ANDROIDMAINWINDOW_H
