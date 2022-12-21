@@ -345,6 +345,7 @@ void Manager::scan() noexcept {
 
 void Manager::connectNewAndroidDevice() noexcept {
     if (m_androidMainWindow) {
+        m_androidMainWindow->showConnectDevice();
         return;
     }
 
