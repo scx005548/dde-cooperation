@@ -33,7 +33,7 @@ void AndroidMachine::handleConnected() {
 void AndroidMachine::handleDisconnected() {
 }
 
-void AndroidMachine::handleCaseRequest(const CastRequest &req) {
+void AndroidMachine::handleCastRequest(const CastRequest &req) {
     auto androidMainWindow = manager()->getAndroidMainWindow();
     int rStage = req.stage();
     qDebug() << "rStage:" << rStage;

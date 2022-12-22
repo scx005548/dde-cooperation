@@ -23,7 +23,7 @@ public:
 protected:
     virtual void handleConnected() override;
     virtual void handleDisconnected() override;
-    virtual void handleCaseRequest(const CastRequest &req) override;
+    virtual void handleCastRequest(const CastRequest &req) override;
     virtual void handleTransferResponse(const TransferResponse &resp) override;
     virtual void sendFiles(const QStringList &filePaths) override;
 

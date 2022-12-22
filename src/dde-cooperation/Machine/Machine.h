@@ -138,7 +138,7 @@ protected:
 
     virtual void handleConnected() = 0;
     virtual void handleDisconnected() = 0;
-    virtual void handleCaseRequest(const CastRequest &req) = 0;
+    virtual void handleCastRequest(const CastRequest &req) = 0;
     virtual void sendFiles(const QStringList &filePaths) = 0;
 };
 

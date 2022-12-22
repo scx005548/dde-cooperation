@@ -350,6 +350,11 @@ void Machine::dispatcher() noexcept {
             break;
         }
 
+        case Message::PayloadCase::kCastRequest: {
+            handleCastRequest(msg.castrequest());
+            break;
+        }
+
         default: {
             qWarning() << "invalid message type:", msg.payload_case();
             m_conn->close();
