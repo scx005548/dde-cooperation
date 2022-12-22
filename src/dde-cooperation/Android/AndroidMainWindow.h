@@ -37,6 +37,7 @@ public:
     void showConnectDevice();
     void setWirelessDbgAddress(const QString &ip, uint16_t port);
     void openTCPAdb();
+    void ensureTCPAdbConnected();
     void connectTCPAdb();
     void connectDevice();
 

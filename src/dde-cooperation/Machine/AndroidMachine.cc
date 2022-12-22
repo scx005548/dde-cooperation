@@ -39,7 +39,7 @@ void AndroidMachine::handleCastRequest(const CastRequest &req) {
     qDebug() << "rStage:" << rStage;
     if (rStage & ANDROID_STAGE_TCPIP) {
         androidMainWindow->setWirelessDbgAddress(QString::fromStdString(m_ip), 5545);
-        androidMainWindow->connectTCPAdb();
+        androidMainWindow->ensureTCPAdbConnected();
     } else if (rStage & ANDROID_STAGE_USB_ADB) {
         androidMainWindow->setWirelessDbgAddress(QString::fromStdString(m_ip), 5545);
         androidMainWindow->openTCPAdb();

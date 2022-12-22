@@ -92,19 +92,21 @@ void AndroidMainWindow::handleAdbProcessResult(qsc::AdbProcess::ADB_EXEC_RESULT 
     case AdbProcess::AER_ERROR_START:
         break;
     case AdbProcess::AER_SUCCESS_EXEC:
-        if (args.contains("tcpip")) {
+        if (args.contains("devices")) {
+            QStringList devices = m_adb->getDevicesSerialFromStdOut();
+            if (!devices.contains(m_tcpSerial)) {
+                connectTCPAdb();
+            } else {
+                QTimer::singleShot(500, this, [this]() {
+                    connectDevice(); // 打开投屏端口准备投屏
+                });
+            }
+        } else if (args.contains("tcpip")) {
             connectTCPAdb();
         } else if (args.contains("connect")) {
-            // m_wifiSerial = args[args.indexOf("connect") + 1];
-            //                if (!m_jacksuRuned) {
-            //                    qInfo() << "startRemoteJacksu:" << serial;
-            //                    delayMs(300);
-            //                    startRemoteJacksu();
-            //                }
-            QTimer::singleShot(500, [this]() {
+            QTimer::singleShot(500, this, [this]() {
                 connectDevice(); // 打开投屏端口准备投屏
             });
-            break;
         }
         break;
     case AdbProcess::AER_ERROR_EXEC:
@@ -126,6 +128,10 @@ void AndroidMainWindow::setWirelessDbgAddress(const QString &ip, uint16_t port) 
 
 void AndroidMainWindow::openTCPAdb() {
     m_adb->execute("", QStringList{"tcpip", QString::number(m_tcpPort)});
+}
+
+void AndroidMainWindow::ensureTCPAdbConnected() {
+    listDevices();
 }
 
 void AndroidMainWindow::connectTCPAdb() {
