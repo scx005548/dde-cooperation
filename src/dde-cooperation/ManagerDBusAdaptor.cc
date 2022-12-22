@@ -104,12 +104,12 @@ void ManagerDBusAdaptor::SetDeviceSharingSwitch(bool value) const {
 }
 
 void ManagerDBusAdaptor::updateMachines(const QVector<QDBusObjectPath> &machines) {
-    QVariantList list;
+    QList<QDBusObjectPath> list;
     for (const QDBusObjectPath &path : machines) {
         list.append(path);
     }
 
-    propertiesChanged("Machines", list);
+    propertiesChanged("Machines", QVariant::fromValue(list));
 }
 
 void ManagerDBusAdaptor::updateCooperatedMachines(const QStringList &UUIDs) {
