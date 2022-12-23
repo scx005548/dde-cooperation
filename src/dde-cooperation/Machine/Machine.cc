@@ -757,7 +757,7 @@ void Machine::sendReceivedFilesSystemNtf(const QString &body) {
         .path("/org/freedesktop/Notifications")
         .interface("org.freedesktop.Notifications")
         .method(QString("Notify"))
-        .arg(QObject::tr("collaboration"))
+        .arg(QString("notification_collaboration"))
         .arg(static_cast<uint>(0))
         .arg(QString(""))
         .arg(QString(""))
