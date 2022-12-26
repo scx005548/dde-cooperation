@@ -56,6 +56,10 @@ void InputGrabberWrapper::start() {
 }
 
 void InputGrabberWrapper::stop() {
+    if (!m_conn) {
+        return;
+    }
+
     qDebug() << "stop" << m_path;
     InputGrabberParent msg;
     msg.mutable_stop();
