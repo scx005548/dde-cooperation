@@ -34,15 +34,17 @@ void AndroidMachine::handleDisconnected() {
 }
 
 void AndroidMachine::handleCastRequest(const CastRequest &req) {
-    auto androidMainWindow = manager()->getAndroidMainWindow();
+    if (!m_mainWindow) {
+        m_mainWindow = manager()->getAndroidMainWindow();
+    }
     int rStage = req.stage();
     qDebug() << "rStage:" << rStage;
     if (rStage & ANDROID_STAGE_TCPIP) {
-        androidMainWindow->setWirelessDbgAddress(QString::fromStdString(m_ip), 5545);
-        androidMainWindow->ensureTCPAdbConnected();
+        m_mainWindow->setWirelessDbgAddress(QString::fromStdString(m_ip), 5545);
+        m_mainWindow->ensureTCPAdbConnected();
     } else if (rStage & ANDROID_STAGE_USB_ADB) {
-        androidMainWindow->setWirelessDbgAddress(QString::fromStdString(m_ip), 5545);
-        androidMainWindow->openTCPAdb();
+        m_mainWindow->setWirelessDbgAddress(QString::fromStdString(m_ip), 5545);
+        m_mainWindow->openTCPAdb();
     }
 }
 
