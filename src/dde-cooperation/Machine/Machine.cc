@@ -237,7 +237,7 @@ void Machine::dispatcher() noexcept {
                            m_conn->size())
                    .data();
 
-    while (m_conn->size() >= header_size) {
+    while (m_conn && m_conn->size() >= header_size) {
         QByteArray buffer = m_conn->peek(header_size);
         auto header = MessageHelper::parseMessageHeader(buffer);
         if (!header.legal()) {
@@ -369,6 +369,7 @@ void Machine::handlePairResponseAux(const PairResponse &resp) {
     bool agree = resp.agree();
     if (!agree) {
         // handle not agree
+        m_conn->close();
         // rejected, need notify,ui can reset connecting status
         m_connected = false;
         m_dbusAdaptor->updateConnected(m_connected);
