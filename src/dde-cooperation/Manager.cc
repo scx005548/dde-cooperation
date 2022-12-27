@@ -543,6 +543,7 @@ void Manager::handleNewConnection() noexcept {
         qDebug() << fmt::format("new connection received").data();
 
         QTcpSocket *socket = m_listenPair->nextPendingConnection();
+        Net::setKeepAlive(socket);
         connect(socket, &QTcpSocket::readyRead, [this, socket] {
             QByteArray buffer = socket->peek(header_size);
             auto header = MessageHelper::parseMessageHeader(buffer);
