@@ -376,6 +376,15 @@ void Machine::handlePairResponseAux(const PairResponse &resp) {
         return;
     }
 
+    // connect only one machine
+    if ((isPcMachine() && m_manager->hasPcMachinePaired()) ||
+        (isAndroid() && m_manager->hasAndroidPaired())) {
+        m_conn->close();
+        m_connected = false;
+        m_dbusAdaptor->updateConnected(m_connected);
+        return;
+    }
+
     m_connected = true;
     m_dbusAdaptor->updateConnected(m_connected);
 
