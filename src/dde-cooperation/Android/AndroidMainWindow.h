@@ -43,6 +43,7 @@ public:
 
 signals:
     void stageChanged(quint16 stage);
+    void tcpAdbConnected();
 
 protected slots:
     void deviceConnected(bool success,

@@ -39,6 +39,18 @@ void AndroidMachine::handleCastRequest(const CastRequest &req) {
     }
     int rStage = req.stage();
     qDebug() << "rStage:" << rStage;
+
+    m_mainWindow->disconnect();
+    QObject::connect(m_mainWindow.get(), &AndroidMainWindow::tcpAdbConnected, [this]() {
+        qDebug() << "tcpAdbConnected";
+        // m_mainWindow->
+
+        Message msg;
+        auto *castResponse = msg.mutable_castresponse();
+        castResponse->set_well(true);
+        sendMessage(msg);
+    });
+
     if (rStage & ANDROID_STAGE_TCPIP) {
         m_mainWindow->setWirelessDbgAddress(QString::fromStdString(m_ip), 5545);
         m_mainWindow->ensureTCPAdbConnected();

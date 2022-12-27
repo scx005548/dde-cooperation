@@ -99,6 +99,7 @@ void AndroidMainWindow::handleAdbProcessResult(qsc::AdbProcess::ADB_EXEC_RESULT 
             } else {
                 QTimer::singleShot(500, this, [this]() {
                     connectDevice(); // 打开投屏端口准备投屏
+                    emit tcpAdbConnected();
                 });
             }
         } else if (args.contains("tcpip")) {
@@ -106,6 +107,7 @@ void AndroidMainWindow::handleAdbProcessResult(qsc::AdbProcess::ADB_EXEC_RESULT 
         } else if (args.contains("connect")) {
             QTimer::singleShot(500, this, [this]() {
                 connectDevice(); // 打开投屏端口准备投屏
+                emit tcpAdbConnected();
             });
         }
         break;
@@ -154,6 +156,7 @@ void AndroidMainWindow::deviceConnected(bool success,
                                         const QString &serial,
                                         const QString &deviceName,
                                         [[maybe_unused]] const QSize &size) {
+    qDebug() << "deviceConnected:" << success;
     if (!success) {
         return;
     }
