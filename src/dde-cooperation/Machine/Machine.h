@@ -86,6 +86,7 @@ private:
 
     QTimer *m_pingTimer;
     QTimer *m_offlineTimer;
+    QTimer *m_pairTimeoutTimer;
 
     std::unordered_map<InputDeviceType, std::unique_ptr<InputEmitterWrapper>> m_inputEmitters;
 
@@ -98,6 +99,7 @@ private:
     void onOffline();
 
     void initConnection();
+    void initPairRequestTimer();
 
     void handleDisconnectedAux();
     void dispatcher() noexcept;
@@ -119,8 +121,11 @@ private:
 
     void stopDeviceSharingAux();
     void receivedUserConfirm(bool accepted);
+    void receivedUserOperated(bool tryAgain);
     void sendFlowDirectionNtf();
     void sendReceivedFilesSystemNtf(const QString &body);
+    int getPairTimeoutInterval();
+    void sendPairRequest();
 
     virtual void handleTransferResponse(const TransferResponse &resp) = 0;
 

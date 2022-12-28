@@ -1,9 +1,14 @@
 #include "ConfirmDialog.h"
 
-#include <QApplication>
 #include <QLabel>
-#include <QFile>
-#include <QDebug>
+#include <QTimer>
+
+#include <DConfig>
+
+const static QString dConfigAppID = "org.deepin.cooperation";
+const static QString dConfigName = "org.deepin.cooperation";
+
+DCORE_USE_NAMESPACE
 
 ConfirmDialog::ConfirmDialog(const QString &ip, const QString &machineName)
     : DDialog()
@@ -11,6 +16,8 @@ ConfirmDialog::ConfirmDialog(const QString &ip, const QString &machineName)
     , m_contentLabel(new QLabel(this)) {
     setAttribute(Qt::WA_QuitOnClose);
     setFocus(Qt::MouseFocusReason);
+
+    initTimeout();
 
     QFont font = m_titleLabel->font();
     font.setBold(true);
@@ -34,4 +41,21 @@ ConfirmDialog::ConfirmDialog(const QString &ip, const QString &machineName)
     });
 
     connect(this, &ConfirmDialog::closed, this, [=]() { emit onConfirmed(false); });
+}
+
+void ConfirmDialog::initTimeout() {
+    int interval = 60; // default
+
+    DConfig *dConfigPtr = DConfig::create(dConfigAppID, dConfigName);
+    if (dConfigPtr && dConfigPtr->isValid() && dConfigPtr->keyList().contains("timeoutInterval")) {
+        interval =  dConfigPtr->value("timeoutInterval").toInt();
+    }
+
+    dConfigPtr->deleteLater();
+
+    QTimer::singleShot(interval * 1000, this, [this](){
+        blockSignals(true);
+        this->close();
+        blockSignals(false);
+    });
 }

@@ -16,6 +16,7 @@ dde_cooperation_sources = files('''
   Wrappers/InputGrabberWrapper.cc
   Fuse/FuseClient.cc
   Fuse/FuseServer.cc
+  ReconnectDialog.cc
   SendTransfer.cc
   ReceiveTransfer.cc
   DisplayBase.h
@@ -44,6 +45,7 @@ dde_cooperation_moc_headers = files('''
   Wrappers/InputGrabberWrapper.h
   Fuse/FuseClient.h
   Fuse/FuseServer.h
+  ReconnectDialog.h
   SendTransfer.h
   ReceiveTransfer.h
   X11/X11.h

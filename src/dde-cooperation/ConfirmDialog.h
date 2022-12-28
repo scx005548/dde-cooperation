@@ -17,6 +17,9 @@ signals:
     void onConfirmed(bool accepted);
 
 private:
+    void initTimeout();
+
+private:
     QLabel *m_titleLabel;
     QLabel *m_contentLabel;
 };

@@ -17,6 +17,7 @@
 #include "Fuse/FuseServer.h"
 #include "Fuse/FuseClient.h"
 #include "utils/message_helper.h"
+#include "ReconnectDialog.h"
 
 #include "protocol/message.pb.h"
 
@@ -27,6 +28,8 @@ namespace fs = std::filesystem;
 static const std::string fileSchema{"file://"};
 static const std::string clipboardFileTarget{"x-special/gnome-copied-files"};
 static const std::string uriListTarget{"text/uri-list"};
+const static QString dConfigAppID = "org.deepin.cooperation";
+const static QString dConfigName = "org.deepin.cooperation";
 
 static const uint64_t U10s = 10 * 1000;
 static const uint64_t U25s = 25 * 1000;
@@ -56,6 +59,7 @@ Machine::Machine(Manager *manager,
     , m_direction(FLOW_DIRECTION_RIGHT)
     , m_pingTimer(new QTimer(this))
     , m_offlineTimer(new QTimer(this))
+    , m_pairTimeoutTimer(new QTimer(this))
     , m_mounted(false)
     , m_conn(nullptr)
     , m_ip(ip) {
@@ -76,6 +80,8 @@ Machine::Machine(Manager *manager,
     QObject::connect(m_offlineTimer, &QTimer::timeout, this, &Machine::onOffline);
     m_offlineTimer->setSingleShot(true);
     m_offlineTimer->start(U25s);
+
+    initPairRequestTimer();
 }
 
 Machine::~Machine() {
@@ -109,15 +115,9 @@ void Machine::connect() {
         m_pingTimer->stop();
         m_offlineTimer->stop();
 
-        Message msg;
-        auto *request = msg.mutable_pairrequest();
-        request->set_key(SCAN_KEY);
-        request->mutable_deviceinfo()->set_uuid(m_manager->uuid());
-        request->mutable_deviceinfo()->set_name(Net::getHostname());
-        request->mutable_deviceinfo()->set_os(DEVICE_OS_LINUX);
-        request->mutable_deviceinfo()->set_compositor(COMPOSITOR_X11);
+        sendPairRequest();
 
-        sendMessage(msg);
+        m_pairTimeoutTimer->start(getPairTimeoutInterval() * 1000);
     });
     QObject::connect(m_conn, &QTcpSocket::errorOccurred, [this](QAbstractSocket::SocketError err) {
         qWarning() << "connect failed:" << err;
@@ -198,6 +198,20 @@ void Machine::initConnection() {
     QObject::connect(m_conn, &QTcpSocket::readyRead, this, &Machine::dispatcher);
     m_conn->setSocketOption(QAbstractSocket::LowDelayOption, true);
     Net::tcpSocketSetKeepAliveOption(m_conn->socketDescriptor());
+}
+
+void Machine::initPairRequestTimer() {
+    m_pairTimeoutTimer->setSingleShot(true);
+
+    QObject::connect(m_pairTimeoutTimer, &QTimer::timeout, this, [this](){
+        auto *reconnectDialog = new ReconnectDialog(QString::fromStdString(m_name));
+        reconnectDialog->setAttribute(Qt::WA_DeleteOnClose);
+        QObject::connect(reconnectDialog,
+                         &ReconnectDialog::onOperated,
+                         this,
+                         &Machine::receivedUserOperated);
+        reconnectDialog->show();
+    });
 }
 
 void Machine::handleDisconnectedAux() {
@@ -366,7 +380,21 @@ void Machine::dispatcher() noexcept {
 }
 
 void Machine::handlePairResponseAux(const PairResponse &resp) {
+    m_pairTimeoutTimer->stop();
+
     bool agree = resp.agree();
+
+    // send notification
+    QString msgBody;
+    if (agree) {
+        msgBody = QString(QObject::tr("Successfully connected to %1"))
+                      .arg(QString::fromStdString(m_name));
+    } else {
+        msgBody = QString(QObject::tr("Your connection request has been declined"));
+    }
+
+    sendReceivedFilesSystemNtf(msgBody);
+
     if (!agree) {
         // handle not agree
         m_conn->close();
@@ -728,6 +756,15 @@ void Machine::receivedUserConfirm(bool accepted) {
 
     sendMessage(msg);
 
+    // send notification
+    QString msgBody;
+    if (accepted) {
+        msgBody = QString(QObject::tr("Successfully connected to %1"))
+                      .arg(QString::fromStdString(m_name));
+    }
+
+    sendReceivedFilesSystemNtf(msgBody);
+
     if (accepted) {
         initConnection();
 
@@ -739,6 +776,15 @@ void Machine::receivedUserConfirm(bool accepted) {
 
         sendServiceStatusNotification();
         handleConnected();
+    } else {
+        m_conn->close();
+    }
+}
+
+void Machine::receivedUserOperated(bool tryAgain) {
+    if (tryAgain) {
+        sendPairRequest();
+        m_pairTimeoutTimer->start(getPairTimeoutInterval() * 1000);
     } else {
         m_conn->close();
     }
@@ -760,12 +806,37 @@ void Machine::sendReceivedFilesSystemNtf(const QString &body) {
         .arg(QString("notification_collaboration"))
         .arg(static_cast<uint>(0))
         .arg(QString(""))
-        .arg(QString(""))
+        .arg(QObject::tr("PC Collaboration"))
         .arg(body)
         .arg(QStringList())
         .arg(QVariantMap())
         .arg(5000)
         .call();
+}
+
+int Machine::getPairTimeoutInterval() {
+    int interval = 60; // default
+
+    DConfig *dConfigPtr = DConfig::create(dConfigAppID, dConfigName);
+    if (dConfigPtr && dConfigPtr->isValid() && dConfigPtr->keyList().contains("timeoutInterval")) {
+        interval =  dConfigPtr->value("timeoutInterval").toInt();
+    }
+
+    dConfigPtr->deleteLater();
+
+    return interval;
+}
+
+void Machine::sendPairRequest() {
+    Message msg;
+    auto *request = msg.mutable_pairrequest();
+    request->set_key(SCAN_KEY);
+    request->mutable_deviceinfo()->set_uuid(m_manager->uuid());
+    request->mutable_deviceinfo()->set_name(Net::getHostname());
+    request->mutable_deviceinfo()->set_os(DEVICE_OS_LINUX);
+    request->mutable_deviceinfo()->set_compositor(COMPOSITOR_X11);
+
+    sendMessage(msg);
 }
 
 void Machine::sendMessage(const Message &msg) {
