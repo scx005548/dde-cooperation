@@ -10,14 +10,14 @@ class QLocalServer;
 class QLocalSocket;
 class QProcess;
 
-class Manager;
+class InputGrabbersManager;
 class Machine;
 
 class InputGrabberWrapper : public QObject {
     Q_OBJECT
 
 public:
-    explicit InputGrabberWrapper(Manager *manager, const std::filesystem::path &path);
+    explicit InputGrabberWrapper(InputGrabbersManager *manager, const QString &path);
     ~InputGrabberWrapper();
     void setMachine(const std::weak_ptr<Machine> &machine);
     void start();
@@ -30,7 +30,7 @@ private slots:
     void onDisconnected();
 
 private:
-    Manager *m_manager;
+    InputGrabbersManager *m_manager;
     QLocalServer *m_server;
     QLocalSocket *m_conn;
     QProcess *m_process;

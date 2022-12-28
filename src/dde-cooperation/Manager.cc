@@ -22,6 +22,7 @@
 #include "utils/message_helper.h"
 #include "utils/net.h"
 #include "protocol/message.pb.h"
+#include "Wrappers/InputGrabbersManager.h"
 
 namespace fs = std::filesystem;
 
@@ -36,7 +37,6 @@ Manager::Manager(const std::filesystem::path &dataDir)
     , m_mountRoot(m_dataDir / "mr")
     , m_lastMachineIndex(0)
     , m_deviceSharingSwitch(true)
-    , m_lastRequestId(0)
     , m_socketScan(new QUdpSocket(this))
     , m_listenPair(new QTcpServer(this))
     , m_powersaverProxy("org.freedesktop.ScreenSaver",
@@ -44,7 +44,8 @@ Manager::Manager(const std::filesystem::path &dataDir)
                         "org.freedesktop.ScreenSaver")
     , m_keypair(m_dataDir, KeyPair::KeyType::ED25519)
     , m_dConfig(DConfig::create(dConfigAppID, dConfigName))
-    , m_androidMainWindow(nullptr) {
+    , m_androidMainWindow(nullptr)
+    , m_inputGrabbersManager(new InputGrabbersManager(this)) {
     ensureDataDirExists();
     initUUID();
     initFileStoragePath();
@@ -64,20 +65,6 @@ Manager::Manager(const std::filesystem::path &dataDir)
 
     m_displayServer = std::make_unique<X11::Display>(this, this);
     m_clipboard = std::make_unique<X11::Clipboard>(this, this);
-
-    // TODO: inotify
-    for (const auto &entry : fs::directory_iterator(inputDevicePath)) {
-        if (!entry.is_character_file()) {
-            continue;
-        }
-        if (entry.path().filename().string().rfind("event", 0) != 0) {
-            continue;
-        }
-
-        m_inputGrabbers.emplace(
-            std::make_pair(entry.path().string(),
-                           std::make_shared<InputGrabberWrapper>(this, entry.path())));
-    }
 
     scan();
 }
@@ -359,10 +346,6 @@ void Manager::connectNewAndroidDevice() noexcept {
     m_androidMainWindow->showConnectDevice();
 }
 
-void Manager::removeInputGrabber(const std::filesystem::path &path) {
-    m_inputGrabbers.erase(path.string());
-}
-
 bool Manager::tryFlowOut(uint16_t direction, uint16_t x, uint16_t y, bool evFromPeer) {
     for (const auto &v : m_machines) {
         const std::shared_ptr<Machine> &machine = v.second;
@@ -637,9 +620,7 @@ void Manager::onStartDeviceSharing(const std::weak_ptr<Machine> &machine, bool p
 }
 
 void Manager::onStopDeviceSharing() {
-    for (auto &inputGrabber : m_inputGrabbers) {
-        inputGrabber.second->stop();
-    }
+    m_inputGrabbersManager->stopGrab();
 
     m_displayServer->stopEdgeDetection();
     m_displayServer->hideMouse(false);
@@ -649,18 +630,13 @@ void Manager::onStopDeviceSharing() {
 }
 
 void Manager::onFlowBack(uint16_t direction, uint16_t x, uint16_t y) {
-    for (auto &inputGrabber : m_inputGrabbers) {
-        inputGrabber.second->stop();
-    }
+    m_inputGrabbersManager->stopGrab();
 
     m_displayServer->flowBack(direction, x, y);
 }
 
 void Manager::onFlowOut(const std::weak_ptr<Machine> &machine) {
-    for (auto &inputGrabbers : m_inputGrabbers) {
-        inputGrabbers.second->setMachine(machine);
-        inputGrabbers.second->start();
-    }
+    m_inputGrabbersManager->startGrabEvents(machine);
 }
 
 void Manager::onClipboardTargetsChanged(const std::vector<std::string> &targets) {

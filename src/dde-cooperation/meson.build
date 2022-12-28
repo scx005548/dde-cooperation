@@ -12,6 +12,7 @@ dde_cooperation_sources = files('''
   Machine/AndroidMachineDBusAdaptor.cc
   Wrappers/InputEmitterWrapper.cc
   Wrappers/InputGrabberWrapper.cc
+  Wrappers/InputGrabbersManager.cc
   Fuse/FuseClient.cc
   Fuse/FuseServer.cc
   ReconnectDialog.cc
@@ -43,6 +44,7 @@ dde_cooperation_moc_headers = files('''
   Machine/AndroidMachineDBusAdaptor.h
   Wrappers/InputEmitterWrapper.h
   Wrappers/InputGrabberWrapper.h
+  Wrappers/InputGrabbersManager.h
   Fuse/FuseClient.h
   Fuse/FuseServer.h
   ReconnectDialog.h

@@ -1,5 +1,7 @@
 #include "InputGrabberWrapper.h"
 
+#include "InputGrabbersManager.h"
+
 #include <QLocalServer>
 #include <QLocalSocket>
 #include <QProcess>
@@ -10,12 +12,12 @@
 #include "utils/message_helper.h"
 #include "protocol/ipc_message.pb.h"
 
-InputGrabberWrapper::InputGrabberWrapper(Manager *manager, const std::filesystem::path &path)
+InputGrabberWrapper::InputGrabberWrapper(InputGrabbersManager *manager, const QString &path)
     : m_manager(manager)
     , m_server(new QLocalServer(this))
     , m_conn(nullptr)
     , m_process(new QProcess(this))
-    , m_path(QString::fromStdString(path)) {
+    , m_path(path) {
     auto name = QString("DDECooperationInputEmitter-%1")
                     .arg(QString(m_path).replace("/", "_"));
 
@@ -38,7 +40,7 @@ InputGrabberWrapper::InputGrabberWrapper(Manager *manager, const std::filesystem
             &InputGrabberWrapper::onProcessClosed);
     m_process->setProcessChannelMode(QProcess::ForwardedChannels);
     m_process->start(INPUT_GRABBER_PATH,
-                     QStringList{m_server->serverName(), QString::fromStdString(path.string())});
+                     QStringList{m_server->serverName(), path});
 }
 
 InputGrabberWrapper::~InputGrabberWrapper() {
@@ -88,7 +90,7 @@ void InputGrabberWrapper::handleNewConnection() {
 void InputGrabberWrapper::onProcessClosed([[maybe_unused]] int exitCode,
                                           [[maybe_unused]] QProcess::ExitStatus exitStatus) {
     qDebug() << "onProcessClosed" << m_path;
-    m_manager->removeInputGrabber(m_path.toStdString());
+    m_manager->removeInputGrabber(m_path);
 }
 
 void InputGrabberWrapper::onReceived() {

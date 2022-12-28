@@ -33,6 +33,7 @@ class Machine;
 class DisplayBase;
 class ClipboardBase;
 class AndroidMainWindow;
+class InputGrabbersManager;
 
 class Manager : public QObject, public ClipboardObserver {
     friend class ManagerDBusAdaptor;
@@ -53,7 +54,6 @@ public:
     bool hasPcMachinePaired() const;
     bool hasAndroidPaired() const;
     void machineCooperated(const std::string &machineId);
-    void removeInputGrabber(const std::filesystem::path &path);
 
     void ping(const std::string &ip, uint16_t port = m_scanPort);
     void onMachineOffline(const std::string &uuid);
@@ -93,8 +93,6 @@ private:
     std::weak_ptr<Machine> m_clipboardOwner;
     std::unique_ptr<DisplayBase> m_displayServer;
     std::unique_ptr<ClipboardBase> m_clipboard;
-    uint32_t m_lastRequestId;
-    std::unordered_map<std::string, std::shared_ptr<InputGrabberWrapper>> m_inputGrabbers;
 
     std::thread m_uvThread;
     QUdpSocket *m_socketScan;
@@ -118,6 +116,7 @@ private:
     std::shared_ptr<DConfig> m_dConfig;
 
     AndroidMainWindow *m_androidMainWindow;
+    InputGrabbersManager *m_inputGrabbersManager;
 
     void ensureDataDirExists();
     void initUUID();
