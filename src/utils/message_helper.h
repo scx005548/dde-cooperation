@@ -48,11 +48,9 @@ enum class PARSE_ERROR {
 };
 
 inline QByteArray genMessage(const google::protobuf::Message &msg) {
-    MessageHeader header(msg.ByteSizeLong());
-
     QByteArray buff;
     buff.resize(header_size + msg.ByteSizeLong());
-    memcpy(buff.data(), &header, header_size);
+    new (buff.data()) MessageHeader(msg.ByteSizeLong());
     msg.SerializeToArray(buff.data() + header_size, msg.ByteSizeLong());
 
     return buff;
