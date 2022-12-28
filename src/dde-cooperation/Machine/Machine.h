@@ -137,7 +137,7 @@ protected:
     void sendMessage(const Message &msg);
 
     virtual void handleConnected() = 0;
-    virtual void handleDisconnected() = 0;
+    virtual void handleDisconnected() {};
     virtual void handleCastRequest(const CastRequest &req) = 0;
     virtual void sendFiles(const QStringList &filePaths) = 0;
 };

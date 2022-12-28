@@ -197,11 +197,11 @@ void Machine::initConnection() {
     QObject::connect(m_conn, &QTcpSocket::disconnected, this, &Machine::handleDisconnectedAux);
     QObject::connect(m_conn, &QTcpSocket::readyRead, this, &Machine::dispatcher);
     m_conn->setSocketOption(QAbstractSocket::LowDelayOption, true);
-    m_conn->setSocketOption(QAbstractSocket::KeepAliveOption, 20);
+    Net::tcpSocketSetKeepAliveOption(m_conn->socketDescriptor());
 }
 
 void Machine::handleDisconnectedAux() {
-    qDebug("disconnected");
+    qInfo("disconnected");
 
     if (m_connected) {
         m_manager->onStopDeviceSharing();

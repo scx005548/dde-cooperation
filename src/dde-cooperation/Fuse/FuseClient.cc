@@ -4,7 +4,6 @@
 #include <filesystem>
 #include <chrono>
 
-#include <sys/time.h>
 #include <sys/stat.h>
 
 #include <fmt/core.h>
@@ -14,6 +13,7 @@
 #include <QHostAddress>
 #include <QProcess>
 
+#include "utils/net.h"
 #include "utils/message_helper.h"
 #include "protocol/message.pb.h"
 
@@ -60,6 +60,7 @@ FuseClient::FuseClient(const std::string &ip,
                 fuse_opt_add_arg(&m_args, "-d");
 
                 connect(m_conn, &QTcpSocket::connected, [this] {
+                    Net::tcpSocketSetKeepAliveOption(m_conn->socketDescriptor());
                     m_mountThread = std::thread(&FuseClient::mount, this);
                 });
                 connect(m_conn, &QTcpSocket::readyRead, this, &FuseClient::handleResponse);

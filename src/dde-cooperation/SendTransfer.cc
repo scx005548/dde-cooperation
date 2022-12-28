@@ -4,12 +4,12 @@
 
 #include <fmt/core.h>
 
-#include <QDir>
 #include <QFile>
 #include <QTcpSocket>
 #include <QHostAddress>
 
 #include "utils/message_helper.h"
+#include "utils/net.h"
 
 #include "protocol/message.pb.h"
 
@@ -175,7 +175,10 @@ SendTransfer::SendTransfer(const QStringList &filePaths)
 void SendTransfer::send(const std::string &ip, uint16_t port) {
     m_conn = new QTcpSocket(this);
 
-    connect(m_conn, &QTcpSocket::connected, [this] { sendNextObject(); });
+    connect(m_conn, &QTcpSocket::connected, [this] {
+        Net::tcpSocketSetKeepAliveOption(m_conn->socketDescriptor());
+        sendNextObject();
+    });
     connect(m_conn, &QTcpSocket::errorOccurred, [this](QAbstractSocket::SocketError err) {
         qWarning() << "transfer connection failed:" << err;
         deleteLater();

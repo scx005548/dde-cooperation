@@ -465,7 +465,7 @@ void Manager::handleReceivedSocketScan() noexcept {
         size -= header_size;
 
         auto base = MessageHelper::parseMessageBody<Message>(buff, size);
-        qInfo() << fmt::format("received packet, type: {}", base.payload_case()).data();
+        qDebug() << fmt::format("received packet, type: {}", base.payload_case()).data();
 
         switch (base.payload_case()) {
         case Message::PayloadCase::kScanRequest: {
