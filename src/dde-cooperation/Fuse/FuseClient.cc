@@ -15,7 +15,6 @@
 #include <QProcess>
 
 #include "utils/message_helper.h"
-#include "utils/net.h"
 #include "protocol/message.pb.h"
 
 using namespace std::chrono_literals;
@@ -44,8 +43,6 @@ FuseClient::FuseClient(const std::string &ip,
     , m_args(FUSE_ARGS_INIT(0, nullptr))
     , m_fuse(std::unique_ptr<fuse, decltype(&fuse_destroy)>(nullptr, &fuse_destroy)) {
     qInfo() << fmt::format("FuseClient::FuseClient, mountpoint: {}", m_mountpoint.string()).data();
-
-    Net::setKeepAlive(m_conn);
 
     QProcess *process = new QProcess(this);
     connect(process,

@@ -100,7 +100,6 @@ bool Machine::isAndroid() const {
 
 void Machine::connect() {
     m_conn = new QTcpSocket(this);
-    Net::setKeepAlive(m_conn);
 
     QObject::connect(m_conn, &QTcpSocket::connected, [this]() {
         qInfo() << "connected";
@@ -198,6 +197,7 @@ void Machine::initConnection() {
     QObject::connect(m_conn, &QTcpSocket::disconnected, this, &Machine::handleDisconnectedAux);
     QObject::connect(m_conn, &QTcpSocket::readyRead, this, &Machine::dispatcher);
     m_conn->setSocketOption(QAbstractSocket::LowDelayOption, true);
+    m_conn->setSocketOption(QAbstractSocket::KeepAliveOption, 20);
 }
 
 void Machine::handleDisconnectedAux() {
