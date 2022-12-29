@@ -153,19 +153,21 @@ void AndroidMainWindow::connectDevice() {
 }
 
 void AndroidMainWindow::deviceConnected(bool success,
-                                        const QString &serial,
-                                        const QString &deviceName,
+                                        [[maybe_unused]] const QString &serial,
+                                        [[maybe_unused]] const QString &deviceName,
                                         [[maybe_unused]] const QSize &size) {
     qDebug() << "deviceConnected:" << success;
     if (!success) {
         return;
     }
 
+    m_stage = STAGE_ALREADY;
+    emit stageChanged(m_stage);
     m_device->registerDeviceObserver(m_videoFrameProvider);
 
     // setWindowTitle(deviceName + " - " + serial);
 }
 
 void AndroidMainWindow::deviceDisconnected([[maybe_unused]] const QString &serial) {
-    // close();
+    deleteLater();
 }

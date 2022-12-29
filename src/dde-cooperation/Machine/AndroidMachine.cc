@@ -17,6 +17,7 @@ AndroidMachine::AndroidMachine(Manager *manager,
                                const DeviceInfo &sp)
     : Machine(manager, clipboard, service, id, dataDir, ip, port, sp)
     , m_dbusAdaptorAndroid(new AndroidMachineDBusAdaptor(this, m_bus, m_dbusPath))
+    , m_mainWindow(nullptr)
     , m_currentTransferId(0) {
 }
 
@@ -36,19 +37,22 @@ void AndroidMachine::handleDisconnected() {
 void AndroidMachine::handleCastRequest(const CastRequest &req) {
     if (!m_mainWindow) {
         m_mainWindow = manager()->getAndroidMainWindow();
+        m_mainWindow->setParent(this);
     }
     int rStage = req.stage();
     qDebug() << "rStage:" << rStage;
 
     m_mainWindow->disconnect();
-    QObject::connect(m_mainWindow.get(), &AndroidMainWindow::tcpAdbConnected, [this]() {
+    QObject::connect(m_mainWindow, &AndroidMainWindow::tcpAdbConnected, this, [this]() {
         qDebug() << "tcpAdbConnected";
-        // m_mainWindow->
 
         Message msg;
         auto *castResponse = msg.mutable_castresponse();
         castResponse->set_well(true);
         sendMessage(msg);
+    });
+    QObject::connect(m_mainWindow, &AndroidMainWindow::destroyed, this, [this]() {
+        m_mainWindow = nullptr;
     });
 
     if (rStage & ANDROID_STAGE_TCPIP) {

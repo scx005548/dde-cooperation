@@ -30,7 +30,7 @@ protected:
 
 private:
     AndroidMachineDBusAdaptor *m_dbusAdaptorAndroid;
-    std::shared_ptr<AndroidMainWindow> m_mainWindow;
+    AndroidMainWindow *m_mainWindow;
 
     uint32_t m_currentTransferId;
 

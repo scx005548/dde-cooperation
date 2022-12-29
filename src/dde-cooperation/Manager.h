@@ -68,7 +68,7 @@ public:
     void onInputEvent();
 
     void completeDeviceInfo(DeviceInfo *info);
-    std::shared_ptr<AndroidMainWindow> getAndroidMainWindow();
+    AndroidMainWindow *getAndroidMainWindow();
 
 protected:
     void scan() noexcept;
@@ -116,7 +116,7 @@ private:
     QStringList m_cooperatedMachines;
     std::shared_ptr<DConfig> m_dConfig;
 
-    std::shared_ptr<AndroidMainWindow> m_androidMainWindow;
+    AndroidMainWindow *m_androidMainWindow;
 
     void ensureDataDirExists();
     void initUUID();

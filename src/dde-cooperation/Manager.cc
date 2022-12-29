@@ -43,7 +43,8 @@ Manager::Manager(const std::filesystem::path &dataDir)
                         "/org/freedesktop/ScreenSaver",
                         "org.freedesktop.ScreenSaver")
     , m_keypair(m_dataDir, KeyPair::KeyType::ED25519)
-    , m_dConfig(DConfig::create(dConfigAppID, dConfigName)) {
+    , m_dConfig(DConfig::create(dConfigAppID, dConfigName))
+    , m_androidMainWindow(nullptr) {
     ensureDataDirExists();
     initUUID();
     initFileStoragePath();
@@ -197,13 +198,13 @@ void Manager::completeDeviceInfo(DeviceInfo *info) {
     info->set_compositor(COMPOSITOR_X11);
 }
 
-std::shared_ptr<AndroidMainWindow> Manager::getAndroidMainWindow() {
+AndroidMainWindow* Manager::getAndroidMainWindow() {
     if (!m_androidMainWindow) {
-        return std::make_shared<AndroidMainWindow>(QString::fromStdString(m_uuid));
+        return new AndroidMainWindow(QString::fromStdString(m_uuid));
     }
 
     auto androidMainWindow = m_androidMainWindow;
-    m_androidMainWindow.reset();
+    m_androidMainWindow = nullptr;
     return androidMainWindow;
 }
 
@@ -354,7 +355,7 @@ void Manager::connectNewAndroidDevice() noexcept {
         return;
     }
 
-    m_androidMainWindow = std::make_shared<AndroidMainWindow>(QString::fromStdString(m_uuid));
+    m_androidMainWindow = new AndroidMainWindow(QString::fromStdString(m_uuid), this);
     m_androidMainWindow->showConnectDevice();
 }
 
