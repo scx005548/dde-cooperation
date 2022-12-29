@@ -1,3 +1,19 @@
+dde-cooperation (0.0.4.2) unstable; urgency=medium
+
+  [ TagBuilder ]
+  * fix: 解决windows拒绝连接重连无响应的问题。(Bug: 179359)(Influence: 拒绝连接后重连。)
+  * feat: 若已连接无线调试，不再运行 adb connect(Task: 230285)(Influence: 无)
+  * fix: 修复 QProcess crash(Task: 231339)(Influence: 无)
+  * fix: 已协同设备关闭协同服务导致崩溃问题。(Task: 145447)(Influence: 无。)
+  * chore: 修改 TCP 链接 keepalive(Task: 231857)(Influence: 链接)
+  * fix: 同时发起多个连接导致可以协同上多台机器的问题。(Bug: 179471)(Influence: 一对一协同。)
+  * fix: 解决断开网络协同连接状态未变化的问题。(Bug: 179615)(Influence: 断开网络协同连接状态。)
+  * fix: 横幅通知不显示图标的问题。(Bug: 175273)(Influence: 无。)
+  * feat: 添加pair request超时处理及结果通知(Bug: 179401)(Influence: 协同超时处理及结果通知。)
+  * perf: 使用 placement new 代替 memcpy(Task: 232199)(Influence: 消息生成)
+
+ -- zhaoyingzhen <zhaoyingzhen@uniontech.com>  Thu, 29 Dec 2022 15:09:55 +0800
+
 dde-cooperation (0.0.3.1) unstable; urgency=medium
 
   [ TagBuilder ]
