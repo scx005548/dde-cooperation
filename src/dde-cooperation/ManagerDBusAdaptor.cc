@@ -45,7 +45,7 @@ bool ManagerDBusAdaptor::getSharedDevices() const {
 }
 
 void ManagerDBusAdaptor::Scan(const QDBusMessage &message) const {
-    if (m_manager->m_deviceSharingSwitch) {
+    if (!m_manager->m_deviceSharingSwitch) {
         message.createErrorReply({QDBusError::Failed, "DeviceSharing Switch close!"});
         qWarning() << "DeviceSharing Switch close";
         return;

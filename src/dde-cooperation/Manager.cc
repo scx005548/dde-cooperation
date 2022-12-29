@@ -439,11 +439,6 @@ void Manager::handleSocketError(const std::string &title, const std::string &msg
 }
 
 void Manager::handleReceivedSocketScan() noexcept {
-
-    if (!m_deviceSharingSwitch) {
-        return;
-    }
-
     while (m_socketScan->hasPendingDatagrams()) {
         QByteArray datagram;
         datagram.resize(m_socketScan->pendingDatagramSize());
@@ -466,6 +461,10 @@ void Manager::handleReceivedSocketScan() noexcept {
 
         auto base = MessageHelper::parseMessageBody<Message>(buff, size);
         qDebug() << fmt::format("received packet, type: {}", base.payload_case()).data();
+
+        if (!m_deviceSharingSwitch) {
+            return;
+        }
 
         switch (base.payload_case()) {
         case Message::PayloadCase::kScanRequest: {
