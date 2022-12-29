@@ -67,6 +67,7 @@ public:
                                const std::vector<std::string> &targets);
     void onInputEvent();
 
+    void completeDeviceInfo(DeviceInfo *info);
     std::shared_ptr<AndroidMainWindow> getAndroidMainWindow();
 
 protected:

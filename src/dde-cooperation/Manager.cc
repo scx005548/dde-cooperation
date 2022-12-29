@@ -190,6 +190,13 @@ void Manager::initCooperatedMachines() {
     m_cooperatedMachines = m_dConfig->value("cooperatedMachineIds").toStringList();
 }
 
+void Manager::completeDeviceInfo(DeviceInfo *info) {
+    info->set_uuid(m_uuid);
+    info->set_name(Net::getHostname());
+    info->set_os(DEVICE_OS_LINUX);
+    info->set_compositor(COMPOSITOR_X11);
+}
+
 std::shared_ptr<AndroidMainWindow> Manager::getAndroidMainWindow() {
     if (!m_androidMainWindow) {
         return std::make_shared<AndroidMainWindow>(QString::fromStdString(m_uuid));
@@ -333,9 +340,7 @@ void Manager::scan() noexcept {
     Message base;
     ScanRequest *request = base.mutable_scanrequest();
     request->set_key(SCAN_KEY);
-    request->mutable_deviceinfo()->set_uuid(m_uuid);
-    request->mutable_deviceinfo()->set_name(Net::getHostname());
-    request->mutable_deviceinfo()->set_os(DEVICE_OS_LINUX);
+    completeDeviceInfo(request->mutable_deviceinfo());
     request->set_port(m_port);
 
     m_socketScan->writeDatagram(MessageHelper::genMessage(base),
@@ -489,9 +494,7 @@ void Manager::handleReceivedSocketScan() noexcept {
             Message msg;
             ScanResponse *response = msg.mutable_scanresponse();
             response->set_key(SCAN_KEY);
-            response->mutable_deviceinfo()->set_uuid(m_uuid);
-            response->mutable_deviceinfo()->set_name(Net::getHostname());
-            response->mutable_deviceinfo()->set_os(DEVICE_OS_LINUX);
+            completeDeviceInfo(response->mutable_deviceinfo());
             response->set_port(m_port);
             m_socketScan->writeDatagram(MessageHelper::genMessage(msg), addr, port);
 
@@ -606,9 +609,7 @@ void Manager::ping(const std::string &ip, uint16_t port) {
     Message msg;
     ScanRequest *request = msg.mutable_scanrequest();
     request->set_key(SCAN_KEY);
-    request->mutable_deviceinfo()->set_uuid(m_uuid);
-    request->mutable_deviceinfo()->set_name(Net::getHostname());
-    request->mutable_deviceinfo()->set_os(DEVICE_OS_LINUX);
+    completeDeviceInfo(request->mutable_deviceinfo());
     request->set_port(m_port);
 
     m_socketScan->writeDatagram(MessageHelper::genMessage(msg),

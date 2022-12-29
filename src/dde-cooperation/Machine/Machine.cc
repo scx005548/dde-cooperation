@@ -203,7 +203,7 @@ void Machine::initConnection() {
 void Machine::initPairRequestTimer() {
     m_pairTimeoutTimer->setSingleShot(true);
 
-    QObject::connect(m_pairTimeoutTimer, &QTimer::timeout, this, [this](){
+    QObject::connect(m_pairTimeoutTimer, &QTimer::timeout, this, [this]() {
         auto *reconnectDialog = new ReconnectDialog(QString::fromStdString(m_name));
         reconnectDialog->setAttribute(Qt::WA_DeleteOnClose);
         QObject::connect(reconnectDialog,
@@ -590,7 +590,7 @@ void Machine::handleFsSendFileRequest(const FsSendFileRequest &req) {
                               .arg(QString::fromStdString(m_name));
             } else {
                 msgBody = QString(QObject::tr("Unable to receive the file sent by device A %1"))
-                                  .arg(QString::fromStdString(m_name));
+                              .arg(QString::fromStdString(m_name));
             }
 
             sendReceivedFilesSystemNtf(msgBody);
@@ -748,10 +748,7 @@ void Machine::receivedUserConfirm(bool accepted) {
     Message msg;
     auto *response = msg.mutable_pairresponse();
     response->set_key(SCAN_KEY);
-    response->mutable_deviceinfo()->set_uuid(m_manager->uuid());
-    response->mutable_deviceinfo()->set_name(Net::getHostname());
-    response->mutable_deviceinfo()->set_os(DEVICE_OS_LINUX);
-    response->mutable_deviceinfo()->set_compositor(COMPOSITOR_X11);
+    m_manager->completeDeviceInfo(response->mutable_deviceinfo());
     response->set_agree(accepted); // 询问用户是否同意
 
     sendMessage(msg);
@@ -819,7 +816,7 @@ int Machine::getPairTimeoutInterval() {
 
     DConfig *dConfigPtr = DConfig::create(dConfigAppID, dConfigName);
     if (dConfigPtr && dConfigPtr->isValid() && dConfigPtr->keyList().contains("timeoutInterval")) {
-        interval =  dConfigPtr->value("timeoutInterval").toInt();
+        interval = dConfigPtr->value("timeoutInterval").toInt();
     }
 
     dConfigPtr->deleteLater();
@@ -831,10 +828,7 @@ void Machine::sendPairRequest() {
     Message msg;
     auto *request = msg.mutable_pairrequest();
     request->set_key(SCAN_KEY);
-    request->mutable_deviceinfo()->set_uuid(m_manager->uuid());
-    request->mutable_deviceinfo()->set_name(Net::getHostname());
-    request->mutable_deviceinfo()->set_os(DEVICE_OS_LINUX);
-    request->mutable_deviceinfo()->set_compositor(COMPOSITOR_X11);
+    m_manager->completeDeviceInfo(request->mutable_deviceinfo());
 
     sendMessage(msg);
 }
