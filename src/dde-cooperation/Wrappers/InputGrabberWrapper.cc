@@ -16,10 +16,16 @@ InputGrabberWrapper::InputGrabberWrapper(Manager *manager, const std::filesystem
     , m_conn(nullptr)
     , m_process(new QProcess(this))
     , m_path(QString::fromStdString(path)) {
-    auto name = QString("DDECooperationInputEmitter-%1").arg(QString(m_path).replace("/", "_"));
-    m_server->listen(name);
+    auto name = QString("DDECooperationInputEmitter-%1")
+                    .arg(QString(m_path).replace("/", "_"));
+
+    QLocalServer::removeServer(name);
+    if (!m_server->listen(name)) {
+        qWarning() << "InputGrabber listen addr:" << m_server->serverName()
+                   << " errStr:" << m_server->errorString();
+    }
+
     m_server->setMaxPendingConnections(1);
-    qDebug() << "InputGrabber listen addr:" << m_server->serverName();
 
     connect(m_server,
             &QLocalServer::newConnection,
