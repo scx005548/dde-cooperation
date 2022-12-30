@@ -754,13 +754,12 @@ void Machine::receivedUserConfirm(bool accepted) {
     sendMessage(msg);
 
     // send notification
-    QString msgBody;
     if (accepted) {
+        QString msgBody;
         msgBody = QString(QObject::tr("Successfully connected to %1"))
                       .arg(QString::fromStdString(m_name));
+        sendReceivedFilesSystemNtf(msgBody);
     }
-
-    sendReceivedFilesSystemNtf(msgBody);
 
     if (accepted) {
         initConnection();
