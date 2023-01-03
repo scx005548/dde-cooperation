@@ -9,14 +9,11 @@ MachineDBusAdaptor::MachineDBusAdaptor(Manager *manager,
                                        Machine *machine,
                                        QDBusConnection bus,
                                        const QString &path)
-    : QObject(machine)
+    : QDBusAbstractAdaptor(machine)
     , m_path(path)
     , m_manager(manager)
     , m_machine(machine)
     , m_bus(bus) {
-    m_bus.registerObject(m_path,
-                         this,
-                         QDBusConnection::ExportAllSlots | QDBusConnection::ExportAllProperties);
 }
 
 MachineDBusAdaptor::~MachineDBusAdaptor() {

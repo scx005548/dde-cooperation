@@ -5,11 +5,12 @@
 
 #include <QDBusConnection>
 #include <QVector>
+#include <QDBusAbstractAdaptor>
 
 class Manager;
 class Machine;
 
-class MachineDBusAdaptor : public QObject {
+class MachineDBusAdaptor : public QDBusAbstractAdaptor {
     friend class Machine;
 
     Q_OBJECT
@@ -32,8 +33,6 @@ public:
                        QDBusConnection bus,
                        const QString &path);
     ~MachineDBusAdaptor();
-
-    const QString &path() const { return m_path; }
 
 public: // D-Bus properties
     QString getUUID() const;

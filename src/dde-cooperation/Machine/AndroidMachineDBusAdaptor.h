@@ -3,11 +3,12 @@
 
 #include <QObject>
 #include <QDBusConnection>
+#include <QDBusAbstractAdaptor>
 
 class AndroidMachine;
 class QDBusMessage;
 
-class AndroidMachineDBusAdaptor : public QObject {
+class AndroidMachineDBusAdaptor : public QDBusAbstractAdaptor {
     Q_OBJECT
     Q_CLASSINFO("D-Bus Interface", "org.deepin.dde.Cooperation1.Machine.Android")
 

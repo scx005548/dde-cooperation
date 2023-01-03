@@ -82,6 +82,12 @@ Machine::Machine(Manager *manager,
     m_offlineTimer->start(U25s);
 
     initPairRequestTimer();
+
+    if (!m_bus.registerObject(m_dbusPath, this)) {
+        qWarning() << "Failed to register request object for" << m_dbusPath << ":"
+                   << m_bus.lastError().message();
+        return;
+    }
 }
 
 Machine::~Machine() {
@@ -89,10 +95,12 @@ Machine::~Machine() {
         m_conn->close();
         m_manager->onStopDeviceSharing();
     }
+
+    m_bus.unregisterObject(m_dbusPath);
 }
 
 const QString &Machine::path() const {
-    return m_dbusAdaptor->path();
+    return m_dbusPath;
 }
 
 bool Machine::isPcMachine() const {
