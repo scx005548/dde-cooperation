@@ -32,6 +32,10 @@ void AndroidMachine::handleConnected() {
 }
 
 void AndroidMachine::handleDisconnected() {
+    if (m_mainWindow) {
+        m_mainWindow->deleteLater();
+        m_mainWindow = nullptr;
+    }
 }
 
 void AndroidMachine::handleCastRequest(const CastRequest &req) {
