@@ -144,7 +144,7 @@ Rectangle {
     }
 
     Shortcut {
-        sequence: StandardKey.Paste
+        sequences: [StandardKey.Paste]
 
         onActivated: device.setClipboard();
     }
