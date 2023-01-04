@@ -127,6 +127,7 @@ private:
     int getPairTimeoutInterval();
     void sendPairRequest();
 
+    virtual void handleTransferRequest(const TransferRequest &req) = 0;
     virtual void handleTransferResponse(const TransferResponse &resp) = 0;
 
 protected:

@@ -357,6 +357,16 @@ void Machine::dispatcher() noexcept {
             break;
         }
 
+        case Message::PayloadCase::kTransferRequest: {
+            handleTransferRequest(msg.transferrequest());
+            break;
+        }
+
+        case Message::PayloadCase::kTransferResponse: {
+            handleTransferResponse(msg.transferresponse());
+            break;
+        }
+
         case Message::PayloadCase::kClipboardNotify: {
             handleClipboardNotify(msg.clipboardnotify());
             break;

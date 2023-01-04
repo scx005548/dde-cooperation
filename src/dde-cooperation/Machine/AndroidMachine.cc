@@ -69,6 +69,9 @@ void AndroidMachine::handleCastRequest(const CastRequest &req) {
     }
 }
 
+void AndroidMachine::handleTransferRequest(const TransferRequest &req) {
+}
+
 void AndroidMachine::handleTransferResponse(const TransferResponse &resp) {
     uint32_t transferId = resp.transferid();
 
