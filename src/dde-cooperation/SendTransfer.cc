@@ -167,8 +167,9 @@ private:
     std::shared_ptr<ObjectSendTransfer> m_child;
 };
 
-SendTransfer::SendTransfer(const QStringList &filePaths)
-    : m_conn(nullptr)
+SendTransfer::SendTransfer(const QStringList &filePaths, QObject *parent)
+    : QObject(parent)
+    , m_conn(nullptr)
     , m_filePaths(filePaths) {
 }
 

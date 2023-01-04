@@ -18,7 +18,7 @@ class SendTransfer : public QObject {
     Q_OBJECT
 
 public:
-    SendTransfer(const QStringList &filePaths);
+    SendTransfer(const QStringList &filePaths, QObject *parent);
 
     uint16_t receive();
     void send(const std::string &ip, uint16_t port);

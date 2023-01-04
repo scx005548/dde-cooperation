@@ -2,10 +2,10 @@
 #define MACHINE_ANDROIDMACHINE_H
 
 #include "Machine.h"
-#include "SendTransfer.h"
 
 class AndroidMachineDBusAdaptor;
 class AndroidMainWindow;
+class SendTransfer;
 
 class AndroidMachine : public Machine {
 public:
@@ -33,8 +33,7 @@ private:
     AndroidMainWindow *m_mainWindow;
 
     uint32_t m_currentTransferId;
-
-    std::unordered_map<uint32_t, std::unique_ptr<SendTransfer>> m_sendTransfers;
+    std::unordered_map<uint32_t, SendTransfer *> m_sendTransfers;
 };
 
 #endif // !MACHINE_ANDROIDMACHINE_H

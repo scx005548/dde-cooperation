@@ -6,6 +6,7 @@
 #include "Manager.h"
 #include "AndroidMachineDBusAdaptor.h"
 #include "Android/AndroidMainWindow.h"
+#include "SendTransfer.h"
 
 AndroidMachine::AndroidMachine(Manager *manager,
                                ClipboardBase *clipboard,
@@ -82,7 +83,7 @@ void AndroidMachine::handleTransferResponse(const TransferResponse &resp) {
         return;
     }
 
-    auto &[_, transfer] = *iter;
+    auto [_, transfer] = *iter;
 
     transfer->send(m_ip, resp.port());
 }
@@ -90,7 +91,12 @@ void AndroidMachine::handleTransferResponse(const TransferResponse &resp) {
 void AndroidMachine::sendFiles(const QStringList &filePaths) {
     m_currentTransferId++;
     uint32_t transferId = m_currentTransferId;
-    m_sendTransfers.emplace(transferId, std::make_unique<SendTransfer>(filePaths));
+    auto *transfer = new SendTransfer(filePaths, this);
+    m_sendTransfers.emplace(transferId, transfer);
+
+    QObject::connect(transfer, &SendTransfer::destroyed, this, [this, transferId]() {
+        m_sendTransfers.erase(transferId);
+    });
 
     Message msg;
     auto *transferRequest = msg.mutable_transferrequest();
