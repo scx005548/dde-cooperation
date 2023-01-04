@@ -19,14 +19,13 @@ class ReceiveTransfer : public QObject {
     Q_OBJECT
 
 public:
-    ReceiveTransfer(const std::vector<std::string> &filePaths, const std::filesystem::path &dest);
+    ReceiveTransfer(const std::filesystem::path &dest, QObject *parent = nullptr);
 
-    uint16_t receive();
+    uint16_t port();
 
 private:
     QTcpServer *m_listen;
     QTcpSocket *m_conn;
-    std::vector<std::string> m_filePaths;
     std::filesystem::path m_dest;
     std::unordered_map<std::string, std::ofstream> m_streams;
 

@@ -11,18 +11,18 @@
 
 namespace fs = std::filesystem;
 
-ReceiveTransfer::ReceiveTransfer(const std::vector<std::string> &filePaths, const fs::path &dest)
-    : m_filePaths(filePaths)
+ReceiveTransfer::ReceiveTransfer(const fs::path &dest, QObject *parent)
+    : QObject(parent)
+    , m_listen(new QTcpServer(this))
+    , m_conn(nullptr)
     , m_dest(dest) {
-}
-
-uint16_t ReceiveTransfer::receive() {
-    m_listen = new QTcpServer(this);
     m_listen->setMaxPendingConnections(1);
     m_listen->listen(QHostAddress::Any);
 
     connect(m_listen, &QTcpServer::newConnection, this, &ReceiveTransfer::handleNewConnection);
+}
 
+uint16_t ReceiveTransfer::port() {
     return m_listen->serverPort();
 }
 
@@ -36,6 +36,7 @@ void ReceiveTransfer::handleNewConnection() {
     }
 
     m_conn = m_listen->nextPendingConnection();
+
     connect(m_conn, &QTcpSocket::readyRead, this, &ReceiveTransfer::dispatcher);
     connect(m_conn, &QTcpSocket::disconnected, this, &ReceiveTransfer::handleDisconnected);
 
@@ -68,16 +69,29 @@ void ReceiveTransfer::dispatcher() {
         qDebug() << fmt::format("message type: {}", msg.payload_case()).data();
 
         switch (msg.payload_case()) {
-        case Message::PayloadCase::kSendFileRequest:
-        case Message::PayloadCase::kSendFileChunkRequest:
-        case Message::PayloadCase::kStopSendFileRequest:
+        case Message::PayloadCase::kSendFileRequest: {
+            handleSendFileRequest(msg.sendfilerequest());
+            break;
+        }
+        case Message::PayloadCase::kSendFileChunkRequest: {
+            handleSendFileChunkRequest(msg.sendfilechunkrequest());
+            break;
+        }
+        case Message::PayloadCase::kStopSendFileRequest: {
+            handleStopSendFileRequest(msg.stopsendfilerequest());
+            break;
+        }
         case Message::PayloadCase::kSendDirRequest: {
+            handleSendDirRequest(msg.senddirrequest());
             break;
         }
         case Message::PayloadCase::kStopTransferRequest: {
             m_conn->close();
+            break;
         }
         default: {
+            qWarning() << "unknown message type:" << msg.payload_case();
+            m_conn->close();
         }
         }
     }

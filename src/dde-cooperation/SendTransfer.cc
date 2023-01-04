@@ -15,30 +15,13 @@
 
 namespace fs = std::filesystem;
 
-class ObjectSendTransfer {
-public:
-    ObjectSendTransfer(QTcpSocket *conn, const fs::path &base, const fs::path &relPath)
-        : m_conn(conn)
-        , m_base(base)
-        , m_relPath(relPath)
-        , m_path(m_base / m_relPath) {}
-    virtual ~ObjectSendTransfer() = default;
-
-    virtual void handleMessage(const Message &msg) = 0;
-    virtual bool done() = 0;
-    virtual void sendRequest() = 0;
-
-protected:
-    QTcpSocket *m_conn;
-    const fs::path m_base;
-    const fs::path m_relPath;
-    const fs::path m_path;
-};
-
 class FileSendTransfer : public ObjectSendTransfer {
 public:
-    FileSendTransfer(QTcpSocket *conn, const fs::path &base, const fs::path &relPath)
-        : ObjectSendTransfer(conn, base, relPath)
+    FileSendTransfer(QTcpSocket *conn,
+                     const fs::path &base,
+                     const fs::path &relPath,
+                     QObject *parent)
+        : ObjectSendTransfer(conn, base, relPath, parent)
         , m_stream(m_path, std::ios::binary)
         , m_remainingSize(fs::file_size(m_path)) {}
 
@@ -49,12 +32,14 @@ public:
         {
             if (done()) {
                 sendDone();
+                deleteLater();
             } else {
                 sendNextChunk();
             }
             break;
         }
         default:
+            qWarning() << "FileSendTransfer unknown message type:" << msg.payload_case();
             m_conn->close();
         }
     }
@@ -107,34 +92,40 @@ private:
 
 class DirectorySendTransfer : public ObjectSendTransfer {
 public:
-    DirectorySendTransfer(QTcpSocket *conn, const fs::path &base, const fs::path &relPath)
-        : ObjectSendTransfer(conn, base, relPath)
-        , m_dirIter(m_path) {}
+    DirectorySendTransfer(QTcpSocket *conn,
+                          const fs::path &base,
+                          const fs::path &relPath,
+                          QObject *parent)
+        : ObjectSendTransfer(conn, base, relPath, parent)
+        , m_dirIter(m_path)
+        , m_child(nullptr) {}
 
     virtual void handleMessage(const Message &msg) override {
         if (m_child) {
             // 文件还未发送完成，交由它处理
             m_child->handleMessage(msg);
-            if (m_child->done()) {
-                m_child.reset();
-                return;
-            }
+            return;
         }
 
         switch (msg.payload_case()) {
         case Message::PayloadCase::kStopSendFileResponse: // 上个文件发送结束
         case Message::PayloadCase::kSendDirResponse:      // 目录创建结束
         {
-            sendNextEntry();
+            if (done()) {
+                deleteLater();
+            } else {
+                sendNextEntry();
+            }
             break;
         }
         default: {
+            qWarning() << "DirectorySendTransfer unknown message type:" << msg.payload_case();
             m_conn->close();
         }
         }
     }
 
-    virtual bool done() override { return m_dirIter == fs::end(m_dirIter); }
+    virtual bool done() override { return !m_child && m_dirIter == fs::end(m_dirIter); }
 
     virtual void sendRequest() override {
         Message msg;
@@ -158,25 +149,28 @@ public:
             return;
         }
 
-        m_child = std::make_shared<FileSendTransfer>(m_conn, m_base, entry.path());
+        m_child = new FileSendTransfer(m_conn, m_base, relPath, this);
+        connect(m_child, &FileSendTransfer::destroyed, this, [this]() { m_child = nullptr; });
         m_child->sendRequest();
     }
 
 private:
     std::filesystem::recursive_directory_iterator m_dirIter;
-    std::shared_ptr<ObjectSendTransfer> m_child;
+    ObjectSendTransfer *m_child;
 };
 
 SendTransfer::SendTransfer(const QStringList &filePaths, QObject *parent)
     : QObject(parent)
     , m_conn(nullptr)
-    , m_filePaths(filePaths) {
+    , m_filePaths(filePaths)
+    , m_objectSendTransfer(nullptr) {
 }
 
 void SendTransfer::send(const std::string &ip, uint16_t port) {
     m_conn = new QTcpSocket(this);
 
     connect(m_conn, &QTcpSocket::connected, [this] {
+        qDebug() << "send transfer connected";
         Net::tcpSocketSetKeepAliveOption(m_conn->socketDescriptor());
         sendNextObject();
     });
@@ -217,9 +211,7 @@ void SendTransfer::dispatcher() {
         case Message::PayloadCase::kSendDirResponse: {
             if (m_objectSendTransfer) {
                 m_objectSendTransfer->handleMessage(msg);
-                if (m_objectSendTransfer->done()) {
-                    m_objectSendTransfer.reset();
-                }
+                break;
             } else {
                 sendNextObject();
             }
@@ -228,8 +220,11 @@ void SendTransfer::dispatcher() {
         }
         case Message::PayloadCase::kStopTransferResponse: {
             m_conn->close();
+            break;
         }
         default: {
+            qWarning() << "SendTransfer unknown message type:" << msg.payload_case();
+            m_conn->close();
         }
         }
     }
@@ -248,14 +243,19 @@ void SendTransfer::sendNextObject() {
     m_filePaths.pop_back();
     fs::path path(qpath.toStdString());
     if (!fs::is_directory(path)) {
-        m_objectSendTransfer = std::make_shared<FileSendTransfer>(m_conn,
-                                                                  path.parent_path(),
-                                                                  path.filename());
+        m_objectSendTransfer = new FileSendTransfer(m_conn,
+                                                    path.parent_path(),
+                                                    path.filename(),
+                                                    this);
     } else {
-        m_objectSendTransfer = std::make_shared<DirectorySendTransfer>(m_conn,
-                                                                       path.parent_path(),
-                                                                       path.filename());
+        m_objectSendTransfer = new DirectorySendTransfer(m_conn,
+                                                         path.parent_path(),
+                                                         path.filename(),
+                                                         this);
     }
+    connect(m_objectSendTransfer, &FileSendTransfer::destroyed, this, [this]() {
+        m_objectSendTransfer = nullptr;
+    });
 
     m_objectSendTransfer->sendRequest();
 }

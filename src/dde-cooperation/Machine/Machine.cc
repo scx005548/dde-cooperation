@@ -18,6 +18,8 @@
 #include "Fuse/FuseClient.h"
 #include "utils/message_helper.h"
 #include "ReconnectDialog.h"
+#include "ReceiveTransfer.h"
+#include "SendTransfer.h"
 
 #include "protocol/message.pb.h"
 
@@ -60,6 +62,7 @@ Machine::Machine(Manager *manager,
     , m_pingTimer(new QTimer(this))
     , m_offlineTimer(new QTimer(this))
     , m_pairTimeoutTimer(new QTimer(this))
+    , m_currentSendTransferId(0)
     , m_mounted(false)
     , m_conn(nullptr)
     , m_ip(ip) {
@@ -106,6 +109,10 @@ const QString &Machine::path() const {
 bool Machine::isPcMachine() const {
     return m_os == DEVICE_OS_UOS || m_os == DEVICE_OS_LINUX || m_os == DEVICE_OS_WINDOWS ||
            m_os == DEVICE_OS_MACOS;
+}
+
+bool Machine::isLinux() const {
+    return m_os == DEVICE_OS_LINUX || m_os == DEVICE_OS_UOS;
 }
 
 bool Machine::isAndroid() const {
@@ -532,6 +539,42 @@ void Machine::handleFlowRequest(const FlowRequest &req) {
     m_manager->onFlowBack(req.direction(), req.x(), req.y());
 }
 
+void Machine::handleTransferRequest(const TransferRequest &req) {
+    auto *transfer = new ReceiveTransfer(m_manager->getFileStoragePath().toStdString(), this);
+    m_receiveTransfers.emplace(transfer);
+
+    QObject::connect(transfer, &ReceiveTransfer::destroyed, this, [this, transfer]() {
+        m_receiveTransfers.erase(transfer);
+    });
+
+    uint32_t transferId = req.transferid();
+    Message msg;
+    auto *transferResponse = msg.mutable_transferresponse();
+    transferResponse->set_transferid(transferId);
+    transferResponse->set_accepted(true);
+    transferResponse->set_port(transfer->port());
+    sendMessage(msg);
+}
+
+void Machine::handleTransferResponse(const TransferResponse &resp) {
+    uint32_t transferId = resp.transferid();
+
+    if (!resp.accepted()) {
+        // TODO:
+        m_sendTransfers.erase(transferId);
+        return;
+    }
+
+    auto iter = m_sendTransfers.find(transferId);
+    if (iter == m_sendTransfers.end()) {
+        return;
+    }
+
+    auto [_, transfer] = *iter;
+
+    transfer->send(m_ip, resp.port());
+}
+
 void Machine::handleFsRequest([[maybe_unused]] const FsRequest &req) {
     if (m_fuseServer) {
         Message msg;
@@ -846,6 +889,23 @@ void Machine::sendPairRequest() {
     auto *request = msg.mutable_pairrequest();
     request->set_key(SCAN_KEY);
     m_manager->completeDeviceInfo(request->mutable_deviceinfo());
+
+    sendMessage(msg);
+}
+
+void Machine::transferSendFiles(const QStringList &filePaths) {
+    m_currentSendTransferId++;
+    uint32_t transferId = m_currentSendTransferId;
+    auto *transfer = new SendTransfer(filePaths, this);
+    m_sendTransfers.emplace(transferId, transfer);
+
+    QObject::connect(transfer, &SendTransfer::destroyed, this, [this, transferId]() {
+        m_sendTransfers.erase(transferId);
+    });
+
+    Message msg;
+    auto *transferRequest = msg.mutable_transferrequest();
+    transferRequest->set_transferid(transferId);
 
     sendMessage(msg);
 }

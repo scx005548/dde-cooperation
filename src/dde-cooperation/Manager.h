@@ -67,6 +67,7 @@ public:
                                const std::vector<std::string> &targets);
     void onInputEvent();
 
+    const QString &getFileStoragePath() const { return m_fileStoragePath; }
     void completeDeviceInfo(DeviceInfo *info);
     AndroidMainWindow *getAndroidMainWindow();
 

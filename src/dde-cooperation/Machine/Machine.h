@@ -21,6 +21,8 @@ class Request;
 class InputEmitterWrapper;
 class FuseServer;
 class FuseClient;
+class ReceiveTransfer;
+class SendTransfer;
 
 class Machine : public QObject, public std::enable_shared_from_this<Machine> {
     friend class Manager;
@@ -54,6 +56,7 @@ public:
     void readTarget(const std::string &target);
 
     bool isPcMachine() const;
+    bool isLinux() const;
     bool isAndroid() const;
 
     bool connected() const { return !!m_conn; }
@@ -93,6 +96,10 @@ private:
     std::unique_ptr<FuseServer> m_fuseServer;
     std::unique_ptr<FuseClient> m_fuseClient;
 
+    std::set<ReceiveTransfer *> m_receiveTransfers;
+    uint32_t m_currentSendTransferId;
+    std::unordered_map<uint32_t, SendTransfer *> m_sendTransfers;
+
     bool m_mounted;
 
     void ping();
@@ -111,6 +118,8 @@ private:
     void handleInputEventRequest(const InputEventRequest &req);
     void handleFlowDirectionNtf(const FlowDirectionNtf &ntf);
     void handleFlowRequest(const FlowRequest &req);
+    void handleTransferRequest(const TransferRequest &req);
+    void handleTransferResponse(const TransferResponse &resp);
     void handleFsRequest(const FsRequest &req);
     void handleFsResponse(const FsResponse &resp);
     void handleFsSendFileRequest(const FsSendFileRequest &req);
@@ -127,9 +136,6 @@ private:
     int getPairTimeoutInterval();
     void sendPairRequest();
 
-    virtual void handleTransferRequest(const TransferRequest &req) = 0;
-    virtual void handleTransferResponse(const TransferResponse &resp) = 0;
-
 protected:
     QTcpSocket *m_conn;
 
@@ -140,10 +146,11 @@ protected:
     void requestDeviceSharing();
     void stopDeviceSharing();
     void setFlowDirection(FlowDirection direction);
+    void transferSendFiles(const QStringList &filePaths);
     void sendMessage(const Message &msg);
 
     virtual void handleConnected() = 0;
-    virtual void handleDisconnected() {};
+    virtual void handleDisconnected(){};
     virtual void handleCastRequest(const CastRequest &req) = 0;
     virtual void sendFiles(const QStringList &filePaths) = 0;
 };

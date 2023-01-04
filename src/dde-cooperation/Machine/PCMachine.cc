@@ -1,8 +1,5 @@
 #include "PCMachine.h"
 
-#include "utils/message_helper.h"
-#include "protocol/message.pb.h"
-
 PCMachine::PCMachine(Manager *manager,
                      ClipboardBase *clipboard,
                      QDBusConnection service,
@@ -22,6 +19,11 @@ void PCMachine::handleDisconnected() {
 }
 
 void PCMachine::sendFiles(const QStringList &filePaths) {
+    if (isLinux()) {
+        transferSendFiles(filePaths);
+        return;
+    }
+
     for (const QString &filePath : filePaths) {
         Message msg;
         FsSendFileRequest *send = msg.mutable_fssendfilerequest();
