@@ -7,6 +7,7 @@
 #include <QFile>
 #include <QTcpSocket>
 #include <QHostAddress>
+#include <QCryptographicHash>
 
 #include "utils/message_helper.h"
 #include "utils/net.h"
@@ -14,6 +15,19 @@
 #include "protocol/message.pb.h"
 
 namespace fs = std::filesystem;
+
+static QByteArray fileChecksum(const QString &path, QCryptographicHash::Algorithm hashAlgorithm) {
+    QFile f(path);
+    if (f.open(QFile::ReadOnly)) {
+        QCryptographicHash hash(hashAlgorithm);
+        if (hash.addData(&f)) {
+            // 转为字符串形式
+            return hash.result().toHex();
+        }
+    }
+
+    return QByteArray();
+}
 
 class FileSendTransfer : public ObjectSendTransfer {
 public:
@@ -79,7 +93,8 @@ public:
         Message msg;
         auto *stopSendFileRequest = msg.mutable_stopsendfilerequest();
         stopSendFileRequest->set_relpath(m_relPath);
-        // stopSendFileRequest->set_sha256();
+        stopSendFileRequest->set_sha256(
+            fileChecksum(QString::fromStdString(m_base / m_relPath), QCryptographicHash::Sha256));
 
         m_conn->write(MessageHelper::genMessage(msg));
     }

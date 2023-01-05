@@ -101,9 +101,12 @@ void ReceiveTransfer::handleSendFileRequest(const SendFileRequest &req) {
     auto path = getPath(req.relpath());
     qDebug() << "save file to:" << QString::fromStdString(path);
 
-    m_streams.emplace(std::piecewise_construct,
-                      std::forward_as_tuple(path.string()),
-                      std::forward_as_tuple(path, std::ios::binary));
+    decltype(m_streams.begin()) iter;
+    bool r;
+    std::tie(iter, r) = m_streams.emplace(std::piecewise_construct,
+                                          std::forward_as_tuple(path.string()),
+                                          std::forward_as_tuple(QString::fromStdString(path)));
+    iter->second.open(QFile::ReadWrite | QFile::Truncate);
 
     Message msg;
     msg.mutable_sendfileresponse();
@@ -115,6 +118,18 @@ void ReceiveTransfer::handleStopSendFileRequest(const StopSendFileRequest &req) 
     auto iter = m_streams.find(path);
     if (iter == m_streams.end()) {
         return;
+    }
+
+    auto sha256 = req.sha256();
+    QCryptographicHash hash(QCryptographicHash::Sha256);
+    iter->second.reset();
+    if (hash.addData(&iter->second)) {
+        auto res = hash.result().toHex().toStdString();
+        if (res != sha256) {
+            qWarning() << fmt::format("file hash mismatch, {} {}", res, sha256).data();
+            m_streams.erase(iter);
+            return;
+        }
     }
 
     m_streams.erase(iter);
@@ -131,8 +146,8 @@ void ReceiveTransfer::handleSendFileChunkRequest(const SendFileChunkRequest &req
         return;
     }
 
-    std::ofstream &stream = iter->second;
-    stream.seekp(req.offset());
+    QFile &stream = iter->second;
+    stream.seek(req.offset());
     stream.write(req.data().data(), req.data().size());
 
     Message msg;

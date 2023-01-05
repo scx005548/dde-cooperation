@@ -9,6 +9,8 @@
 #include <fstream>
 
 #include <QObject>
+#include <QFile>
+#include <QCryptographicHash>
 
 #include "protocol/message.pb.h"
 
@@ -27,7 +29,7 @@ private:
     QTcpServer *m_listen;
     QTcpSocket *m_conn;
     std::filesystem::path m_dest;
-    std::unordered_map<std::string, std::ofstream> m_streams;
+    std::unordered_map<std::string, QFile> m_streams;
 
     std::filesystem::path getPath(const std::string &relpath);
 
