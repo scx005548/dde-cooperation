@@ -67,8 +67,7 @@ void Display::initXinputExtension() {
     mask.head.deviceid = XCB_INPUT_DEVICE_ALL;
     mask.head.mask_len = sizeof(mask.mask) / sizeof(uint32_t);
     mask.mask = static_cast<xcb_input_xi_event_mask_t>(XCB_INPUT_XI_EVENT_MASK_HIERARCHY |
-                                                       XCB_INPUT_XI_EVENT_MASK_RAW_MOTION |
-                                                       XCB_INPUT_XI_EVENT_MASK_MOTION);
+                                                       XCB_INPUT_XI_EVENT_MASK_RAW_MOTION);
     auto cookie = xcb_input_xi_select_events(m_conn, m_screen->root, 1, &mask.head);
     auto err = xcb_request_check(m_conn, cookie);
     if (err) {
@@ -110,7 +109,7 @@ void Display::handleEvent(std::shared_ptr<xcb_generic_event_t> event) {
         auto *ge = reinterpret_cast<xcb_ge_generic_event_t *>(event.get());
 
         if (edgeDetectionStarted() && ge->extension == m_xinput2OPCode &&
-            ge->event_type == XCB_INPUT_MOTION) {
+            ge->event_type == XCB_INPUT_RAW_MOTION) {
             auto reply = XCB_REPLY(xcb_query_pointer, m_conn, m_screen->root);
             if (!reply) {
                 qWarning("failed to query pointer");
