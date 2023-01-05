@@ -85,10 +85,6 @@ void ReceiveTransfer::dispatcher() {
             handleSendDirRequest(msg.senddirrequest());
             break;
         }
-        case Message::PayloadCase::kStopTransferRequest: {
-            m_conn->close();
-            break;
-        }
         default: {
             qWarning() << "unknown message type:" << msg.payload_case();
             m_conn->close();

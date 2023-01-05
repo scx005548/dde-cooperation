@@ -374,6 +374,16 @@ void Machine::dispatcher() noexcept {
             break;
         }
 
+        case Message::PayloadCase::kStopTransferRequest: {
+            handleStopTransferRequest(msg.stoptransferrequest());
+            break;
+        }
+
+        case Message::PayloadCase::kStopTransferResponse: {
+            handleStopTransferResponse(msg.stoptransferresponse());
+            break;
+        }
+
         case Message::PayloadCase::kClipboardNotify: {
             handleClipboardNotify(msg.clipboardnotify());
             break;
@@ -539,42 +549,6 @@ void Machine::handleFlowRequest(const FlowRequest &req) {
     m_manager->onFlowBack(req.direction(), req.x(), req.y());
 }
 
-void Machine::handleTransferRequest(const TransferRequest &req) {
-    auto *transfer = new ReceiveTransfer(m_manager->getFileStoragePath().toStdString(), this);
-    m_receiveTransfers.emplace(transfer);
-
-    QObject::connect(transfer, &ReceiveTransfer::destroyed, this, [this, transfer]() {
-        m_receiveTransfers.erase(transfer);
-    });
-
-    uint32_t transferId = req.transferid();
-    Message msg;
-    auto *transferResponse = msg.mutable_transferresponse();
-    transferResponse->set_transferid(transferId);
-    transferResponse->set_accepted(true);
-    transferResponse->set_port(transfer->port());
-    sendMessage(msg);
-}
-
-void Machine::handleTransferResponse(const TransferResponse &resp) {
-    uint32_t transferId = resp.transferid();
-
-    if (!resp.accepted()) {
-        // TODO:
-        m_sendTransfers.erase(transferId);
-        return;
-    }
-
-    auto iter = m_sendTransfers.find(transferId);
-    if (iter == m_sendTransfers.end()) {
-        return;
-    }
-
-    auto [_, transfer] = *iter;
-
-    transfer->send(m_ip, resp.port());
-}
-
 void Machine::handleFsRequest([[maybe_unused]] const FsRequest &req) {
     if (m_fuseServer) {
         Message msg;
@@ -675,6 +649,59 @@ void Machine::handleFsSendFileResult(const FsSendFileResult &resp) {
     }
 
     sendReceivedFilesSystemNtf(msgBody);
+}
+
+void Machine::handleTransferRequest(const TransferRequest &req) {
+    auto *transfer = new ReceiveTransfer(m_manager->getFileStoragePath().toStdString(), this);
+    m_receiveTransfers.emplace(transfer);
+
+    QObject::connect(transfer, &ReceiveTransfer::destroyed, this, [this, transfer]() {
+        m_receiveTransfers.erase(transfer);
+    });
+
+    uint32_t transferId = req.transferid();
+    Message msg;
+    auto *transferResponse = msg.mutable_transferresponse();
+    transferResponse->set_transferid(transferId);
+    transferResponse->set_accepted(true);
+    transferResponse->set_port(transfer->port());
+    sendMessage(msg);
+}
+
+void Machine::handleTransferResponse(const TransferResponse &resp) {
+    uint32_t transferId = resp.transferid();
+
+    if (!resp.accepted()) {
+        // TODO:
+        m_sendTransfers.erase(transferId);
+        return;
+    }
+
+    auto iter = m_sendTransfers.find(transferId);
+    if (iter == m_sendTransfers.end()) {
+        return;
+    }
+
+    auto [_, transfer] = *iter;
+
+    transfer->send(m_ip, resp.port());
+}
+
+void Machine::handleStopTransferRequest(const StopTransferRequest &req) {
+    Message msg;
+    auto *stopTransferResponse = msg.mutable_stoptransferresponse();
+    stopTransferResponse->set_transferid(req.transferid());
+}
+
+void Machine::handleStopTransferResponse(const StopTransferResponse &resp) {
+    auto transferId = resp.transferid();
+    auto iter = m_sendTransfers.find(transferId);
+    if (iter == m_sendTransfers.end()) {
+        return;
+    }
+
+    auto [_, transfer] = *iter;
+    transfer->stop();
 }
 
 void Machine::handleClipboardNotify(const ClipboardNotify &notify) {
@@ -899,6 +926,13 @@ void Machine::transferSendFiles(const QStringList &filePaths) {
     auto *transfer = new SendTransfer(filePaths, this);
     m_sendTransfers.emplace(transferId, transfer);
 
+    QObject::connect(transfer, &SendTransfer::done, this, [this, transferId]() {
+        Message msg;
+        auto *stopSendTransferRequest = msg.mutable_stoptransferrequest();
+        stopSendTransferRequest->set_transferid(transferId);
+
+        m_conn->write(MessageHelper::genMessage(msg));
+    });
     QObject::connect(transfer, &SendTransfer::destroyed, this, [this, transferId]() {
         m_sendTransfers.erase(transferId);
     });

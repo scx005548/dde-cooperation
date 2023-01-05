@@ -208,6 +208,10 @@ void SendTransfer::send(const std::string &ip, uint16_t port) {
     m_conn->connectToHost(QHostAddress(QString::fromStdString(ip)), port);
 }
 
+void SendTransfer::stop() {
+    m_conn->disconnectFromHost();
+}
+
 void SendTransfer::dispatcher() {
     while (m_conn->size() >= header_size) {
         QByteArray buffer = m_conn->peek(header_size);
@@ -242,10 +246,6 @@ void SendTransfer::dispatcher() {
 
             break;
         }
-        case Message::PayloadCase::kStopTransferResponse: {
-            m_conn->close();
-            break;
-        }
         default: {
             qWarning() << "SendTransfer unknown message type:" << msg.payload_case();
             m_conn->close();
@@ -256,10 +256,7 @@ void SendTransfer::dispatcher() {
 
 void SendTransfer::sendNextObject() {
     if (m_filePaths.empty()) {
-        Message msg;
-        [[maybe_unused]] auto *stopSendTransferRequest = msg.mutable_stoptransferrequest();
-
-        m_conn->write(MessageHelper::genMessage(msg));
+        emit done();
         return;
     }
 

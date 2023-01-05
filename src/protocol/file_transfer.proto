@@ -10,9 +10,13 @@ message TransferResponse {
     int32 port = 3;             // TCP 端口
 }
 
-message StopTransferRequest {}
+message StopTransferRequest {
+    uint32 transferId = 1;
+}
 
-message StopTransferResponse {}
+message StopTransferResponse {
+    uint32 transferId = 1;
+}
 
 message SendFileRequest {
     string relPath = 1;         // 发送对象的相对路径，如发送文件夹 AA 时，下面的文件为 AA/BB.txt

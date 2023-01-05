@@ -118,12 +118,14 @@ private:
     void handleInputEventRequest(const InputEventRequest &req);
     void handleFlowDirectionNtf(const FlowDirectionNtf &ntf);
     void handleFlowRequest(const FlowRequest &req);
-    void handleTransferRequest(const TransferRequest &req);
-    void handleTransferResponse(const TransferResponse &resp);
     void handleFsRequest(const FsRequest &req);
     void handleFsResponse(const FsResponse &resp);
     void handleFsSendFileRequest(const FsSendFileRequest &req);
     void handleFsSendFileResult(const FsSendFileResult &resp);
+    void handleTransferRequest(const TransferRequest &req);
+    void handleTransferResponse(const TransferResponse &resp);
+    void handleStopTransferRequest(const StopTransferRequest &req);
+    void handleStopTransferResponse(const StopTransferResponse &resp);
     void handleClipboardNotify(const ClipboardNotify &notify);
     void handleClipboardGetContentRequest(const ClipboardGetContentRequest &req);
     void handleClipboardGetContentResponse(const ClipboardGetContentResponse &resp);

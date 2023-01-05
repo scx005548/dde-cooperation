@@ -24,6 +24,10 @@ public:
 
     uint16_t receive();
     void send(const std::string &ip, uint16_t port);
+    void stop();
+
+signals:
+    void done();
 
 private:
     QTcpSocket *m_conn;
