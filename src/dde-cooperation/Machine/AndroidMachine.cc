@@ -23,7 +23,7 @@ AndroidMachine::AndroidMachine(Manager *manager,
 void AndroidMachine::startCast() {
     Message msg;
     auto *reverseCastRequest = msg.mutable_reversecastrequest();
-    reverseCastRequest->set_uuid(uuid());
+    reverseCastRequest->set_uuid(manager()->uuid());
     sendMessage(msg);
 }
 
