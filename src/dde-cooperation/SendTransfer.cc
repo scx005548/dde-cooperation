@@ -46,10 +46,14 @@ public:
         {
             if (done()) {
                 sendDone();
-                deleteLater();
             } else {
                 sendNextChunk();
             }
+            break;
+        }
+        case Message::PayloadCase::kStopSendFileResponse: // 当前文件发送完成
+        {
+            deleteLater();
             break;
         }
         default:
@@ -123,8 +127,7 @@ public:
         }
 
         switch (msg.payload_case()) {
-        case Message::PayloadCase::kStopSendFileResponse: // 上个文件发送结束
-        case Message::PayloadCase::kSendDirResponse:      // 目录创建结束
+        case Message::PayloadCase::kSendDirResponse: // 目录创建结束
         {
             if (done()) {
                 deleteLater();
@@ -165,7 +168,14 @@ public:
         }
 
         m_child = new FileSendTransfer(m_conn, m_base, relPath, this);
-        connect(m_child, &FileSendTransfer::destroyed, this, [this]() { m_child = nullptr; });
+        connect(m_child, &FileSendTransfer::destroyed, this, [this]() {
+            m_child = nullptr;
+            if (done()) {
+                deleteLater();
+            } else {
+                sendNextEntry();
+            }
+        });
         m_child->sendRequest();
     }
 
@@ -226,7 +236,6 @@ void SendTransfer::dispatcher() {
         case Message::PayloadCase::kSendDirResponse: {
             if (m_objectSendTransfer) {
                 m_objectSendTransfer->handleMessage(msg);
-                break;
             } else {
                 sendNextObject();
             }
@@ -255,6 +264,7 @@ void SendTransfer::sendNextObject() {
     }
 
     QString qpath = m_filePaths[m_filePaths.size() - 1];
+    qDebug() << "send object:" << qpath;
     m_filePaths.pop_back();
     fs::path path(qpath.toStdString());
     if (!fs::is_directory(path)) {
@@ -270,6 +280,7 @@ void SendTransfer::sendNextObject() {
     }
     connect(m_objectSendTransfer, &FileSendTransfer::destroyed, this, [this]() {
         m_objectSendTransfer = nullptr;
+        sendNextObject();
     });
 
     m_objectSendTransfer->sendRequest();
