@@ -1,3 +1,24 @@
+dde-cooperation (0.0.5) unstable; urgency=medium
+
+  [ TagBuilder ]
+  * chore: Transfer 改用 QObject 处理(Task: 234499)(Influence: 无)
+  * fix: 修复收到发送文件消息后断开链接(Task: 234491)(Influence: 无)
+  * chore: linux 之间文件传输使用 Transfer(Task: 234541)(Influence: 无)
+  * feat: 安卓文件拖拽发送文件(Task: 233983)(Influence: 文件拖拽)
+  * fix: 修复 QML 报错(Task: 234291)(Influence: 无)
+  * fix: 修复主动发起安卓投屏无反应(Task: 234849)(Influence: 无)
+  * feat: 文件传输哈希值比对(Task: 234883)(Influence: 文件传输)
+  * fix: 解决设备共享鼠标无法流转的问题。(Task: 234897)(Influence: 无。)
+  * fix: 解决设备共享时关闭网卡后输入设备未释放的问题。(Bug: 181371)(Influence: 网络断开后释放输入设备grab.)
+  * fix: 修复文件传输结束后未发送 StopTransfer(Task: 234955)(Influence: 文件传输)
+  * chore: StopTransfer 消息移动到主 socket(Task: 234911)(Influence: 文件传输)
+  * chore: 隐藏桌面图标(Task: 234691)(Influence: 无)
+  * chore: 收到错误消息类型不关闭链接(Task: 235223)(Influence: 无)
+  * chore: 发送文件前检查设备是否是连接状态(Task: 235263)(Influence: 发送文件)
+  * fix: 安卓投屏 Tab 键功能修复(Task: 235271)(Influence: 安卓投屏 Tab 键)
+
+ -- lvpeilong <lvpeilong@uniontech.com>  Fri, 06 Jan 2023 15:29:09 +0800
+
 dde-cooperation (0.0.4.2) unstable; urgency=medium
 
   [ TagBuilder ]
