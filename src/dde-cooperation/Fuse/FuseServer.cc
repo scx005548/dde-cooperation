@@ -123,9 +123,8 @@ void FuseServer::handleRequest() noexcept {
             break;
         }
         default: {
-            qWarning() << fmt::format("invalid message type: {}", msg.payload_case()).data();
-            m_conn->close();
-            return;
+            qWarning() << "FuseServer unknown message type:" << msg.payload_case();
+            break;
         }
         }
     }

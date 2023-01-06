@@ -58,7 +58,7 @@ public:
         }
         default:
             qWarning() << "FileSendTransfer unknown message type:" << msg.payload_case();
-            m_conn->close();
+            break;
         }
     }
 
@@ -138,7 +138,7 @@ public:
         }
         default: {
             qWarning() << "DirectorySendTransfer unknown message type:" << msg.payload_case();
-            m_conn->close();
+            break;
         }
         }
     }
@@ -247,8 +247,7 @@ void SendTransfer::dispatcher() {
             break;
         }
         default: {
-            qWarning() << "SendTransfer unknown message type:" << msg.payload_case();
-            m_conn->close();
+            qWarning() << "SendTransfer invalid message type:" << msg.payload_case();
         }
         }
     }

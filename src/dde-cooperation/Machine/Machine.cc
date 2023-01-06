@@ -405,9 +405,7 @@ void Machine::dispatcher() noexcept {
         }
 
         default: {
-            qWarning() << "invalid message type:", msg.payload_case();
-            m_conn->close();
-            return;
+            qWarning() << "Machine unknown message type:" << msg.payload_case();
             break;
         }
         }

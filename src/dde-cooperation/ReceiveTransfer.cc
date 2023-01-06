@@ -86,8 +86,8 @@ void ReceiveTransfer::dispatcher() {
             break;
         }
         default: {
-            qWarning() << "unknown message type:" << msg.payload_case();
-            m_conn->close();
+            qWarning() << "ReceiveTransfer invalid message type:" << msg.payload_case();
+            break;
         }
         }
     }
