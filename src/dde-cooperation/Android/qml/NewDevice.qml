@@ -28,6 +28,8 @@ Rectangle {
                 const scale = ((aspect > 1.0) ? height : width) / s;
 
                 var ctx = getContext("2d");
+                ctx.save();
+                ctx.reset();
                 ctx.fillStyle = Qt.rgba(0, 0, 0, 1);
 
                 for (let y = 0; y < s; y++) {
@@ -39,6 +41,8 @@ Rectangle {
                         }
                     }
                 }
+
+                ctx.restore();
             }
 
             Component.onCompleted: {
