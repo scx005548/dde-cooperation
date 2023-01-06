@@ -127,6 +127,11 @@ void MachineDBusAdaptor::SendFiles(const QStringList &paths, const QDBusMessage 
         return;
     }
 
+    if (!m_machine->connected()) {
+        m_bus.send(message.createErrorReply({QDBusError::Failed, QStringLiteral("connect first")}));
+        return;
+    }
+
     m_machine->sendFiles(paths);
 }
 
