@@ -128,6 +128,7 @@ private:
     void initSharedClipboardStatus();
     void initSharedDevicesStatus();
     void initCooperatedMachines();
+    void initServiceSwitch();
 
     void cooperationStatusChanged(bool enable);
     void updateMachine(const std::string &ip, uint16_t port, const DeviceInfo &devInfo);

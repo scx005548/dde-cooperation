@@ -67,6 +67,17 @@
       "description":"request cooperation timeout interval",
       "permissions":"readwrite",
       "visibility":"public"
+    },
+    "serviceSwitch":{
+      "value": true,
+      "serial": 0,
+      "flags":["global"],
+      "name":"service switch",
+      "name[zh_CN]":"服务开关",
+      "description[zh_CN]":"协同服务总开关",
+      "description":"cooperation service switch",
+      "permissions":"readwrite",
+      "visibility":"public"
     }
   }
 }

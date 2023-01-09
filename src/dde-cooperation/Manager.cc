@@ -52,6 +52,7 @@ Manager::Manager(const std::filesystem::path &dataDir)
     initSharedClipboardStatus();
     initSharedDevicesStatus();
     initCooperatedMachines();
+    initServiceSwitch();
 
     m_keypair.load();
 
@@ -178,6 +179,16 @@ void Manager::initCooperatedMachines() {
     m_cooperatedMachines = m_dConfig->value("cooperatedMachineIds").toStringList();
 }
 
+void Manager::initServiceSwitch() {
+    if (!m_dConfig || !m_dConfig->isValid() ||
+        !m_dConfig->keyList().contains("serviceSwitch")) {
+        qWarning("dConfig is invalid or does not has serviceSwitch key!");
+        return;
+    }
+
+    m_deviceSharingSwitch = m_dConfig->value("serviceSwitch").toBool();
+}
+
 void Manager::completeDeviceInfo(DeviceInfo *info) {
     info->set_uuid(m_uuid);
     info->set_name(Net::getHostname());
@@ -281,8 +292,14 @@ QVector<QDBusObjectPath> Manager::getMachinePaths() const noexcept {
 
 bool Manager::setDeviceSharingSwitch(bool value) noexcept {
     m_deviceSharingSwitch = value;
+
     cooperationStatusChanged(m_deviceSharingSwitch);
     m_dbusAdaptor->updateDeviceSharingSwitch(value);
+
+    if (m_dConfig && m_dConfig->isValid() && m_dConfig->keyList().contains("serviceSwitch")) {
+        m_dConfig->setValue("serviceSwitch", value);
+    }
+
     return true;
 }
 
