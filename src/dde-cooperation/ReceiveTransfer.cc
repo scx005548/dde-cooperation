@@ -11,6 +11,12 @@
 
 namespace fs = std::filesystem;
 
+static bool isSubPath(const fs::path &base, const fs::path &path) {
+    auto baseTmp = base / "";
+
+    return path.string().rfind(baseTmp.string(), 0) == 0;
+}
+
 ReceiveTransfer::ReceiveTransfer(const fs::path &dest, QObject *parent)
     : QObject(parent)
     , m_listen(new QTcpServer(this))
@@ -26,8 +32,8 @@ uint16_t ReceiveTransfer::port() {
     return m_listen->serverPort();
 }
 
-std::filesystem::path ReceiveTransfer::getPath(const std::string &relpath) {
-    return m_dest / relpath;
+std::filesystem::path ReceiveTransfer::getPath(const std::string &relPath) {
+    return m_dest / relPath;
 }
 
 void ReceiveTransfer::handleNewConnection() {
@@ -97,6 +103,12 @@ void ReceiveTransfer::handleSendFileRequest(const SendFileRequest &req) {
     auto path = getPath(req.relpath());
     qDebug() << "save file to:" << QString::fromStdString(path);
 
+    if (!isSubPath(m_dest, path)) {
+        qWarning() << "illegal path:" << QString::fromStdString(req.relpath());
+        m_conn->abort();
+        return;
+    }
+
     decltype(m_streams.begin()) iter;
     bool r;
     std::tie(iter, r) = m_streams.emplace(std::piecewise_construct,
@@ -154,6 +166,12 @@ void ReceiveTransfer::handleSendFileChunkRequest(const SendFileChunkRequest &req
 
 void ReceiveTransfer::handleSendDirRequest(const SendDirRequest &req) {
     auto path = getPath(req.relpath());
+    if (!isSubPath(m_dest, path)) {
+        qWarning() << "illegal path:" << QString::fromStdString(req.relpath());
+        m_conn->abort();
+        return;
+    }
+
     fs::create_directories(path);
 
     Message msg;
