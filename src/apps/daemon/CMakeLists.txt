@@ -15,7 +15,7 @@ FILE(GLOB CPP_SRC
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(${PROJ_NAME}
@@ -31,6 +31,7 @@ endif()
 target_link_libraries(${PROJ_NAME}
   PRIVATE
   Qt${QT_VERSION_MAJOR}::Core
+  Qt${QT_VERSION_MAJOR}::Widgets
   deepin_cross::framework
 )
 

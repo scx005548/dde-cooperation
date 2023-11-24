@@ -43,12 +43,14 @@ void WorkspaceWidgetPrivate::initUI()
 
     QVBoxLayout *mainLayout = new QVBoxLayout;
     mainLayout->setContentsMargins(20, 15, 20, 15);
-    mainLayout->addWidget(searchEdit);
-
 #ifndef linux
-    mainLayout->addSpacing(55);
+    searchEdit->setFixedHeight(35);
+    searchEdit->setPlaceholderText(tr("                                  Search"));
+    searchEdit->setStyleSheet("border-radius: 8px;"
+                              "background-color: rgba(0,0,0, 0.1);");
+    mainLayout->addSpacing(50);
 #endif
-
+    mainLayout->addWidget(searchEdit);
     mainLayout->addLayout(stackedLayout);
     q->setLayout(mainLayout);
 }

@@ -22,5 +22,6 @@
         <file>icons/deepin/builtin/icons/minimise_normal.svg</file>
         <file>icons/deepin/builtin/icons/close_normal.svg</file>
         <file>icons/deepin/builtin/icons/menu_normal.svg</file>
+        <file>icons/deepin/builtin/icons/spinner.gif</file>
     </qresource>
 </RCC>

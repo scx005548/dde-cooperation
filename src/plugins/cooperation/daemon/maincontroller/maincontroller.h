@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2023 UnionTech Software Technology Co., Ltd.
+﻿// SPDX-FileCopyrightText: 2023 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -7,6 +7,10 @@
 
 #include <QObject>
 #include <QDBusInterface>
+
+#ifndef linux
+#include <win/confirmdialog.h>
+#endif
 
 namespace daemon_cooperation {
 
@@ -51,13 +55,15 @@ private:
     void openFileLocation(const QString &path);
 
 private:
+#ifndef linux
+    ConfirmDialog dialog;
+#endif
     QDBusInterface *notifyIfc { nullptr };
     TransferInfo transferInfo;
     QString recvFilesSavePath;
     QMap<int, int64_t> fileIds;   // <file_id, last_current_size> 统计正在传输的文件量<文件id，上次已传输量>
     uint recvNotifyId { 0 };
     bool isTransTimeout = false;
-
 };
 
 }   // namespace daemon_cooperation

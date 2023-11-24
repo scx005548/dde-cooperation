@@ -7,6 +7,7 @@
 
 #include <dde-cooperation-framework/dpf.h>
 #include <QDir>
+#include <QApplication>
 
 static constexpr char kPluginInterface[] { "org.deepin.plugin.daemon" };
 static constexpr char kPluginCore[] { "daemon-core" };
@@ -68,7 +69,7 @@ int main(int argc, char *argv[])
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
 
-    QCoreApplication app(argc, argv);
+    QApplication app(argc, argv);
     app.setOrganizationName("deepin");
 
     if (deepin_cross::BaseUtils::isWayland()) {

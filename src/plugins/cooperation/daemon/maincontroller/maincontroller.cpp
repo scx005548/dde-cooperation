@@ -67,11 +67,19 @@ MainController *MainController::instance()
 
 uint MainController::notifyMessage(uint replacesId, const QString &body, const QStringList &actions, QVariantMap hitMap, int expireTimeout)
 {
+#ifdef linux
     QDBusReply<uint> reply = notifyIfc->call("Notify", MainAppName, replacesId,
-                                             "dde-cooperation", tr("File transfer"), body,
-                                             actions, hitMap, expireTimeout);
+                                                     "dde-cooperation", tr("File transfer"), body,
+                                                     actions, hitMap, expireTimeout);
 
     return reply.isValid() ? reply.value() : replacesId;
+#else
+    dialog.setContent(body);
+    dialog.setAction(actions);
+    dialog.setSavePath(recvFilesSavePath);
+    dialog.show();
+    return 0;
+#endif
 }
 
 void MainController::transferResult(bool result, const QString &msg)
