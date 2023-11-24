@@ -5,7 +5,7 @@
 
 #include <QMap>
 #include <QObject>
-
+#include "../gui/type_defines.h"
 #ifndef WIN32
 #    include <QDBusMessage>
 #endif
@@ -35,8 +35,12 @@ public:
 #ifdef WIN32
     QMap<QString, QString> getAppList(QMap<QString, QString> &noRecommedApplist);
     QMap<QString, QString> getBrowserList();
-    QStringList getTransferFilePath();
+    QStringList getTransferFilePath(QStringList filePathList,QStringList appList,
+                                    QStringList browserList,QStringList configList);
     void startTransfer();
+    QString getTransferJson(QStringList appList,QStringList fileList,QStringList browserList,
+                            QString bookmarksName,QString wallPaperName,QString tempSavePath);
+    void  Retransfer(const QString jsonstr);
 #else
 public:
     int getRemainSize();
@@ -82,6 +86,15 @@ Q_SIGNALS:
 
     // unfinish json content from latest job
     void unfinishedJob(const QString jsonstr);
+
+    // clear select widget
+    void clearSelectWidget();
+
+    // change widget text by select
+    void changeWidgetText();
+
+    //change wideget
+    void changeWidget(PageName index);
 
 private:
     void initOnlineState();

@@ -24,6 +24,8 @@
 #include <QJsonArray>
 #include <QStandardPaths>
 
+
+
 #ifdef WIN32
 #include <gui/win/drapwindowsdata.h>
 #else
@@ -139,7 +141,12 @@ QString TransferHelper::getJsonfile(const QJsonObject &jsonData, const QString &
 #ifdef WIN32
 void TransferHelper::startTransfer()
 {
-    QStringList paths = getTransferFilePath();
+    QStringList filePathList = OptionsManager::instance()->getUserOption(Options::kFile);
+    QStringList appList = OptionsManager::instance()->getUserOption(Options::kApp);
+    QStringList browserList = OptionsManager::instance()->getUserOption(Options::kBrowserBookmarks);
+    QStringList configList = OptionsManager::instance()->getUserOption(Options::kConfig);
+
+    QStringList paths = getTransferFilePath(filePathList,appList,browserList,configList);
     qInfo() << "transferring file list: " << paths;
     transferhandle.sendFiles(paths);
 }
@@ -174,21 +181,13 @@ QMap<QString, QString> TransferHelper::getBrowserList()
     return browserList;
 }
 
-QStringList TransferHelper::getTransferFilePath()
+QStringList TransferHelper::getTransferFilePath(QStringList filePathList,QStringList appList,
+                                                QStringList browserList,QStringList configList)
 {
-    QStringList filePathList = OptionsManager::instance()->getUserOption(Options::kFile);
-    QStringList appList = OptionsManager::instance()->getUserOption(Options::kApp);
-    QStringList browserList = OptionsManager::instance()->getUserOption(Options::kBrowserBookmarks);
-    QStringList configList = OptionsManager::instance()->getUserOption(Options::kConfig);
-
+    //add files
     QStringList transferFilePathList;
     for (auto file : filePathList) {
         transferFilePathList.append(file);
-    }
-    // add app
-    QJsonArray appArray;
-    for (auto app : appList) {
-        appArray.append(app);
     }
 
     QString tempSavePath = QDir::tempPath();
@@ -198,6 +197,7 @@ QStringList TransferHelper::getTransferFilePath()
         QSet<QString> browserName(browserList.begin(), browserList.end());
         DrapWindowsData::instance()->getBrowserBookmarkInfo(browserName);
         QString bookmarksPath = DrapWindowsData::instance()->getBrowserBookmarkJSON(tempSavePath);
+
         transferFilePathList.append(bookmarksPath);
         bookmarksName = QFileInfo(bookmarksPath).fileName();
         OptionsManager::instance()->addUserOption(Options::KBookmarksJsonPath, { bookmarksPath });
@@ -209,17 +209,41 @@ QStringList TransferHelper::getTransferFilePath()
         QString wallparerPath = DrapWindowsData::instance()->getDesktopWallpaperPath();
         QFileInfo fileInfo(wallparerPath);
         wallpaperName = fileInfo.fileName();
+
         transferFilePathList.append(wallparerPath);
         OptionsManager::instance()->addUserOption(Options::KWallpaperPath, { wallparerPath });
     }
 
+    // add transfer.json
+    QString jsonfilePath = getTransferJson(appList,filePathList,browserList,bookmarksName,wallpaperName,tempSavePath);
+
+    transferFilePathList.prepend(jsonfilePath);
+    OptionsManager::instance()->addUserOption(Options::KUserDataInfoJsonPath, { jsonfilePath });
+
+    OptionsManager::instance()->addUserOption(Options::kTransferFileList,transferFilePathList);
+
+    return transferFilePathList;
+}
+QString TransferHelper::getTransferJson(QStringList appList,QStringList fileList,QStringList browserList,
+                                        QString bookmarksName,QString wallPaperName,QString tempSavePath)
+{
+    // add app
+    QJsonArray appArray;
+    for (auto app : appList) {
+        appArray.append(app);
+    }
     // add file
     QJsonArray fileArray;
     qInfo() << "home_path:" << QDir::homePath();
-    for (QString file : filePathList) {
+    for (QString file : fileList) {
         if (file.contains(QDir::homePath()))
             file.replace(QDir::homePath() + "/", "");
         fileArray.append(file);
+    }
+    // add browser
+    QJsonArray browserArray;
+    for (QString browser : browserList) {
+        browserArray.append(browser);
     }
 
     QJsonObject jsonObject;
@@ -228,18 +252,30 @@ QStringList TransferHelper::getTransferFilePath()
     jsonObject["user_file"] = fileArray;
     if (!appArray.isEmpty())
         jsonObject["app"] = appArray;
-    if (!wallpaperName.isEmpty())
-        jsonObject["wallpapers"] = wallpaperName;
+    if (!wallPaperName.isEmpty())
+        jsonObject["wallpapers"] = wallPaperName;
     if (!bookmarksName.isEmpty())
         jsonObject["browserbookmark"] = bookmarksName;
+    if(!browserList.isEmpty())
+        jsonObject["browsersName"] = browserArray;
 
-    // add transfer.json
     QString jsonfilePath = getJsonfile(jsonObject, QString(tempSavePath));
-    transferFilePathList.prepend(jsonfilePath);
-    OptionsManager::instance()->addUserOption(Options::KUserDataInfoJsonPath, { jsonfilePath });
-    qInfo() << "transfer.json save path:" << tempSavePath;
-    return transferFilePathList;
+    qInfo()<<"transfer.json save path:"<<jsonfilePath;
+    return jsonfilePath;
 }
+
+void TransferHelper::Retransfer(const QString jsonstr)
+{
+    //
+    //need filePathList appList browserList configList
+
+   // QStringList paths = getTransferFilePath(filePathList,appList,browserList,configList);
+    // qInfo() << "transferring file list: " << paths;
+    //    transferhandle.sendFiles(paths);
+    //
+    emit changeWidget(PageName::transferringwidget);
+}
+
 #else
 
 bool TransferHelper::checkSize(const QString &filepath)
