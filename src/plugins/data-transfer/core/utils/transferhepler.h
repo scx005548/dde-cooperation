@@ -12,7 +12,7 @@
 
 #include <QUrl>
 
-class WinApp;
+    class WinApp;
 class TransferHelper : public QObject
 {
     Q_OBJECT

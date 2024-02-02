@@ -2,10 +2,20 @@
 #define RESULTDISPLAYWIDGET_H
 
 #include <QFrame>
-
+#include "../type_defines.h"
 class QTextBrowser;
 class QLabel;
-
+class ResultWindow : public ProcessDetailsWindow
+{
+    Q_OBJECT
+public:
+   ResultWindow(QFrame *parent = nullptr);
+   ~ResultWindow()override;
+   void updateContent(const QString &name, const QString &type,bool success);
+   void changeTheme(int theme);
+private:
+   void init();
+};
 class ResultDisplayWidget : public QFrame
 {
     Q_OBJECT
@@ -26,7 +36,7 @@ private:
     void nextPage();
 
 private:
-    QTextBrowser *processTextBrowser { nullptr };
+    ResultWindow *resultWindow { nullptr };
     QString processText;
     QLabel *iconLabel { nullptr };
     QLabel *titileLabel { nullptr };

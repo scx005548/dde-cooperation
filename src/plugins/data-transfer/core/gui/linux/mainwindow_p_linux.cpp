@@ -64,9 +64,7 @@ void MainWindowPrivate::initWidgets()
 
     stackedWidget->insertWidget(PageName::startwidget, startwidget);
     stackedWidget->insertWidget(PageName::choosewidget, choosewidget);
-
     stackedWidget->insertWidget(PageName::uploadwidget, uploadwidget);
-
     stackedWidget->insertWidget(PageName::networkdisconnectwidget, networkdisconnectwidget);
     stackedWidget->insertWidget(PageName::promptwidget, promptwidget);
     stackedWidget->insertWidget(PageName::connectwidget, connectwidget);

@@ -278,5 +278,6 @@
         <file>icon/movie/waiting/waiting7.png</file>
         <file>icon/movie/waiting/waiting8.png</file>
         <file>icon/movie/waiting/waiting9.png</file>
+        <file>icon/working.svg</file>
     </qresource>
 </RCC>
